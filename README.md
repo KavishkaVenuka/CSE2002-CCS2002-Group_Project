@@ -1,0 +1,1 @@
+A scalable, modular, and intelligent business management platform designed to streamline operations for companies engaged in importing and selling goods, starting with an electrical items distributor. The system replaces manual workflows and limitations of tools like QuickBooks by providing custom ERP-style automation, real-time insights, and AI-driven assistant.
