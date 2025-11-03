@@ -6,11 +6,14 @@ UBMS is designed as a generalized business management framework with customizabl
 
 This system supports:
 Inventory & stock management
+
 Purchase orders & supplier management
+
 Customer quotations & invoices (Normal + SVAT + VAT)
 Finance, payment tracking & profitability analytics
 Real-time dashboard + future mobile integration
 Automated data backup & secure role-based access
 AI support for business insights & system operations
+
 
 
