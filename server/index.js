@@ -1,12 +1,14 @@
 import express from "express"
 import mongoose from "mongoose"
-import userRouter from "./routes/adminRouter.js"
 import jwt from "jsonwebtoken"
 import productRouter from "./routes/productRouter.js"
 import cors from "cors"
 import dotenv from "dotenv"
 import errorHandler from "./middleware/errorHandler.js"
 import orderRouter from "./routes/orderRouter.js"
+import adminRouter from "./routes/adminRouter.js"
+import customerRouter from "./routes/customerRouter.js"
+import supplierRouter from "./routes/supplierRouter.js"
 
 dotenv.config()
 
@@ -51,9 +53,9 @@ app.use(
 
 
 
-app.use("/api/users", userRouter)
-app.use("/api/products", productRouter)
-app.use("/api/orders", orderRouter)
+app.use("/api/admin", adminRouter)  
+app.use("/api/customers", customerRouter)
+app.use("/api/suppliers", supplierRouter)
 
 
 // Centralized error handler
