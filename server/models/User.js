@@ -1,44 +1,61 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema(
-    {
-        email : {
-            type : String,
-            required : true,
-            unique: true
-        },
-        firstName : {
-            type : String,
-            required : true
-        },
-        lastName : {
-            type : String,
-            required : true
-        },
-        password : {
-            type : String,
-            required : true
-        },
-        role:{
-            type : String,
-            default : "customer"
-        },
-        isBlocked : {
-            type : Boolean,
-            default : false
-        },
-        isEmailVerified:{
-            type : Boolean,
-            default : false
-        },
-        image : {
-            type : String,
-            required : true,
-            default : "/default.jpg"
-        }
-    }
-)
+const supplierSchema = new mongoose.Schema(
+  {
+    companyName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-const User = mongoose.model("User", userSchema)
+    businessRegistrationNumber: {
+      type: String,
+      required: true,
+      unique: true,
+    },
 
-export default User;
+    vatNumber: {
+      type: String,
+      default: null,
+    },
+
+    contactNumber: {
+      type: String,
+      required: true,
+    },
+
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+    },
+
+    address: {
+      type: String,
+      required: true,
+    },
+
+    businessType: {
+      type: String,
+      enum: ["Manufacturer", "Distributor", "Service Provider", "Other"],
+      required: true,
+    },
+
+    natureOfBusiness: {
+      type: String,
+      required: true,
+    },
+
+    productCategories: [
+      {
+        type: String,
+      },
+    ],
+  },
+  { timestamps: true }
+);
+
+const Supplier = mongoose.model("Supplier", supplierSchema);
+
+export default Supplier;
