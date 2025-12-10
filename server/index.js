@@ -1,6 +1,6 @@
 import express from "express"
 import mongoose from "mongoose"
-import userRouter from "./routes/userRouter.js"
+import userRouter from "./routes/adminRouter.js"
 import jwt from "jsonwebtoken"
 import productRouter from "./routes/productRouter.js"
 import cors from "cors"
