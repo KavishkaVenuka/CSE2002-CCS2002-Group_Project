@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const supplierSchema = new mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     companyName: {
       type: String,
@@ -42,6 +42,12 @@ const supplierSchema = new mongoose.Schema(
       required: true,
     },
 
+     role: {
+      type: String,
+      enum: ["Supplier", "Customer", "Admin"],
+      default: "Supplier", // Default role
+    },
+
     natureOfBusiness: {
       type: String,
       required: true,
@@ -56,6 +62,6 @@ const supplierSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Supplier = mongoose.model("Supplier", supplierSchema);
+const User = mongoose.model("User", userSchema);
 
-export default Supplier;
+export default User;
