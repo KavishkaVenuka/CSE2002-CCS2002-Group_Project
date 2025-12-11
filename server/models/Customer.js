@@ -19,11 +19,6 @@ const customerSchema = new mongoose.Schema(
       default: null,
     },
 
-    taxIdentificationNumber: {
-      type: String,
-      default: null,
-    },
-
     contactNumber: {
       type: String,
       required: true,
