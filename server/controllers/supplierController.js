@@ -44,10 +44,6 @@ export async function createSupplier(req, res) {
     }
 }
 
-
-// =====================
-// LOGIN SUPPLIER
-// =====================
 export async function loginSupplier(req, res) {
     try {
         const { email, password } = req.body;
