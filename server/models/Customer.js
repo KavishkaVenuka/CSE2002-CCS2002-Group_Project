@@ -36,6 +36,12 @@ const customerSchema = new mongoose.Schema(
       lowercase: true,
     },
 
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+    },
+
     address: {
       type: String,
       required: true,
