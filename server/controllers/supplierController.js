@@ -1,6 +1,6 @@
 import Supplier from "../models/Supplier.js";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 
 export async function createSupplier(req, res) {
     try {
@@ -44,44 +44,54 @@ export async function createSupplier(req, res) {
     }
 }
 
-
-// =====================
-// LOGIN SUPPLIER
-// =====================
 export async function loginSupplier(req, res) {
     try {
         const { email, password } = req.body;
 
+       
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required" });
+        }
+
+       
         const supplier = await Supplier.findOne({ email });
         if (!supplier) {
             return res.status(404).json({ message: "Supplier not found" });
         }
 
-        const isPasswordCorrect = bcrypt.compareSync(password, supplier.password);
+       
+        const isPasswordCorrect = await bcrypt.compare(password, supplier.password);
         if (!isPasswordCorrect) {
             return res.status(401).json({ message: "Invalid password" });
         }
 
+    
         const payload = {
             id: supplier._id,
             email: supplier.email,
             companyName: supplier.companyName,
             businessRegistrationNumber: supplier.businessRegistrationNumber,
-            role: supplier.role,
             businessType: supplier.businessType,
             contactNumber: supplier.contactNumber,
+            role: supplier.role || "Supplier",
         };
 
+      
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
             expiresIn: "150h",
         });
 
-        res.json({
+        return res.status(200).json({
             message: "Login successful",
             token,
+            supplier: payload, 
         });
 
-    } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+    } catch (error) {
+        console.error("Login Error:", error);
+        return res.status(500).json({
+            message: "Server error",
+            error: error.message,
+        });
     }
 }
