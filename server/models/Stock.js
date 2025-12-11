@@ -2,13 +2,7 @@ import mongoose from "mongoose";
 
 const stockItemSchema = new mongoose.Schema(
   {
-    sku_code: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-
+    
     item_name: {
       type: String,
       required: true,
