@@ -48,14 +48,14 @@ const stockItemSchema = new mongoose.Schema(
 
     quantity_on_hand: {
       type: Number,
-      required: true,
+      required: false,
       default: 0,
       min: 0,
     },
 
     min_stock_level: {
       type: Number,
-      required: true,
+      required: false,
       default: 0,
       min: 0,
     },
