@@ -23,7 +23,6 @@ export async function createCustomer(req, res) {
             companyName: data.companyName,
             businessRegistrationNumber: data.businessRegistrationNumber,
             vatNumber: data.vatNumber,
-            taxIdentificationNumber: data.taxIdentificationNumber,
             contactNumber: data.contactNumber,
             email: data.email,
             address: data.address,
