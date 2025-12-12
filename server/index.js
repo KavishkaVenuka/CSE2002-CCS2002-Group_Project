@@ -9,6 +9,7 @@ import orderRouter from "./routes/orderRouter.js"
 import adminRouter from "./routes/adminRouter.js"
 import customerRouter from "./routes/customerRouter.js"
 import supplierRouter from "./routes/supplierRouter.js"
+import stockRouter from "./routes/stockRouter.js"
 
 dotenv.config()
 
@@ -56,6 +57,7 @@ app.use(
 app.use("/api/admin", adminRouter)  
 app.use("/api/customers", customerRouter)
 app.use("/api/suppliers", supplierRouter)
+app.use("/api/stocks", stockRouter)
 
 
 // Centralized error handler
