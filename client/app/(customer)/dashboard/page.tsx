@@ -1,6 +1,8 @@
 import React from "react";
 import CustomerNavbar from "@/components/customer/CustomerNavbar";
 import Header from "@/components/ui/Header";
+import StatCard from "@/components/dashboard/StatCard";
+import { FileText, FileClock, CreditCard, Truck } from "lucide-react";
 
 export default function CustomerDashboard() {
     return (
@@ -23,38 +25,32 @@ export default function CustomerDashboard() {
                     </header>
 
                     {/* Dashboard Content Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {/* Statistic Card 1 */}
-                        <div className="bg-[#0f1218] p-6 rounded-3xl border border-gray-800 shadow-xl">
-                            <h3 className="text-gray-400 text-sm font-medium uppercase tracking-wider mb-2">Total Orders</h3>
-                            <div className="text-4xl font-bold text-white mb-4">1,248</div>
-                            <div className="text-sm text-green-400 flex items-center gap-1">
-                                <span>+12.5%</span>
-                                <span className="text-gray-500">vs last month</span>
-                            </div>
-                        </div>
-
-                        {/* Statistic Card 2 */}
-                        <div className="bg-[#0f1218] p-6 rounded-3xl border border-gray-800 shadow-xl">
-                            <h3 className="text-gray-400 text-sm font-medium uppercase tracking-wider mb-2">Pending Quotes</h3>
-                            <div className="text-4xl font-bold text-white mb-4">8</div>
-                            <div className="text-sm text-blue-400 flex items-center gap-1">
-                                <span>Active</span>
-                                <span className="text-gray-500">requests</span>
-                            </div>
-                        </div>
-
-                        {/* Statistic Card 3 */}
-                        <div className="bg-[#0f1218] p-6 rounded-3xl border border-gray-800 shadow-xl">
-                            <h3 className="text-gray-400 text-sm font-medium uppercase tracking-wider mb-2">Total Spent</h3>
-                            <div className="text-4xl font-bold text-white mb-4">$42.5k</div>
-                            <div className="text-sm text-gray-500 flex items-center gap-1">
-                                <span>Updated just now</span>
-                            </div>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <StatCard
+                            title="Active Orders"
+                            value="3"
+                            icon={<FileText className="w-6 h-6" />}
+                            variant="blue"
+                        />
+                        <StatCard
+                            title="Pending Quotations"
+                            value="2"
+                            icon={<FileClock className="w-6 h-6" />}
+                            variant="orange"
+                        />
+                        <StatCard
+                            title="Payments Due"
+                            value="$1,200"
+                            icon={<CreditCard className="w-6 h-6" />}
+                            variant="red"
+                        />
+                        <StatCard
+                            title="Recently Delivered Items"
+                            value="5"
+                            icon={<Truck className="w-6 h-6" />}
+                            variant="green"
+                        />
                     </div>
-
-
                     {/* Recent Activity Section */}
                     <div className="mt-8 bg-[#0f1218] rounded-3xl border border-gray-800 shadow-xl p-8">
                         <h3 className="text-xl font-semibold text-gray-100 mb-6">Recent Activity</h3>
