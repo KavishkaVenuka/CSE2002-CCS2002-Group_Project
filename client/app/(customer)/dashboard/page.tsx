@@ -1,7 +1,7 @@
 import React from "react";
 import CustomerNavbar from "@/components/customer/CustomerNavbar";
 import Header from "@/components/ui/Header";
-import StatCard from "@/components/dashboard/StatCard";
+import StatCard from "@/components/customer/dashboard/StatCard";
 import { FileText, FileClock, CreditCard, Truck } from "lucide-react";
 
 export default function CustomerDashboard() {
