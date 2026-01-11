@@ -4,6 +4,7 @@ import Header from "@/components/ui/Header";
 import StatCard from "@/components/customer/dashboard/StatCard";
 import { FileText, FileClock, CreditCard, Truck } from "lucide-react";
 import NotificationPanel from "@/components/dashboard/NotificationPanel";
+import RequirementRequestTable from "@/components/customer/dashboard/RequestTable";
 
 export default function CustomerDashboard() {
     return (
@@ -57,26 +58,7 @@ export default function CustomerDashboard() {
                             </div>
 
                             {/* Recent Activity Section */}
-                            <div className="bg-[#0f1218] rounded-3xl border border-gray-800 shadow-xl p-8">
-                                <h3 className="text-xl font-semibold text-gray-100 mb-6">Recent Activity</h3>
-                                <div className="space-y-4">
-                                    {[1, 2, 3].map((i) => (
-                                        <div key={i} className="flex items-center justify-between p-4 bg-[#1c1f26]/50 rounded-2xl border border-gray-800/50 hover:border-gray-700 transition-colors">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-xl bg-blue-900/20 flex items-center justify-center text-blue-400">
-                                                    {/* Icon placeholder */}
-                                                    <div className="w-6 h-6 border-2 border-current rounded-md"></div>
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-medium text-gray-200">Order #293{i} Placed</h4>
-                                                    <p className="text-sm text-gray-500">2 hours ago</p>
-                                                </div>
-                                            </div>
-                                            <span className="text-sm font-medium text-gray-400">$1,200.00</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            <RequirementRequestTable />
                         </div>
 
                         {/* Right Column: Notification Panel */}
