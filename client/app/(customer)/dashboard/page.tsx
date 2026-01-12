@@ -3,8 +3,9 @@ import CustomerNavbar from "@/components/customer/CustomerNavbar";
 import Header from "@/components/ui/Header";
 import StatCard from "@/components/customer/dashboard/StatCard";
 import { FileText, FileClock, CreditCard, Truck } from "lucide-react";
-import NotificationPanel from "@/components/dashboard/NotificationPanel";
 import RequirementRequestTable from "@/components/customer/dashboard/RequestTable";
+import TrackingTimeline from "@/components/customer/dashboard/TrackingTimeline"
+import QuotationChart from "@/components/customer/dashboard/QuotationChart"
 
 export default function CustomerDashboard() {
     return (
@@ -27,9 +28,9 @@ export default function CustomerDashboard() {
                     </header>
 
                     <div className="flex flex-col xl:flex-row gap-6 items-start">
-                        {/* Left Column: Stats & Activity */}
+                        {/* LEFT COLUMN: Main Content */}
                         <div className="flex-1 flex flex-col gap-8 w-full">
-                            {/* Dashboard Content Grid */}
+                            {/* 1. Stats Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 <StatCard
                                     title="Active Orders"
@@ -57,16 +58,22 @@ export default function CustomerDashboard() {
                                 />
                             </div>
 
-                            {/* Recent Activity Section */}
-                            <RequirementRequestTable />
+                            {/* 2. Activity Section: Table + Timeline */}
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                                <div className="lg:col-span-2 w-full">
+                                    <RequirementRequestTable />
+                                </div>
+                                <div className="lg:col-span-1 w-full">
+                                    <TrackingTimeline />
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Right Column: Notification Panel */}
-                        <div className="shrink-0 w-full xl:w-auto">
-                            <NotificationPanel />
+                        {/* RIGHT COLUMN: Sidebar (Chart + Notifications) */}
+                        <div className="w-full xl:w-[320px] shrink-0 flex flex-col gap-6">
+                            <QuotationChart />
                         </div>
                     </div>
-
                 </div>
             </main>
         </div>
