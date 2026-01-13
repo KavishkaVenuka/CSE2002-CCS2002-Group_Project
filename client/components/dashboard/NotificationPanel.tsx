@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { FileText, CreditCard, PackageCheck, Truck, Bell, X, CheckCheck } from "lucide-react";
+import { FileText, CreditCard, Truck, Bell, X, CheckCheck } from "lucide-react";
 
 type NotificationType = "quotation" | "payment" | "delivery" | "system";
 
@@ -77,7 +77,7 @@ export default function NotificationPanel() {
     };
 
     return (
-        <div className="w-full max-w-sm bg-[#0f1218] rounded-3xl border border-gray-800 shadow-2xl overflow-hidden flex flex-col h-[500px]">
+        <div className="w-[480px] bg-[#0f1218] rounded-3xl border border-gray-800 shadow-2xl overflow-hidden flex flex-col h-[500px]">
             {/* Header */}
             <div className="p-5 border-b border-gray-800/50 flex justify-between items-center sticky top-0 bg-[#0f1218]/95 backdrop-blur-sm z-10">
                 <div className="flex items-center gap-2">
