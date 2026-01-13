@@ -11,19 +11,22 @@ import {
     User,
     Settings,
     LogOut,
-    Layers
+    Layers,
+    Truck,
+    Receipt,
+    CheckCircle
 } from "lucide-react";
 
 export default function CustomerNavbar() {
     const menuItems = [
         { name: "Dashboard", icon: LayoutDashboard, active: true },
         { name: "Send Requirements", icon: Send, active: false },
-        { name: "My Quotations", icon: FileText, active: false },
+        { name: "Quotations", icon: FileText, active: false },
+        { name: "Delivery Tracking", icon: Truck, active: false },
+        { name: "Invoices", icon: Receipt, active: false },
         { name: "My Orders", icon: ShoppingBag, active: false },
         { name: "Payments", icon: CreditCard, active: false },
-        { name: "Messages / Support", icon: MessageSquare, active: false },
-        { name: "Profile / Settings", icon: User, active: false },
-        { name: "Settings", icon: Settings, active: false },
+        { name: "Order Confirmation", icon: CheckCircle, active: false },
     ];
 
     return (
