@@ -14,17 +14,21 @@ export async function createSupplier(req, res) {
         const hashedPassword = bcrypt.hashSync(data.password, 10);
 
         const supplier = new Supplier({
-                companyName: data.companyName,
-                businessRegistrationNumber: data.businessRegistrationNumber,
-                vatNumber: data.vatNumber,
-                contactNumber: data.contactNumber,
-                email: data.email,
-                address: data.address,
-                businessType: data.businessType,
-                natureOfBusiness: data.natureOfBusiness,
-                productCategories: data.productCategories || [],
-                password: hashedPassword,
-                role: data.role || "Supplier", // default role
+            companyName: data.companyName,
+            businessRegistrationNumber: data.businessRegistrationNumber,
+            vatNumber: data.vatNumber,
+            contactNumber: data.contactNumber,
+            email: data.email,
+            address: data.address,
+            businessType: data.businessType,
+            natureOfBusiness: data.natureOfBusiness,
+            productCategories: data.productCategories || [],
+            contactPersonName: data.contactPersonName,
+            contactPersonPhone: data.contactPersonPhone,
+            bankDetails: data.bankDetails,
+            paymentTerms: data.paymentTerms,
+            password: hashedPassword,
+            role: data.role || "Supplier", // default role
         });
 
         await supplier.save();
@@ -48,24 +52,24 @@ export async function loginSupplier(req, res) {
     try {
         const { email, password } = req.body;
 
-       
+
         if (!email || !password) {
             return res.status(400).json({ message: "Email and password are required" });
         }
 
-       
+
         const supplier = await Supplier.findOne({ email });
         if (!supplier) {
             return res.status(404).json({ message: "Supplier not found" });
         }
 
-       
+
         const isPasswordCorrect = await bcrypt.compare(password, supplier.password);
         if (!isPasswordCorrect) {
             return res.status(401).json({ message: "Invalid password" });
         }
 
-    
+
         const payload = {
             id: supplier._id,
             email: supplier.email,
@@ -73,10 +77,14 @@ export async function loginSupplier(req, res) {
             businessRegistrationNumber: supplier.businessRegistrationNumber,
             businessType: supplier.businessType,
             contactNumber: supplier.contactNumber,
+            contactPersonName: supplier.contactPersonName,
+            contactPersonPhone: supplier.contactPersonPhone,
+            bankDetails: supplier.bankDetails,
+            paymentTerms: supplier.paymentTerms,
             role: supplier.role || "Supplier",
         };
 
-      
+
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
             expiresIn: "150h",
         });
@@ -84,7 +92,7 @@ export async function loginSupplier(req, res) {
         return res.status(200).json({
             message: "Login successful",
             token,
-            supplier: payload, 
+            supplier: payload,
         });
 
     } catch (error) {

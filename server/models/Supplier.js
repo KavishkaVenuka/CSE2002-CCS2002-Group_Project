@@ -48,7 +48,7 @@ const SupplierSchema = new mongoose.Schema(
       required: true,
     },
 
-     role: {
+    role: {
       type: String,
       enum: ["Supplier", "Customer", "Admin"],
       default: "Supplier", // Default role
@@ -64,6 +64,27 @@ const SupplierSchema = new mongoose.Schema(
         type: String,
       },
     ],
+
+    contactPersonName: {
+      type: String,
+      required: true,
+    },
+
+    contactPersonPhone: {
+      type: String,
+      required: true,
+    },
+
+    bankDetails: {
+      bankName: { type: String },
+      accountNumber: { type: String },
+      branch: { type: String },
+    },
+
+    paymentTerms: {
+      type: String,
+    },
+
   },
   { timestamps: true }
 );
