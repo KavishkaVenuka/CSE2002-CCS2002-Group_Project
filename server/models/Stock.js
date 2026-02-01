@@ -9,12 +9,6 @@ const stockItemSchema = new mongoose.Schema(
       trim: true,
     },
 
-    description: {
-      type: String,
-      trim: true,
-      default: null,
-    },
-
     category: {
       type: String,
       required: true,
@@ -22,6 +16,12 @@ const stockItemSchema = new mongoose.Schema(
     },
 
     brand: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
+    description: {
       type: String,
       trim: true,
       default: null,
