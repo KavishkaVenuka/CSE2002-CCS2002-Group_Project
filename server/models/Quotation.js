@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 
-const orderSchema = new mongoose.Schema({
+const quotationSchema = new mongoose.Schema({
     
-    orderID :{
+    quotationID :{
         type:String,
         required:true,
         unique: true
@@ -51,46 +51,12 @@ const orderSchema = new mongoose.Schema({
             image: {type:String, required:true}
 
         }
-    ],
-    totalCost:{
-        type:Number,
-        required:true
-    },
-    delivery:{
-        trackingNumber:{
-            type:String,
-            required:false
-        },
-        estimatedDeliveryDate:{
-            type:Date,
-            required:false
-        },
-        deliveryAddress:{
-            type:String,
-            required:false
-        }
-    },
-    statusDates:{
-        quotationAcceptedDate:{
-            type:Date,
-            required:false
-        },
-        dispatchedDate:{
-            type:Date,
-            required:false
-        },
-        inTransitDate:{
-            type:Date,
-            required:false
-        }
-    },
-    deliveryProof:{
-        type:String,
-        required:false
-    }
+    ]
+
+
 
 })
 
-const Order = mongoose.model('Order', orderSchema);
+const Quotation = mongoose.model('Quotation', quotationSchema);
 
-export default Order;
+export default Quotation;

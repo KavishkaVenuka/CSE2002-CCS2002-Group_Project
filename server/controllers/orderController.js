@@ -1,7 +1,6 @@
 import Order from "../models/Order.js";
-import Product from "../models/Product.js";
 
-export async function createOrder(req, res) {
+exports.createOrder = async (req, res) => {
 
     if(req.user == null){
         return res.status(401).json({ message: "Authentication required" });
@@ -81,10 +80,10 @@ export async function createOrder(req, res) {
 
         }
 
-export async function getOrders(req, res) {
+exports.getOrders = async (req, res) => {
     if(req.user == null){
         return res.status(401).json({ message: "Authentication required" });        
-}
+    }
     if(req.user.role === "admin"){
         const orders = await Order.find().sort({ date: -1 });
         return res.json(orders);
@@ -92,13 +91,9 @@ export async function getOrders(req, res) {
         const orders = await Order.find({ email: req.user.email }).sort({ date: -1 });
         return res.json(orders);
     }
-     
-   
-
-
 }    
 
-export async function updateOrder(req, res) {
+exports.updateOrder = async (req, res) => {
     if(req.user == null || req.user.role !== "admin"){
         return res.status(401).json({ message: "Authentication required" });         
     }
@@ -114,5 +109,304 @@ export async function updateOrder(req, res) {
     return res.json({ message: "Order updated successfully" });
     }catch(err){
         return res.status(500).json({ message: "Server error", error: err.message });
+    }
+}
+
+exports.getActiveOrderCount = async (req, res) => {
+    try{
+        const email = req.params.email;
+        const activeOrderCount = await Order.countDocuments({
+             email: email, 
+             status: { $in: ["pending", "processing", "in_transit"] } 
+        });
+        
+        res.status(200).json({ success: true, activeOrderCount: activeOrderCount });
+
+    } catch (err) {
+        res.status(500).json({
+             success: false, 
+             message: "Error getting active order count", 
+             error: err.message });
+    }
+}
+
+exports.getDeliveredOrderCount = async (req, res) => {
+    try{
+        const email = req.params.email;
+        const activeOrderCount = await Order.countDocuments({
+             email: email, 
+             status: { $in: ["delivered"] } 
+        });
+        
+        res.status(200).json({ success: true, deliveredOrderCount: deliveredOrderCount });
+
+    } catch (err) {
+        res.status(500).json({
+             success: false, 
+             message: "Error getting delivered order count", 
+             error: err.message });
+    }
+}
+
+exports.getRecentOrders = async (req, res) => {
+    try{
+        const email = req.params.email;
+        const recentOrders = await Order.find({ email: email }).sort({ date: -1 }).limit(3).select('orderID status date totalCost items');
+
+        const formattedOrders = recentOrders.map(order => ({
+            orderID: order.orderID,
+            status: order.status,
+            date: order.date,
+            totalCost: order.totalCost,
+            itemCount: order.items.length
+        }));
+
+        res.status(200).json({ success: true, recentOrders: formattedOrders });
+
+    } catch (err) {
+        res.status(500).json({
+             success: false, 
+             message: "Error getting recent orders", 
+             error: err.message });
+    }
+}
+
+exports.getPendingOrderCountByCustomer = async (req, res) => {
+    try{
+        const email = req.params.email;
+        const pendingOrderCount = await Order.countDocuments({
+             email: email, 
+             status: "pending" 
+        });
+        
+        res.status(200).json({ success: true, pendingOrderCount: pendingOrderCount });
+
+    } catch (err) {
+        res.status(500).json({
+             success: false, 
+             message: "Error getting pending order count", 
+             error: err.message });
+    }
+}
+
+exports.getProcessingOrderCountByCustomer = async (req, res) => {
+    try{
+        const email = req.params.email;
+        const processingOrderCount = await Order.countDocuments({
+             email: email, 
+             status: "processing" 
+        });
+        
+        res.status(200).json({ success: true, processingOrderCount: processingOrderCount });
+    } catch (err) {
+        res.status(500).json({
+             success: false, 
+             message: "Error getting processing order count", 
+             error: err.message });
+    }
+}
+
+exports.getDispatchedOrderCountByCustomer = async (req, res) => {
+    try{
+        const email = req.params.email;
+        const dispatchedOrderCount = await Order.countDocuments({
+             email: email, 
+             status: "in_transit" 
+        });
+        
+        res.status(200).json({ success: true, dispatchedOrderCount: dispatchedOrderCount });
+    } catch (err) {
+        res.status(500).json({
+             success: false, 
+             message: "Error getting dispatched order count", 
+             error: err.message });
+    }
+}
+
+exports.getDeliveredOrderCountByCustomer = async (req, res) => {
+    try{
+        const email = req.params.email;
+        const deliveredOrderCount = await Order.countDocuments({
+             email: email, 
+             status: "delivered" 
+        });
+        
+        res.status(200).json({ success: true, deliveredOrderCount: deliveredOrderCount });
+    } catch (err) {
+        res.status(500).json({
+             success: false, 
+             message: "Error getting delivered order count", 
+             error: err.message });
+    }
+}
+
+exports.getPendingOrdersByCustomer = async (req, res) => {
+    try{
+        const { email } = req.query;
+        if(!email){
+            return res.status(400).json({ success: false, message: "Email is required" });
+        }
+        const pendingOrders = await Order.find({
+            email: email,
+            status: "pending"
+        }).sort({ date: -1 });
+
+        const formattedOrders = pendingOrders.map(order => ({
+            orderID: order.orderID,
+            status: order.status,
+            quotationRef: order.quotationRef || null,
+            date: order.date,
+            totalCost: order.totalCost,
+            itemCount: order.items.length
+        }));
+        res.status(200).json({ success: true, pendingOrders: formattedOrders });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Error getting pending orders",
+            error: err.message
+        });
+    }
+}
+
+exports.getProcessingOrdersByCustomer = async (req, res) => {
+    try{
+        const { email } = req.query;
+        if(!email){
+            return res.status(400).json({ success: false, message: "Email is required" });
+        }
+        const processingOrders = await Order.find({
+            email: email,
+            status: "processing"
+        }).sort({ date: -1 });
+
+        const formattedOrders = processingOrders.map(order => ({
+            orderID: order.orderID,
+            status: order.status,
+            quotationRef: order.quotationRef || null,
+            date: order.date,
+            totalCost: order.totalCost,
+            itemCount: order.items.length
+        }));
+        res.status(200).json({ success: true, processingOrders: formattedOrders });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Error getting processing orders",
+            error: err.message
+        });
+    }
+}
+
+exports.getDispatchedOrdersByCustomer = async (req, res) => {
+    try{
+        const { email } = req.query;
+        if(!email){
+            return res.status(400).json({ success: false, message: "Email is required" });
+        }
+        const dispatchedOrders = await Order.find({
+            email: email,
+            status: "dispatched"
+        }).sort({ date: -1 });
+
+        const formattedOrders = dispatchedOrders.map(order => ({
+            orderID: order.orderID,
+            status: order.status,
+            quotationRef: order.quotationRef || null,
+            date: order.date,
+            totalCost: order.totalCost,
+            itemCount: order.items.length
+        }));
+        res.status(200).json({ success: true, dispatchedOrders: formattedOrders });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Error getting dispatched orders",
+            error: err.message
+        });
+    }
+}
+
+exports.getInTransitOrdersByCustomer = async (req, res) => {
+    try{
+        const { email } = req.query;
+        if(!email){
+            return res.status(400).json({ success: false, message: "Email is required" });
+        }
+        const inTransitOrders = await Order.find({
+            email: email,
+            status: "in-transit"
+        }).sort({ date: -1 });
+
+        const formattedOrders = inTransitOrders.map(order => ({
+            orderID: order.orderID,
+            status: order.status,
+            quotationRef: order.quotationRef || null,
+            date: order.date,
+            totalCost: order.totalCost,
+            itemCount: order.items.length
+        }));
+        res.status(200).json({ success: true, inTransitOrders: formattedOrders });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Error getting in-transit orders",
+            error: err.message
+        });
+    }
+}
+
+exports.getDeliveredOrdersByCustomer = async (req, res) => {
+    try{
+        const { email } = req.query;
+        if(!email){
+            return res.status(400).json({ success: false, message: "Email is required" });
+        }
+        const deliveredOrders = await Order.find({
+            email: email,
+            status: "delivered"
+        }).sort({ date: -1 });
+
+        const formattedOrders = deliveredOrders.map(order => ({
+            orderID: order.orderID,
+            status: order.status,
+            quotationRef: order.quotationRef || null,
+            date: order.date,
+            totalCost: order.totalCost,
+            itemCount: order.items.length
+        }));
+        res.status(200).json({ success: true, deliveredOrders: formattedOrders });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Error getting delivered orders",
+            error: err.message
+        });
+    }
+}
+
+exports.uploadDeliveryProof = async (req, res) => {
+    try{
+        const { orderID } = req.body;
+        if(!orderID || !req.file){
+            return res.status(400).json({ success: false, message: "Order ID and delivery proof are required" });
+        }
+
+        const order = await Order.findOne({ orderID: orderID });
+        if(!order){
+            return res.status(404).json({ success: false, message: "Order not found" });
+        }
+        
+        order.deliveryProof = req.file.path;
+        await order.save();
+
+        res.status(200).json({ success: true, message: "Delivery proof uploaded successfully" });
+    } 
+    catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Error uploading delivery proof",
+            error: err.message
+        });
     }
 }
