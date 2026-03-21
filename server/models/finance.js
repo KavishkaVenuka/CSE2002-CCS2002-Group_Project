@@ -4,14 +4,14 @@ const financeSchema = new mongoose.Schema(
   {
     transaction_type: {
       type: String,
+      enum: ['fund', 'loan', 'cash_in', 'cash_out', 'bank_deposit', 'bank_withdraw'],
       required: true,
-      enum: ["income", "expense"],
       trim: true,
     },
     amount: {
       type: mongoose.Schema.Types.Decimal128,
       required: true,
-      min: 0,
+      default: 0,
     },
     description: {
       type: String,
@@ -22,35 +22,28 @@ const financeSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    category: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-    payment_method: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-    status: {
-      type: String,
-      enum: ["paid", "pending"],
-      default: "paid",
-    },
-    module: {
-      type: String,
-      default: "",
-      trim: true,
-    },
     notes: {
       type: String,
-      default: "",
       trim: true,
+      default: '',
+    },
+    bankAccountId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "BankAccount",
+      default: null,
+    },
+    bankAccountName: {
+      type: String,
+      trim: true,
+      default: '',
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
-const Finance = mongoose.model("Finance", financeSchema);
+const Finance =
+  mongoose.models.Finance || mongoose.model("Finance", financeSchema);
 
 export default Finance;

@@ -1,4 +1,5 @@
 import Finance from "../models/finance.js";
+import BankAccount from "../models/bankAccount.js";
 
 export const addTransaction = async (req, res) => {
   try {
@@ -7,42 +8,90 @@ export const addTransaction = async (req, res) => {
       amount,
       description,
       date,
-      category,
-      payment_method,
-      status,
-      module,
       notes,
+      bankAccountId,
+      bankAccountName,
     } = req.body;
 
-    if (!transaction_type || !amount || !description || !date) {
-      return res.status(400).json({
-        success: false,
-        message: "transaction_type, amount, description, and date are required",
-      });
+    const numericAmount = Number(amount);
+
+    // 🔴 BANK WITHDRAW VALIDATION
+    if (transaction_type === 'bank_withdraw') {
+      if (!bankAccountId) {
+        return res.status(400).json({
+          success: false,
+          message: "Bank account is required",
+        });
+      }
+
+      const balance = await getBankBalance(bankAccountId);
+
+      if (numericAmount > balance) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient bank balance. Available: ${balance}`,
+        });
+      }
     }
 
+    // 🔴 BANK DEPOSIT VALIDATION (optional advanced)
+    if (transaction_type === 'bank_deposit') {
+      const cashIn = await Finance.aggregate([
+        { $match: { transaction_type: 'cash_in' } },
+        { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }
+      ]);
+
+      const cashOut = await Finance.aggregate([
+        { $match: { transaction_type: 'cash_out' } },
+        { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }
+      ]);
+
+      const withdraw = await Finance.aggregate([
+        { $match: { transaction_type: 'bank_withdraw' } },
+        { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }
+      ]);
+
+      const deposit = await Finance.aggregate([
+        { $match: { transaction_type: 'bank_deposit' } },
+        { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }
+      ]);
+
+      const cashBalance =
+        (cashIn[0]?.total || 0) +
+        (withdraw[0]?.total || 0) -
+        (cashOut[0]?.total || 0) -
+        (deposit[0]?.total || 0);
+
+      if (numericAmount > cashBalance) {
+        return res.status(400).json({
+          success: false,
+          message: `Not enough cash in hand. Available: ${cashBalance}`,
+        });
+      }
+    }
+
+    // ✅ CREATE TRANSACTION
     const transaction = await Finance.create({
       transaction_type,
       amount,
       description,
       date,
-      category: category || "",
-      payment_method: payment_method || "",
-      status: status || "paid",
-      module: module || "",
-      notes: notes || "",
+      notes,
+      bankAccountId,
+      bankAccountName,
     });
 
     res.status(201).json({
       success: true,
       message: "Transaction added successfully",
-      data: transaction,
+      transaction,
     });
+
   } catch (error) {
-    console.error("Error adding transaction:", error);
+    console.error(error);
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Error adding transaction",
     });
   }
 };
@@ -177,4 +226,27 @@ export const deleteTransaction = async (req, res) => {
       message: error.message,
     });
   }
+};
+
+const getBankBalance = async (bankAccountId) => {
+  const bank = await BankAccount.findById(bankAccountId);
+
+  if (!bank) return 0;
+
+  const openingBalance = Number(bank.opening_balance || 0);
+
+  const deposits = await Finance.aggregate([
+    { $match: { bankAccountId: bank._id, transaction_type: 'bank_deposit' } },
+    { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }
+  ]);
+
+  const withdrawals = await Finance.aggregate([
+    { $match: { bankAccountId: bank._id, transaction_type: 'bank_withdraw' } },
+    { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }
+  ]);
+
+  const totalDeposits = deposits[0]?.total || 0;
+  const totalWithdrawals = withdrawals[0]?.total || 0;
+
+  return openingBalance + totalDeposits - totalWithdrawals;
 };

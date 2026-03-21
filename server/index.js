@@ -13,6 +13,7 @@ import dotenv from "dotenv"
 // import supplierRouter from "./routes/supplierRouter.js"
 import stockRouter from "./routes/stockRouter.js"
 import financeRouter from "./routes/financeRouter.js"
+import bankAccountRoutes from "./routes/bankAccountRoutes.js"
 // import invoiceRouter from "./routes/invoiceRouter.js"  
 
 dotenv.config()
@@ -64,7 +65,8 @@ app.use(express.json())
 // app.use("/api/customers", customerRouter)
 // app.use("/api/suppliers", supplierRouter)
 app.use("/api/stocks", stockRouter)
-app.use("/api/finance", financeRouter)  
+app.use("/api/finance", financeRouter)
+app.use("/api/bankAccounts", bankAccountRoutes)  
 // app.use("/api/orders", orderRoutes)
 // app.use("/api/products", productRouter)
 // app.use("/api/requirements", requirementRoutes)
