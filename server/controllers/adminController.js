@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
 
-export async function createAdmin(req, res) {
+export async function   createAdmin(req, res) {
     try {
         const data = req.body;
 
