@@ -8,9 +8,10 @@ import dotenv from "dotenv"
 // import orderRouter from "./routes/orderRouter.js"
 // import requirementRouter from "./routes/requirementRouter.js"
 // import quotationRouter from "./routes/quotationRouter.js"
-import adminRouter from "./routes/adminRouter.js"
+// import adminRouter from "./routes/adminRouter.js"
 // import customerRouter from "./routes/customerRouter.js"
 // import supplierRouter from "./routes/supplierRouter.js"
+import userRouter from "./routes/userRouter.js"
 import stockRouter from "./routes/stockRouter.js"
 import financeRouter from "./routes/financeRouter.js"
 import bankAccountRoutes from "./routes/bankAccountRoutes.js"
@@ -62,8 +63,9 @@ app.use(express.json())
 //     }
 // )
 
-app.use("/api/admin", adminRouter)  
+// app.use("/api/admin", adminRouter)  
 // app.use("/api/customers", customerRouter)
+app.use("/api/users", userRouter)
 // app.use("/api/suppliers", supplierRouter)
 app.use("/api/stocks", stockRouter)
 app.use("/api/finance", financeRouter)
