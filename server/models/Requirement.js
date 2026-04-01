@@ -13,4 +13,5 @@ const requirementSchema = new mongoose.Schema({
     attachedDocument: { type: String },
 }, { timestamps: true });
 
-module.exports = mongoose.model('Requirement', requirementSchema);
+const Requirement = mongoose.model('Requirement', requirementSchema);
+export default Requirement;
