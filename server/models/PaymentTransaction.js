@@ -59,6 +59,18 @@ const paymentTransactionSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
+    // Supplier-specific: links payment to a purchase order ID (po_id string)
+    purchaseOrderRef: {
+      type: String,
+      default: "",
+    },
+
+    // Supplier-specific: links payment to a bill ID (bill_id string)
+    billRef: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

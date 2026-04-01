@@ -70,6 +70,19 @@ const stockItemSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    // Supplier who provides this stock item
+    supplierId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Supplier",
+      default: null,
+    },
+
+    supplierEmail: {
+      type: String,
+      default: null,
+      trim: true,
+    },
   },
   { 
     timestamps: true 
