@@ -1,31 +1,33 @@
 import Requirement from "../models/Requirement.js";
-import User from "../models/User.js";
 import mongoose from "mongoose";
 
 // ==========================================
-// 1. GET ALL CUSTOMER REQUIREMENTS (For Admin)
+// 1. GET ALL REQUIREMENTS
+//    GET /api/requirements?customerId=&status=&search=
+//    Admin → all records | Customer → own records only
 // ==========================================
-// මෙමගින් Admin හට සියලුම පාරිභෝගිකයින්ගේ දත්ත දැකගත හැක.
 export const getAllRequirements = async (req, res) => {
     try {
         const { status, search, customerId } = req.query;
 
         const filter = {};
-        
-        // පාරිභෝගිකයෙකු තමන්ගේ දත්ත බලනවා නම් customerId අනුව filter වේ.
-        // Admin බලනවා නම් customerId අවශ්‍ය නැත, එවිට සියලුම දත්ත පෙන්වයි.
+
+        // Customer ID ලබා දුන්නා නම් ඒ අනුව filter කරයි
         if (customerId) filter.customerId = customerId;
+
+        // Status filter ("All Requests" නම් skip)
         if (status && status !== "All Requests") filter.status = status.toLowerCase();
-        
-        // ID එකෙන් search කිරීමට
-        if (search) filter._id = search;
+
+        // Requirement ID search (exact ObjectId)
+        if (search && mongoose.Types.ObjectId.isValid(search)) {
+            filter._id = search;
+        }
 
         const requirements = await Requirement.find(filter)
-            .populate("customerId", "fullName companyName email") // User model එකෙන් දත්ත ලබා ගැනීම
+            .populate("customerId", "fullName companyName email")
             .sort({ createdAt: -1 });
 
         const formatted = requirements.map((r) => {
-            // මුළු ප්‍රමාණය ගණනය කිරීම
             const totalQty = r.requirements?.reduce(
                 (sum, item) => sum + (item.quantity || 0), 0
             ) || 0;
@@ -34,11 +36,12 @@ export const getAllRequirements = async (req, res) => {
                 id: r._id,
                 requirementId: `REQ-${r._id.toString().slice(-5).toUpperCase()}`,
                 customerName: r.customerId?.fullName || "Unknown Customer",
-                companyName: r.customerId?.companyName || "N/A",
-                items: r.requirements?.map(i => i.itemName).join(", "), // පින්තූරයේ ඇති ලෙස summary එකක්
+                companyName:  r.customerId?.companyName || "N/A",
+                items:        r.requirements?.map(i => i.itemName).join(", "),
                 totalQty,
-                requestDate: r.createdAt,
-                status: r.status, // pending, quoted, accepted, delivered
+                requestDate:  r.createdAt,
+                createdAt:    r.createdAt,
+                status:       r.status,
                 attachedDocument: r.attachedDocument || null,
             };
         });
@@ -54,11 +57,44 @@ export const getAllRequirements = async (req, res) => {
 };
 
 // ==========================================
-// 2. GET REQUIREMENT BY ID (Admin & Customer)
+// 2. GET STATS
+//    GET /api/requirements/stats?customerId=
+//    Frontend stats boxes සඳහා — total, pending, quoted/accepted/delivered
+// ==========================================
+export const getRequirementStats = async (req, res) => {
+    try {
+        const { customerId } = req.query;
+        const matchStage = customerId
+            ? { customerId: new mongoose.Types.ObjectId(customerId) }
+            : {};
+
+        const stats = await Requirement.aggregate([
+            { $match: matchStage },
+            { $group: { _id: "$status", count: { $sum: 1 } } },
+        ]);
+
+        const result = { total: 0, new: 0, completed: 0, in_progress: 0 };
+
+        stats.forEach(({ _id, count }) => {
+            result.total += count;
+            if (_id === "pending")                     result.new         += count;
+            if (_id === "quoted" || _id === "accepted") result.in_progress += count;
+            if (_id === "delivered")                   result.completed   += count;
+        });
+
+        return res.status(200).json({ success: true, stats: result });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ==========================================
+// 3. GET SINGLE REQUIREMENT BY ID
+//    GET /api/requirements/:id?customerId=
 // ==========================================
 export const getRequirementById = async (req, res) => {
     try {
-        const { customerId } = req.query; 
+        const { customerId } = req.query;
 
         const requirement = await Requirement.findById(req.params.id)
             .populate("customerId", "fullName email contactNumber companyName address");
@@ -67,8 +103,7 @@ export const getRequirementById = async (req, res) => {
             return res.status(404).json({ success: false, message: "Requirement not found" });
         }
 
-        // Security: පාරිභෝගිකයෙකු නම් වෙනත් අයගේ දත්ත බැලීම වැලැක්වීම
-        // Admin හට ඕනෑම එකක් බැලිය හැක
+        // Security: Admin හට ඕනෑම record බැලිය හැක; Customer ට ස්වකීය record පමණි
         const isAdmin = req.user && req.user.role === "Admin";
         if (!isAdmin && customerId && requirement.customerId._id.toString() !== customerId) {
             return res.status(403).json({ success: false, message: "Access Denied" });
@@ -77,13 +112,13 @@ export const getRequirementById = async (req, res) => {
         return res.status(200).json({
             success: true,
             requirement: {
-                id: requirement._id,
-                requirementId: `REQ-${requirement._id.toString().slice(-5).toUpperCase()}`,
-                customer: requirement.customerId, // මෙහි සම්පූර්ණ විස්තර ඇත
-                status: requirement.status,
-                createdAt: requirement.createdAt,
-                items: requirement.requirements,
-                attachedDocument: requirement.attachedDocument || null
+                id:               requirement._id,
+                requirementId:    `REQ-${requirement._id.toString().slice(-5).toUpperCase()}`,
+                customer:         requirement.customerId,
+                status:           requirement.status,
+                createdAt:        requirement.createdAt,
+                items:            requirement.requirements,
+                attachedDocument: requirement.attachedDocument || null,
             },
         });
     } catch (error) {
@@ -92,7 +127,10 @@ export const getRequirementById = async (req, res) => {
 };
 
 // ==========================================
-// 3. CREATE REQUIREMENT (Customer Only)
+// 4. CREATE REQUIREMENT
+//    POST /api/requirements   (multipart/form-data)
+//    Body: requirements (JSON string), customerId
+//    File: attachedDocument (optional)
 // ==========================================
 export const createRequirement = async (req, res) => {
     try {
@@ -102,34 +140,45 @@ export const createRequirement = async (req, res) => {
             return res.status(400).json({ success: false, message: "Customer ID is required" });
         }
 
-        const newRequirement = new Requirement({ 
-            requirements: JSON.parse(requirements), // FormData භාවිතා කරන්නේ නම් stringify කර එවිය හැක
+        if (!requirements) {
+            return res.status(400).json({ success: false, message: "At least one requirement item is required" });
+        }
+
+        const parsedItems = JSON.parse(requirements);
+
+        const newRequirement = new Requirement({
             customerId,
+            requirements: parsedItems,
             attachedDocument: req.file ? req.file.path : null,
-            status: "pending" 
+            status: "pending",
         });
 
-        const savedRequirement = await newRequirement.save();
+        const saved = await newRequirement.save();
 
-        res.status(201).json({
-            success: true, 
-            message: "Request submitted successfully", 
-            data: savedRequirement 
+        return res.status(201).json({
+            success: true,
+            message: "Requirement submitted successfully",
+            data: saved,
         });
-
     } catch (error) {
         res.status(400).json({ success: false, message: error.message });
     }
-}
+};
 
 // ==========================================
-// 4. UPDATE STATUS (Admin Only)
+// 5. UPDATE STATUS  (Admin Only)
+//    PATCH /api/requirements/:id/status
+//    Body: { status }
 // ==========================================
-// පින්තූරයේ ඇති "Send Quote" හෝ "Update Delivery" වැනි button සඳහා
 export const updateRequirementStatus = async (req, res) => {
     try {
         const { status } = req.body;
         const { id } = req.params;
+
+        const validStatuses = ["pending", "quoted", "accepted", "delivered", "rejected"];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ success: false, message: `Invalid status. Must be one of: ${validStatuses.join(", ")}` });
+        }
 
         const updated = await Requirement.findByIdAndUpdate(
             id,
@@ -137,10 +186,14 @@ export const updateRequirementStatus = async (req, res) => {
             { new: true }
         );
 
-        res.status(200).json({
+        if (!updated) {
+            return res.status(404).json({ success: false, message: "Requirement not found" });
+        }
+
+        return res.status(200).json({
             success: true,
-            message: `Status updated to ${status}`,
-            data: updated
+            message: `Status updated to "${status}"`,
+            data: updated,
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
