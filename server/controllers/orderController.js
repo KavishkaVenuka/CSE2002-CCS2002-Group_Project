@@ -1,4 +1,5 @@
 import Order from "../models/Order.js";
+import Product from "../models/Product.js";
 
 exports.createOrder = async (req, res) => {
 
@@ -410,3 +411,389 @@ exports.uploadDeliveryProof = async (req, res) => {
         });
     }
 }
+
+// ================================
+//   GET ALL PURCHASE ORDERS FOR THIS SUPPLIER
+// ================================
+exports.getSupplierOrders = async (req, res) => {
+    try {
+        const supplierEmail = req.user.email;
+
+        const orders = await Order.find({
+            supplierEmail,
+            orderType: "purchase",
+        }).sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            orders,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Error getting supplier orders",
+            error: error.message,
+        });
+    }
+};
+
+// ================================
+//   GET SINGLE PURCHASE ORDER
+// ================================
+exports.getSupplierOrderById = async (req, res) => {
+    try {
+        const supplierEmail = req.user.email;
+
+        const order = await Order.findOne({
+            _id:           req.params.id,
+            supplierEmail,
+            orderType:     "purchase",
+        });
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            order,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Error getting supplier order",
+            error: error.message,
+        });
+    }
+};
+
+// ================================
+//   UPDATE PURCHASE ORDER STATUS
+// ================================
+exports.updateSupplierOrderStatus = async (req, res) => {
+    try {
+        const supplierEmail     = req.user.email;
+        const { status, notes } = req.body;
+
+        const allowed = ["confirmed", "dispatched", "delivered", "cancelled"];
+        if (!status || !allowed.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: `status must be one of: ${allowed.join(", ")}`,
+            });
+        }
+
+        const order = await Order.findOne({
+            _id:       req.params.id,
+            supplierEmail,
+            orderType: "purchase",
+        });
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found",
+            });
+        }
+
+        order.status = status;
+        if (notes) order.notes = notes;
+
+        // Record status-change dates using the existing statusDates field
+        if (status === "dispatched") {
+            order.statusDates = order.statusDates || {};
+            order.statusDates.dispatchedDate = new Date();
+        }
+        if (status === "delivered") {
+            order.statusDates = order.statusDates || {};
+            order.statusDates.inTransitDate = new Date();
+        }
+
+        await order.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Order status updated successfully",
+            order: {
+                id:     order._id,
+                po_id:  order.po_id,
+                status: order.status,
+            },
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Error updating supplier order status",
+            error: error.message,
+        });
+    }
+};
+
+// ================================
+//   CUSTOMER ORDERS PAGE - STAT CARDS
+// ================================
+exports.getSupplierOrderStats = async (req, res) => {
+    try {
+        const supplierEmail = req.user.email;
+
+        const pending      = await Order.countDocuments({ supplierEmail, orderType: "purchase", status: "pending" });
+        const acknowledged = await Order.countDocuments({ supplierEmail, orderType: "purchase", status: "confirmed" });
+        const preparing    = await Order.countDocuments({ supplierEmail, orderType: "purchase", status: "preparing" });
+        const ready        = await Order.countDocuments({ supplierEmail, orderType: "purchase", status: "ready" });
+        const dispatched   = await Order.countDocuments({ supplierEmail, orderType: "purchase", status: "dispatched" });
+
+        return res.status(200).json({
+            success: true,
+            stats: { pending, acknowledged, preparing, ready, dispatched },
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ================================
+//   CUSTOMER ORDERS PAGE - TABLE
+// ================================
+exports.getSupplierOrdersTable = async (req, res) => {
+    try {
+        const supplierEmail = req.user.email;
+        const { status, search } = req.query;
+
+        const filter = { supplierEmail, orderType: "purchase" };
+        if (status) filter.status = status;
+        if (search) {
+            filter.$or = [
+                { po_id:   { $regex: search, $options: "i" } },
+                { orderID: { $regex: search, $options: "i" } },
+            ];
+        }
+
+        const orders = await Order.find(filter).sort({ createdAt: -1 });
+
+        const formatted = orders.map((o) => ({
+            id:           o._id,
+            po_id:        o.po_id,
+            customerName: o.name || "Hardware Store",
+            totalItems:   o.items?.length || 0,
+            totalAmount:  o.total,
+            orderDate:    o.date,
+            status:       o.status,
+            items:        o.items,
+        }));
+
+        return res.status(200).json({ success: true, orders: formatted });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ================================
+//   ACKNOWLEDGE ORDER
+// ================================
+exports.acknowledgeSupplierOrder = async (req, res) => {
+    try {
+        const supplierEmail = req.user.email;
+
+        const order = await Order.findOne({
+            _id:           req.params.id,
+            supplierEmail,
+            orderType:     "purchase",
+            status:        "pending",
+        });
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Pending order not found",
+            });
+        }
+
+        order.status = "confirmed";
+        order.statusDates = order.statusDates || {};
+        order.statusDates.quotationAcceptedDate = new Date();
+        await order.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Order acknowledged successfully",
+            order: { id: order._id, po_id: order.po_id, status: order.status },
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ================================
+//   DELIVERY PROGRESS PAGE - ORDER DROPDOWN
+// ================================
+exports.getDispatchOrderList = async (req, res) => {
+    try {
+        const supplierEmail = req.user.email;
+
+        const orders = await Order.find({
+            supplierEmail,
+            orderType: "purchase",
+            status: { $nin: ["pending", "delivered"] },
+        })
+            .sort({ createdAt: -1 })
+            .select("po_id name status");
+
+        const formatted = orders.map((o) => ({
+            id:           o._id,
+            po_id:        o.po_id,
+            customerName: o.name || "Hardware Store",
+            status:       o.status,
+            label:        `${o.po_id} — ${o.name || "Hardware Store"}`,
+        }));
+
+        return res.status(200).json({ success: true, orders: formatted });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ================================
+//   DELIVERY PROGRESS PAGE - GET ORDER TIMELINE
+// ================================
+exports.getDeliveryProgress = async (req, res) => {
+    try {
+        const supplierEmail = req.user.email;
+
+        const order = await Order.findOne({
+            _id:           req.params.id,
+            supplierEmail,
+            orderType:     "purchase",
+        });
+
+        if (!order) {
+            return res.status(404).json({ success: false, message: "Order not found" });
+        }
+
+        // Map statuses to timeline steps
+        const statusRank = {
+            pending:    0,
+            confirmed:  1,
+            preparing:  2,
+            ready:      3,
+            dispatched: 4,
+            delivered:  5,
+        };
+
+        const currentRank = statusRank[order.status] ?? 0;
+
+        const timeline = [
+            {
+                step:        "order_received",
+                label:       "Order Received",
+                description: "Order confirmed from customer",
+                completed:   currentRank >= 1,
+                date:        order.statusDates?.quotationAcceptedDate || null,
+            },
+            {
+                step:        "goods_prepared",
+                label:       "Goods Prepared",
+                description: "All items packed and ready",
+                completed:   currentRank >= 3,
+                date:        order.statusDates?.preparedDate || null,
+            },
+            {
+                step:        "dispatched",
+                label:       "Dispatched",
+                description: currentRank >= 4 ? order.dispatchDetails?.deliveryNotes || "Dispatched" : "Enter dispatch details",
+                completed:   currentRank >= 4,
+                inProgress:  currentRank === 3,
+                date:        order.statusDates?.dispatchedDate || null,
+            },
+            {
+                step:        "in_transit",
+                label:       "In Transit",
+                description: currentRank >= 4 ? "Package in transit" : "Awaiting dispatch",
+                completed:   currentRank >= 5,
+                date:        order.statusDates?.inTransitDate || null,
+            },
+            {
+                step:        "delivered",
+                label:       "Delivered",
+                description: currentRank >= 5 ? "Delivered successfully" : "Awaiting delivery confirmation",
+                completed:   currentRank >= 5,
+                date:        order.statusDates?.deliveredDate || null,
+            },
+        ];
+
+        return res.status(200).json({
+            success: true,
+            order: {
+                id:     order._id,
+                po_id:  order.po_id,
+                status: order.status,
+            },
+            timeline,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ================================
+//   DISPATCH DETAILS - MARK AS DISPATCHED
+// ================================
+exports.dispatchSupplierOrder = async (req, res) => {
+    try {
+        const supplierEmail = req.user.email;
+        const {
+            trackingNumber,
+            vehicleNumber,
+            driverName,
+            dispatchDate,
+            deliveryNotes,
+            deliveryNoteFileUrl,  
+        } = req.body;
+
+        const order = await Order.findOne({
+            _id:           req.params.id,
+            supplierEmail,
+            orderType:     "purchase",
+            status:        { $in: ["confirmed", "preparing", "ready"] },
+        });
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found or cannot be dispatched in its current status",
+            });
+        }
+
+        order.status = "dispatched";
+        order.delivery = {
+            trackingNumber:          trackingNumber        || "",
+            estimatedDeliveryDate:   order.expectedDeliveryDate || null,
+            deliveryAddress:         order.address         || "",
+        };
+        order.dispatchDetails = {
+            vehicleNumber:      vehicleNumber      || "",
+            driverName:         driverName         || "",
+            dispatchDate:       dispatchDate        ? new Date(dispatchDate) : new Date(),
+            deliveryNotes:      deliveryNotes       || "",
+            deliveryNoteFileUrl: deliveryNoteFileUrl || "",
+        };
+        order.statusDates = order.statusDates || {};
+        order.statusDates.dispatchedDate = new Date();
+
+        await order.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Order marked as dispatched",
+            order: {
+                id:     order._id,
+                po_id:  order.po_id,
+                status: order.status,
+            },
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
