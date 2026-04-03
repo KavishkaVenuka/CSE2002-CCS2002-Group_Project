@@ -1,112 +1,102 @@
-import User from "../models/Supplier.js";
+import User from "../models/User.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-// =====================
-// CREATE USER
-// =====================
 export async function createUser(req, res) {
     try {
-        const data = req.body;
+        const { 
+            fullName, 
+            email, 
+            password, 
+            role, // "Admin", "Customer", හෝ "Supplier" ලෙස Frontend එකෙන් එවිය යුතුයි
+            contactNumber,
+            address 
+        } = req.body;
 
-        // check if email exists
-        const existingUser = await User.findOne({ email: data.email });
+        // 1. Validation
+        if (!fullName || !email || !password || !role) {
+            return res.status(400).json({ message: "Required fields are missing." });
+        }
+
+        // 2. පවතින Email එකක්දැයි බැලීම
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {
             return res.status(400).json({ message: "Email already exists" });
         }
 
-        const hashedPassword = bcrypt.hashSync(data.password, 10);
+        // -----------------------------------------------------------
+        // 3. ROLE-BASED ID GENERATION (Dynamic Prefix)
+        // -----------------------------------------------------------
+        let prefix = "";
+        if (role === "Admin") prefix = "ADM";
+        else if (role === "Customer") prefix = "CUST";
+        else if (role === "Supplier") prefix = "SUP";
+        else prefix = "USR"; // වෙනත් අවස්ථාවකදී
 
-        const user = new User({
-            email: data.email,
-            firstName: data.firstName,
-            lastName: data.lastName,
+        // අදාළ Role එකේ අවසාන පරිශීලකයා පමණක් සෙවීම
+        const latestUser = await User.findOne({ role: role }).sort({ createdAt: -1 });
+
+        let customID = prefix + "000001"; 
+
+        if (latestUser && latestUser.customID) {
+            let latestIDString = latestUser.customID.replace(prefix, "");
+            let latestNumber = parseInt(latestIDString);
+            let newNumber = latestNumber + 1;
+            customID = prefix + newNumber.toString().padStart(6, '0');
+        }
+        // -----------------------------------------------------------
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newUser = new User({
+            customID, // උදා: CUST000005
+            fullName,
+            email: email.toLowerCase(),
             password: hashedPassword,
-            role: data.role,
+            role, 
+            contactNumber,
+            address
         });
 
-        await user.save();
+        await newUser.save();
 
-        res.json({ message: "User created successfully" });
+        res.status(201).json({
+            message: `${role} registered successfully`,
+            user: { customID, fullName, email, role }
+        });
 
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        res.status(500).json({ message: "Registration failed", error: err.message });
     }
 }
 
-// =====================
-// LOGIN USER
-// =====================
 export async function loginUser(req, res) {
     try {
         const { email, password } = req.body;
+        const user = await User.findOne({ email: email.toLowerCase() });
 
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
+        if (!user) return res.status(404).json({ message: "User not found" });
 
-        const isPasswordCorrect = bcrypt.compareSync(password, user.password);
-        if (!isPasswordCorrect) {
-            return res.status(401).json({ message: "Invalid password" });
-        }
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
         const payload = {
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            role: user.role,
-            isEmailVerified: user.isEmailVerified,
-            image: user.image,
+            id: user._id,
+            customID: user.customID,
+            role: user.role, // මෙය Frontend එකේ Routes filter කිරීමට වැදගත් වේ
+            fullName: user.fullName
         };
 
-        const token = jwt.sign(payload, process.env.JWT_SECRET, {
-            expiresIn: "150h",
-        });
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "150h" });
 
-        res.json({
-            message: "Login successful",
+        res.status(200).json({
             token,
+            user: payload // මෙහි Role එක තිබේ
         });
-
     } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
+        res.status(500).json({ message: "Login failed", error: err.message });
     }
-}
-
-// =====================
-// GET CURRENT USER
-// =====================
-export async function getCurrentUser(req, res) {
-    try {
-        // `verifyToken` middleware attaches `req.user` when a valid token is provided
-        if (!req.user) {
-            return res.status(401).json({ message: "Authentication required" });
-        }
-
-        // Return the token payload as the current user info. If you prefer the
-        // complete fresh record from DB, you can query User.findOne({ email: req.user.email })
-        // and exclude the password field.
-        res.json(req.user);
-    } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
-    }
-}
-
-// =====================
-// ADMIN CHECK (MIDDLEWARE)
-// =====================
-export function isAdmin(req, res, next) {
-    if (!req.user) {
-        return res.status(401).json({ message: "Access denied" });
-    }
-
-    if (req.user.role !== "admin") {
-        return res.status(403).json({ message: "Admin access only" });
-    }
-
-    next();
 }

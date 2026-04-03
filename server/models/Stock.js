@@ -46,14 +46,14 @@ const stockItemSchema = new mongoose.Schema(
       min: 0,
     },
 
-    quantity_on_hand: {
+    quantity: {
       type: Number,
       required: false,
       default: 0,
       min: 0,
     },
 
-    min_stock_level: {
+    min_quantity: {
       type: Number,
       required: false,
       default: 0,
@@ -69,6 +69,19 @@ const stockItemSchema = new mongoose.Schema(
     is_discontinued: {
       type: Boolean,
       default: false,
+    },
+
+    // Supplier who provides this stock item
+    supplierId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Supplier",
+      default: null,
+    },
+
+    supplierEmail: {
+      type: String,
+      default: null,
+      trim: true,
     },
   },
   { 
