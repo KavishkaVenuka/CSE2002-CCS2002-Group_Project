@@ -5,56 +5,7 @@ import mongoose from "mongoose";
 // 1. GET ALL REQUIREMENTS
 //    GET /api/requirements?customerId=&status=&search=
 //    Admin → all records | Customer → own records only
-// ==========================================
-export const getAllRequirements = async (req, res) => {
-    try {
-        const { status, search, customerId } = req.query;
-
-        const filter = {};
-
-        // Customer ID ලබා දුන්නා නම් ඒ අනුව filter කරයි
-        if (customerId) filter.customerId = customerId;
-
-        // Status filter ("All Requests" නම් skip)
-        if (status && status !== "All Requests") filter.status = status.toLowerCase();
-
-        // Requirement ID search (exact ObjectId)
-        if (search && mongoose.Types.ObjectId.isValid(search)) {
-            filter._id = search;
-        }
-
-        const requirements = await Requirement.find(filter)
-            .populate("customerId", "fullName companyName email")
-            .sort({ createdAt: -1 });
-
-        const formatted = requirements.map((r) => {
-            const totalQty = r.requirements?.reduce(
-                (sum, item) => sum + (item.quantity || 0), 0
-            ) || 0;
-
-            return {
-                id: r._id,
-                requirementId: `REQ-${r._id.toString().slice(-5).toUpperCase()}`,
-                customerName: r.customerId?.fullName || "Unknown Customer",
-                companyName:  r.customerId?.companyName || "N/A",
-                items:        r.requirements?.map(i => i.itemName).join(", "),
-                totalQty,
-                requestDate:  r.createdAt,
-                createdAt:    r.createdAt,
-                status:       r.status,
-                attachedDocument: r.attachedDocument || null,
-            };
-        });
-
-        return res.status(200).json({
-            success: true,
-            count: formatted.length,
-            requirements: formatted,
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
+// =========================================
 
 // ==========================================
 // 2. GET STATS
@@ -73,13 +24,14 @@ export const getRequirementStats = async (req, res) => {
             { $group: { _id: "$status", count: { $sum: 1 } } },
         ]);
 
-        const result = { total: 0, new: 0, completed: 0, in_progress: 0 };
+        const result = { total: 0, new: 0, completed: 0, in_progress: 0, rejected: 0 };
 
         stats.forEach(({ _id, count }) => {
             result.total += count;
-            if (_id === "pending")                     result.new         += count;
+            if (_id === "pending")                      result.new         += count;
             if (_id === "quoted" || _id === "accepted") result.in_progress += count;
-            if (_id === "delivered")                   result.completed   += count;
+            if (_id === "delivered")                    result.completed   += count;
+            if (_id === "rejected")                     result.rejected    += count;
         });
 
         return res.status(200).json({ success: true, stats: result });
@@ -172,7 +124,7 @@ export const createRequirement = async (req, res) => {
 // ==========================================
 export const updateRequirementStatus = async (req, res) => {
     try {
-        const { status } = req.body;
+        const { status, rejectReason } = req.body;
         const { id } = req.params;
 
         const validStatuses = ["pending", "quoted", "accepted", "delivered", "rejected"];
@@ -180,9 +132,22 @@ export const updateRequirementStatus = async (req, res) => {
             return res.status(400).json({ success: false, message: `Invalid status. Must be one of: ${validStatuses.join(", ")}` });
         }
 
+        // Build update payload
+        const updatePayload = { status };
+
+        if (status === 'rejected') {
+            if (!rejectReason || !rejectReason.trim()) {
+                return res.status(400).json({ success: false, message: 'Rejection reason is required when rejecting a requirement.' });
+            }
+            updatePayload.rejectReason = rejectReason.trim();
+        } else {
+            // Clear reject reason if status is changed away from rejected
+            updatePayload.rejectReason = null;
+        }
+
         const updated = await Requirement.findByIdAndUpdate(
             id,
-            { status },
+            updatePayload,
             { new: true }
         );
 
@@ -194,6 +159,46 @@ export const updateRequirementStatus = async (req, res) => {
             success: true,
             message: `Status updated to "${status}"`,
             data: updated,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getAllRequirements = async (req, res) => {
+    try {
+        const { status, search, customerId } = req.query;
+        const filter = {};
+
+        if (customerId) filter.customerId = customerId;
+        if (status && status !== "all") filter.status = status.toLowerCase();
+
+        if (search && mongoose.Types.ObjectId.isValid(search)) {
+            filter._id = search;
+        }
+
+        const requirements = await Requirement.find(filter)
+            .populate("customerId", "fullName companyName email")
+            .sort({ createdAt: -1 });
+
+        const formatted = requirements.map((r) => {
+            return {
+                id: r._id,
+                requirementId: `REQ-${r._id.toString().slice(-5).toUpperCase()}`,
+                customerName: r.customerId?.fullName || "Unknown Customer",
+                companyName:  r.customerId?.companyName || "N/A",
+                items: r.requirements,
+                itemSummary: r.requirements?.map(i => i.itemName).join(", "),
+                createdAt: r.createdAt,
+                status: r.status,
+                rejectReason: r.rejectReason || null,
+                attachedDocument: r.attachedDocument || null,
+            };
+        });
+
+        return res.status(200).json({
+            success: true,
+            requirements: formatted,
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

@@ -45,6 +45,14 @@ const requirementSchema = new mongoose.Schema(
             enum: ['pending', 'quoted', 'accepted', 'delivered', 'rejected'],
             default: 'pending',
         },
+
+        // =============================================
+        // Rejection reason (admin fills when rejecting)
+        // =============================================
+        rejectReason: {
+            type: String,
+            default: null,
+        },
     },
     { timestamps: true }
 );
