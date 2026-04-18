@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken"
 // import productRouter from "./routes/productRouter.js"
 import cors from "cors"
 import dotenv from "dotenv"
+import { verifyToken } from "./middleware/auth.js"
 // import errorHandler from "./middleware/errorHandler.js"
 // import orderRouter from "./routes/orderRouter.js"
 // import requirementRouter from "./routes/requirementRouter.js"
@@ -17,6 +18,7 @@ import financeRouter from "./routes/financeRouter.js"
 import bankAccountRoutes from "./routes/bankAccountRouter.js"
 import paymentTransactionRoutes from "./routes/paymentTransactionRoutes.js"
 import requirementRouter from "./routes/requirementRouter.js"   
+import quotationRouter from "./routes/quotationRouter.js"
 // import invoiceRouter from "./routes/invoiceRouter.js"  
 
 dotenv.config()
@@ -42,27 +44,9 @@ app.use(express.json())
 // const quotationRoutes = require("./routes/quotationRouter.js");
 // const invoiceRoutes = require("./routes/invoiceRouter.js");
 
-// app.use(
-//     // attach user to req if a valid Bearer token is present
-//     (req, res, next) => {
-//         const authorizationHeader = req.header("Authorization");
+// Apply verifyToken globally — populates req.user if a valid Bearer token is present
+app.use(verifyToken)
 
-//         if (!authorizationHeader) return next();
-
-//         const token = authorizationHeader.replace("Bearer ", "");
-
-//         jwt.verify(token, process.env.JWT_SECRET, (error, content) => {
-//             if (error || !content) {
-//                 // invalid token — do not block here, just continue without user
-//                 console.log("invalid token");
-//                 return next();
-//             }
-
-//             req.user = content;
-//             next();
-//         });
-//     }
-// )
 
 // app.use("/api/admin", adminRouter)  
 // app.use("/api/customers", customerRouter)
@@ -78,7 +62,7 @@ app.use("/api/requirements", requirementRouter);
 // app.use("/api/orders", orderRoutes)
 // app.use("/api/products", productRouter)
 // app.use("/api/requirements", requirementRoutes)
-// app.use("/api/quotations", quotationRoutes)
+app.use("/api/quotations", quotationRouter)
 // app.use("/api/invoices", invoiceRoutes)
 
 // // Centralized error handler
