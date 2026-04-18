@@ -1,8 +1,8 @@
-import Quotation from "../models/Order.js";
-import Supplier from "../models/Supplier.js";
 import Quotation from "../models/Quotation.js";
+import Supplier from "../models/Supplier.js";
+import Requirement from "../models/Requirement.js";
 
-exports.getPendingQuotationCount = async (req, res) => {
+export const getPendingQuotationCount = async (req, res) => {
     try{
         const email = req.params.email;
         const pendingQuotationCount = await Quotation.countDocuments({
@@ -20,7 +20,7 @@ exports.getPendingQuotationCount = async (req, res) => {
     }
 }
 
-exports.getPendingQuotations = async (req, res) => {
+export const getPendingQuotations = async (req, res) => {
     try{
         const email = req.params.email;
         const pendingQuotations = await Quotation.find({
@@ -36,7 +36,7 @@ exports.getPendingQuotations = async (req, res) => {
     }
 }   
 
-exports.getAcceptedQuotationsCount = async (req, res) => {
+export const getAcceptedQuotationsCount = async (req, res) => {
     try{
         const {email} = req.query;
         if(!email){
@@ -57,7 +57,7 @@ exports.getAcceptedQuotationsCount = async (req, res) => {
     }
 };
 
-exports.getRejectedQuotationsCount = async (req, res) => {
+export const getRejectedQuotationsCount = async (req, res) => {
     try{
         const {email} = req.query;
         if(!email){
@@ -77,7 +77,7 @@ exports.getRejectedQuotationsCount = async (req, res) => {
     }
 };
 
-exports.getExpiredQuotationsCount = async (req, res) => {
+export const getExpiredQuotationsCount = async (req, res) => {
     try{
         const {email} = req.query; 
         if(!email){
@@ -99,15 +99,28 @@ exports.getExpiredQuotationsCount = async (req, res) => {
     }
 }
 
-exports.getAllQuotationsByCustomer = async (req, res) => {
-    try{
-        const email = req.params.email;
+export const getAllQuotations = async (req, res) => {
+    try {
+        const quotations = await Quotation.find().sort({ date: -1 });
+        res.status(200).json({ success: true, quotations: quotations });
+    } catch (err) {
+        res.status(500).json({
+            success: false,      
+            message: "Error getting all quotations",      
+            error: err.message
+        });
+    }
+}
 
-        if(!email) {
-            return res.status(400).json({ success: false, message: "Email is required" });
+export const getAllQuotationsByCustomer = async (req, res) => {
+    try{
+        const customerId = req.params.customerId;
+
+        if(!customerId) {
+            return res.status(400).json({ success: false, message: "Customer ID is required" });
         }
 
-        const quotations = await Quotation.find({ email: email }).sort({ date: -1 });
+        const quotations = await Quotation.find({ customerId }).sort({ createdAt: -1 });
         res.status(200).json({ success: true, quotations: quotations });
     } catch (err) {
         res.status(500).json({
@@ -118,7 +131,7 @@ exports.getAllQuotationsByCustomer = async (req, res) => {
     }
 }
 
-exports.getPendingQuotationsByCustomer = async (req, res) => {
+export const getPendingQuotationsByCustomer = async (req, res) => {
     try{
         const email = req.params.email;         
         if(!email) {
@@ -136,13 +149,10 @@ exports.getPendingQuotationsByCustomer = async (req, res) => {
     }
 }
 
-exports.rejectQuotation = async (req, res) => {
+export const rejectQuotation = async (req, res) => {
     try{
-        const { quotationID, email } = req.body;
-        if(!quotationID || !email) {
-            return res.status(400).json({ success: false, message: "Quotation ID and email are required" });
-        }
-        const quotation = await Quotation.findOne({ _id: quotationID, email: email });
+        const id = req.params.id;
+        const quotation = await Quotation.findById(id);
 
         if(!quotation) {
             return res.status(404).json({ success: false, message: "Quotation not found" });
@@ -160,26 +170,48 @@ exports.rejectQuotation = async (req, res) => {
     }
 }
 
+export const acceptQuotation = async (req, res) => {
+    try{
+        const id = req.params.id;
+        const quotation = await Quotation.findById(id);
+
+        if(!quotation) {
+            return res.status(404).json({ success: false, message: "Quotation not found" });
+        }  
+        quotation.status = "accepted";
+        await quotation.save();
+        res.status(200).json({ success: true, message: "Quotation accepted successfully" });
+         
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Error accepting quotation",
+            error: err.message
+        });
+    }
+}
+
 // ================================
-//   CREATE SUPPLIER QUOTATION
+//   CREATE SUPPLIER / ADMIN QUOTATION
 // ================================
-exports.createSupplierQuotation = async (req, res) => {
+export const createSupplierQuotation = async (req, res) => {
     try {
-        const supplierId    = req.user.id;
-        const supplierEmail = req.user.email;
+        // Works for both: a logged-in supplier (req.user populated) OR an admin calling on behalf
+        const supplierId    = req.user?.id    || null;
+        const supplierEmail = req.user?.email || null;
 
         const {
             requirementId,
-            items,           
+            items,
             subtotal,
             tax_amount,
             total_estimate,
             currency,
             notes,
             validUntil,
-            delivery_timeline, 
-            payment_terms,     
-            status,            
+            delivery_timeline,
+            payment_terms,
+            status,
         } = req.body;
 
         if (!items || items.length === 0 || !total_estimate) {
@@ -189,7 +221,8 @@ exports.createSupplierQuotation = async (req, res) => {
             });
         }
 
-        // Verify requirement exists
+        // Verify requirement exists (if linked) and extract the customerId
+        let customerId = req.body.customerId || null;
         if (requirementId) {
             const requirement = await Requirement.findById(requirementId);
             if (!requirement) {
@@ -198,10 +231,12 @@ exports.createSupplierQuotation = async (req, res) => {
                     message: "Requirement not found",
                 });
             }
+            // Always use the customerId from the Requirement as the source of truth
+            customerId = requirement.customerId;
         }
 
-        // Prevent duplicate active quotation for same requirement
-        if (requirementId && status !== "draft") {
+        // Prevent duplicate active quotation for same requirement + supplier
+        if (requirementId && supplierId && status !== "draft") {
             const existing = await Quotation.findOne({
                 supplierId,
                 quotationType: "supplier",
@@ -219,47 +254,49 @@ exports.createSupplierQuotation = async (req, res) => {
         const quotationStatus = status === "draft" ? "draft" : "pending";
 
         const quotation = new Quotation({
-            quotationID:       `SQ-TEMP-${Date.now()}`,
-            email:             supplierEmail,
-            name:              req.user.fullName || "Supplier",
+            quotationID:       `QT-TEMP-${Date.now()}`,
+            customerId:        customerId    || undefined,   // link to correct customer
+            email:             supplierEmail || "admin@system",
+            name:              req.user?.fullName || req.user?.name || "Admin",
             address:           "",
             total:             total_estimate,
             phonenumber:       0,
             items: items.map(item => ({
-                productID:   item.itemName,   
+                productID:   item.itemName,
                 name:        item.itemName,
                 price:       item.unitPrice || 0,
-                quantity:    item.quantity || 0,
-                image:       "",
+                quantity:    item.quantity  || 0,
                 unit:        item.unit        || "pieces",
                 unitPrice:   item.unitPrice   || 0,
                 totalPrice:  item.totalPrice  || 0,
                 description: item.description || "",
             })),
             requirementId:     requirementId || null,
-            supplierId,
-            supplierEmail,
+            supplierId:        supplierId    || null,
+            supplierEmail:     supplierEmail || null,
             total_estimate,
             subtotal:          subtotal       || 0,
             tax_amount:        tax_amount     || 0,
             currency:          currency       || "LKR",
             notes:             notes          || "",
             validUntil:        validUntil     || null,
-            delivery_timeline: delivery_timeline || "",
-            payment_terms:     payment_terms  || "Net 30",
             quotationType:     "supplier",
             status:            quotationStatus,
         });
 
         await quotation.save();
 
-        quotation.quotationID = quotation.sq_id;
-        await quotation.save();
-
-        if (requirementId && quotationStatus === "pending") {
+        // Update supplierId-tracked requirements (only if a real supplier is calling)
+        if (requirementId && supplierId && quotationStatus === "pending") {
             await Supplier.findByIdAndUpdate(supplierId, {
                 $addToSet: { quotedRequirementIds: requirementId },
             });
+        }
+
+        // When quotation is SENT (not draft), mark the Requirement as "quoted"
+        // Admin side → shows as "Sent" | Customer side → shows as "Received"
+        if (requirementId && quotationStatus === "pending") {
+            await Requirement.findByIdAndUpdate(requirementId, { status: "quoted" });
         }
 
         return res.status(201).json({
@@ -280,10 +317,11 @@ exports.createSupplierQuotation = async (req, res) => {
     }
 };
 
+
 // ================================
 //   GET ALL QUOTATIONS FOR THIS SUPPLIER
 // ================================
-exports.getSupplierQuotations = async (req, res) => {
+export const getSupplierQuotations = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
 
@@ -307,7 +345,7 @@ exports.getSupplierQuotations = async (req, res) => {
 // ================================
 //   GET SINGLE SUPPLIER QUOTATION
 // ================================
-exports.getSupplierQuotationById = async (req, res) => {
+export const getSupplierQuotationById = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
 
@@ -339,7 +377,7 @@ exports.getSupplierQuotationById = async (req, res) => {
 // ================================
 //   UPDATE / EDIT A DRAFT QUOTATION
 // ================================
-exports.updateSupplierQuotation = async (req, res) => {
+export const updateSupplierQuotation = async (req, res) => {
     try {
         const supplierId    = req.user.id;
         const supplierEmail = req.user.email;
@@ -434,7 +472,7 @@ exports.updateSupplierQuotation = async (req, res) => {
 // ================================
 //   SUBMIT A SAVED DRAFT
 // ================================
-exports.submitDraftQuotation = async (req, res) => {
+export const submitDraftQuotation = async (req, res) => {
     try {
         const supplierId = req.user.id;
 
@@ -478,7 +516,7 @@ exports.submitDraftQuotation = async (req, res) => {
 // ================================
 //   QUOTATION STATUS PAGE - STAT CARDS
 // ================================
-exports.getSupplierQuotationStats = async (req, res) => {
+export const getSupplierQuotationStats = async (req, res) => {
     try {
         const supplierId = req.user.id;
 
@@ -504,7 +542,7 @@ exports.getSupplierQuotationStats = async (req, res) => {
 // ================================
 //   QUOTATION STATUS PAGE - TABLE
 // ================================
-exports.getSupplierQuotationsTable = async (req, res) => {
+export const getSupplierQuotationsTable = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
         const { status, search } = req.query;
@@ -545,7 +583,7 @@ exports.getSupplierQuotationsTable = async (req, res) => {
 // ================================
 //   QUOTATION DETAIL BOX
 // ================================
-exports.getSupplierQuotationDetail = async (req, res) => {
+export const getSupplierQuotationDetail = async (req, res) => {
     try {
         const supplierId = req.user.id;
 
