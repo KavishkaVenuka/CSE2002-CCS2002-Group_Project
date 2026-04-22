@@ -1,87 +1,111 @@
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
+import User from "../models/User.js";
 
-exports.createOrder = async (req, res) => {
-
-    if(req.user == null){
+export const createOrder = async (req, res) => {
+    // 1. Authentication Check
+    const userId = req.user?._id || req.user?.id;
+    if (!req.user || !userId) {
         return res.status(401).json({ message: "Authentication required" });
-
     }
-    try{const latestOrder = await Order.findOne().sort({ date: -1 });
 
-    let orderID = "ORD000001";
-
-    if(latestOrder !== null){
-        let latestOrderID= latestOrder.orderID;
-        let latestOrderNumberString = latestOrderID.replace("ORD", "");
-        let latestOrderNumber = parseInt(latestOrderNumberString);
-        let newOrderNumber = latestOrderNumber + 1;
-        orderID = "ORD" + newOrderNumber.toString().padStart(6, '0');
-
-    }
-    const items = []
-    let total = 0
-
-    for(let i=0 ; i < req.body.items.length; i++){
-        const product = await Product.findOne({
-            productID: req.body.items[i].productID
-        })
-  
-    if(product == null ){
-        return res.status(400).json({
-            message : `Product with ID ${req.body.items[i].productID}not found`
-        })}
-
-    if(product.stock < req.body.items[i].quantity){
-        return res.status(400).json({
-            message:`only ${product.stock} items available in stock for product ID ${req.body.items[i].productID} `})}    
-    
-     items.push({
-                    productID: product.productID,
-                    name: product.name,
-                    price: product.price,
-                    quantity: req.body.items[i].quantity,
-                    image: product.images[0]
-                });
-        total += product.price * req.body.items[i].quantity;
-    
-        } 
-    let name = req.body.name;         
-    if(req.body.name == null ) {
-        name = req.user.firstName + " " + req.user.lastName;
-    }  
-    const newOrder = new Order({
-        orderID: orderID,
-        email : req.user.email,
-        address : req.body.address,
-        notes: req.body.notes ?? req.body.note ?? undefined,
-        total : total,
-        items : items,
-        phonenumber: req.body.phonenumber,
-        name: name
-    })
-
-    await newOrder.save();
-
-    for(let i=0 ; i < req.body.items.length; i++){
-        await Product.updateOne(
-            { productID: req.body.items[i].productID },
-            {$inc: { stock: -req.body.items[i].quantity }   })}
-
-    return res.json({
-        message: "Order created successfully",
-        orderID: orderID
-    });
-
-                
-    }catch(err){ 
-        return res.status(500).json({ message: "Server error", error: err.message });   
-    }
-    
-
+    try {
+        const dbUser = await User.findById(userId);
+        if (!dbUser) {
+            return res.status(404).json({ message: "User not found in database" });
         }
 
-exports.getOrders = async (req, res) => {
+        // 2. Generate Order ID (Incremental)
+        const latestOrder = await Order.findOne().sort({ date: -1 });
+        let orderID = "ORD000001";
+
+        if (latestOrder && latestOrder.orderID) {
+            let latestOrderNumber = parseInt(latestOrder.orderID.replace("ORD", ""));
+            orderID = "ORD" + (latestOrderNumber + 1).toString().padStart(6, '0');
+        }
+
+        // 3. Process Items and Validate Stock
+        const items = [];
+        let total = 0;
+
+        for (const item of req.body.items) {
+            let productRecord = null;
+            if (item.productID && item.productID !== "CUSTOM") {
+                productRecord = await Product.findOne({ productID: item.productID });
+            }
+
+            if (productRecord) {
+                // It's a standard inventory product
+                if (productRecord.stock < item.quantity) {
+                    return res.status(400).json({ 
+                        message: `Only ${productRecord.stock} items available for ${productRecord.name}` 
+                    });
+                }
+                items.push({
+                    productID: productRecord.productID,
+                    name: productRecord.name,
+                    price: productRecord.price,
+                    quantity: item.quantity,
+                    image: (productRecord.images && productRecord.images.length > 0) ? productRecord.images[0] : ""
+                });
+                total += productRecord.price * item.quantity;
+            } else {
+                // It's a custom quotation item that is not in the regular Products collection
+                items.push({
+                    productID: item.productID || "CUSTOM",
+                    name: item.name || item.productID || "Custom Item",
+                    price: item.price || 0,
+                    quantity: item.quantity || 1,
+                    image: item.image || ""
+                });
+                total += (item.price || 0) * (item.quantity || 1);
+            }
+        }
+
+        // 4. Determine Display Name
+        const name = req.body.name || dbUser.fullName || dbUser.name || "Customer";
+
+        // 5. Create New Order Instance
+        const newOrder = new Order({
+            customerId: userId, // Passing the Customer ID here
+            orderID: orderID,
+            email: dbUser.email || req.user.email,
+            name: name,
+            address: req.body.address,
+            phonenumber: req.body.phonenumber,
+            items: items,
+            total: total,
+            totalCost: total, // Schema requires totalCost, mapping total to it
+            notes: req.body.notes || req.body.note,
+            // If this comes from "Accept Quotation", you might want to set:
+            quotationRef: req.body.quotationId || null 
+        });
+
+        // 6. Save Order
+        await newOrder.save();
+
+        // 7. Update Stock Levels
+        const stockUpdates = req.body.items.map(item => 
+            Product.updateOne(
+                { productID: item.productID },
+                { $inc: { stock: -item.quantity } }
+            )
+        );
+        await Promise.all(stockUpdates);
+
+        return res.status(201).json({
+            message: "Order created successfully",
+            orderID: orderID,
+            order: newOrder
+        });
+
+    } catch (err) {
+        console.error("Order Creation Error:", err);
+        return res.status(500).json({ message: "Server error", error: err.message });
+    }
+};
+
+export const getOrders = async (req, res) => {
     if(req.user == null){
         return res.status(401).json({ message: "Authentication required" });        
     }
@@ -94,7 +118,7 @@ exports.getOrders = async (req, res) => {
     }
 }    
 
-exports.updateOrder = async (req, res) => {
+export const updateOrder = async (req, res) => {
     if(req.user == null || req.user.role !== "admin"){
         return res.status(401).json({ message: "Authentication required" });         
     }
@@ -113,7 +137,7 @@ exports.updateOrder = async (req, res) => {
     }
 }
 
-exports.getActiveOrderCount = async (req, res) => {
+export const getActiveOrderCount = async (req, res) => {
     try{
         const email = req.params.email;
         const activeOrderCount = await Order.countDocuments({
@@ -131,7 +155,7 @@ exports.getActiveOrderCount = async (req, res) => {
     }
 }
 
-exports.getDeliveredOrderCount = async (req, res) => {
+export const getDeliveredOrderCount = async (req, res) => {
     try{
         const email = req.params.email;
         const activeOrderCount = await Order.countDocuments({
@@ -149,7 +173,7 @@ exports.getDeliveredOrderCount = async (req, res) => {
     }
 }
 
-exports.getRecentOrders = async (req, res) => {
+export const getRecentOrders = async (req, res) => {
     try{
         const email = req.params.email;
         const recentOrders = await Order.find({ email: email }).sort({ date: -1 }).limit(3).select('orderID status date totalCost items');
@@ -172,7 +196,7 @@ exports.getRecentOrders = async (req, res) => {
     }
 }
 
-exports.getPendingOrderCountByCustomer = async (req, res) => {
+export const getPendingOrderCountByCustomer = async (req, res) => {
     try{
         const email = req.params.email;
         const pendingOrderCount = await Order.countDocuments({
@@ -190,7 +214,7 @@ exports.getPendingOrderCountByCustomer = async (req, res) => {
     }
 }
 
-exports.getProcessingOrderCountByCustomer = async (req, res) => {
+export const getProcessingOrderCountByCustomer = async (req, res) => {
     try{
         const email = req.params.email;
         const processingOrderCount = await Order.countDocuments({
@@ -207,12 +231,12 @@ exports.getProcessingOrderCountByCustomer = async (req, res) => {
     }
 }
 
-exports.getDispatchedOrderCountByCustomer = async (req, res) => {
+export const getDispatchedOrderCountByCustomer = async (req, res) => {
     try{
         const email = req.params.email;
         const dispatchedOrderCount = await Order.countDocuments({
              email: email, 
-             status: "in_transit" 
+             status: "dispatched" 
         });
         
         res.status(200).json({ success: true, dispatchedOrderCount: dispatchedOrderCount });
@@ -224,7 +248,24 @@ exports.getDispatchedOrderCountByCustomer = async (req, res) => {
     }
 }
 
-exports.getDeliveredOrderCountByCustomer = async (req, res) => {
+export const getInTransitOrderCountByCustomer = async (req, res) => {
+    try{
+        const email = req.params.email;
+        const inTransitOrderCount = await Order.countDocuments({
+             email: email, 
+             status: "in-transit" 
+        });
+        
+        res.status(200).json({ success: true, inTransitOrderCount: inTransitOrderCount });
+    } catch (err) {
+        res.status(500).json({
+             success: false, 
+             message: "Error getting in-transit order count", 
+             error: err.message });
+    }
+}
+
+export const getDeliveredOrderCountByCustomer = async (req, res) => {
     try{
         const email = req.params.email;
         const deliveredOrderCount = await Order.countDocuments({
@@ -241,7 +282,7 @@ exports.getDeliveredOrderCountByCustomer = async (req, res) => {
     }
 }
 
-exports.getPendingOrdersByCustomer = async (req, res) => {
+export const getPendingOrdersByCustomer = async (req, res) => {
     try{
         const { email } = req.query;
         if(!email){
@@ -270,7 +311,7 @@ exports.getPendingOrdersByCustomer = async (req, res) => {
     }
 }
 
-exports.getProcessingOrdersByCustomer = async (req, res) => {
+export const getProcessingOrdersByCustomer = async (req, res) => {
     try{
         const { email } = req.query;
         if(!email){
@@ -299,7 +340,7 @@ exports.getProcessingOrdersByCustomer = async (req, res) => {
     }
 }
 
-exports.getDispatchedOrdersByCustomer = async (req, res) => {
+export const getDispatchedOrdersByCustomer = async (req, res) => {
     try{
         const { email } = req.query;
         if(!email){
@@ -328,7 +369,7 @@ exports.getDispatchedOrdersByCustomer = async (req, res) => {
     }
 }
 
-exports.getInTransitOrdersByCustomer = async (req, res) => {
+export const getInTransitOrdersByCustomer = async (req, res) => {
     try{
         const { email } = req.query;
         if(!email){
@@ -357,7 +398,7 @@ exports.getInTransitOrdersByCustomer = async (req, res) => {
     }
 }
 
-exports.getDeliveredOrdersByCustomer = async (req, res) => {
+export const getDeliveredOrdersByCustomer = async (req, res) => {
     try{
         const { email } = req.query;
         if(!email){
@@ -386,7 +427,7 @@ exports.getDeliveredOrdersByCustomer = async (req, res) => {
     }
 }
 
-exports.uploadDeliveryProof = async (req, res) => {
+export const uploadDeliveryProof = async (req, res) => {
     try{
         const { orderID } = req.body;
         if(!orderID || !req.file){
@@ -415,7 +456,7 @@ exports.uploadDeliveryProof = async (req, res) => {
 // ================================
 //   GET ALL PURCHASE ORDERS FOR THIS SUPPLIER
 // ================================
-exports.getSupplierOrders = async (req, res) => {
+export const getSupplierOrders = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
 
@@ -440,7 +481,7 @@ exports.getSupplierOrders = async (req, res) => {
 // ================================
 //   GET SINGLE PURCHASE ORDER
 // ================================
-exports.getSupplierOrderById = async (req, res) => {
+export const getSupplierOrderById = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
 
@@ -473,7 +514,7 @@ exports.getSupplierOrderById = async (req, res) => {
 // ================================
 //   UPDATE PURCHASE ORDER STATUS
 // ================================
-exports.updateSupplierOrderStatus = async (req, res) => {
+export const updateSupplierOrderStatus = async (req, res) => {
     try {
         const supplierEmail     = req.user.email;
         const { status, notes } = req.body;
@@ -535,7 +576,7 @@ exports.updateSupplierOrderStatus = async (req, res) => {
 // ================================
 //   CUSTOMER ORDERS PAGE - STAT CARDS
 // ================================
-exports.getSupplierOrderStats = async (req, res) => {
+export const getSupplierOrderStats = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
 
@@ -557,7 +598,7 @@ exports.getSupplierOrderStats = async (req, res) => {
 // ================================
 //   CUSTOMER ORDERS PAGE - TABLE
 // ================================
-exports.getSupplierOrdersTable = async (req, res) => {
+export const getSupplierOrdersTable = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
         const { status, search } = req.query;
@@ -593,7 +634,7 @@ exports.getSupplierOrdersTable = async (req, res) => {
 // ================================
 //   ACKNOWLEDGE ORDER
 // ================================
-exports.acknowledgeSupplierOrder = async (req, res) => {
+export const acknowledgeSupplierOrder = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
 
@@ -629,7 +670,7 @@ exports.acknowledgeSupplierOrder = async (req, res) => {
 // ================================
 //   DELIVERY PROGRESS PAGE - ORDER DROPDOWN
 // ================================
-exports.getDispatchOrderList = async (req, res) => {
+export const getDispatchOrderList = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
 
@@ -658,7 +699,7 @@ exports.getDispatchOrderList = async (req, res) => {
 // ================================
 //   DELIVERY PROGRESS PAGE - GET ORDER TIMELINE
 // ================================
-exports.getDeliveryProgress = async (req, res) => {
+export const getDeliveryProgress = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
 
@@ -740,7 +781,7 @@ exports.getDeliveryProgress = async (req, res) => {
 // ================================
 //   DISPATCH DETAILS - MARK AS DISPATCHED
 // ================================
-exports.dispatchSupplierOrder = async (req, res) => {
+export const dispatchSupplierOrder = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
         const {
