@@ -1,6 +1,6 @@
 import express from "express";
 import { uploadDeliveryProof } from "../middleware/uploadMiddleware.js";
-import { uploadDeliveryProof, createOrder, getOrders, updateOrder, getActiveOrderCount, getRecentOrders, getPendingOrderCountByCustomer, getProcessingOrderCountByCustomer, getDispatchedOrderCountByCustomer, getInTransitOrderCountByCustomer, getDeliveredOrderCountByCustomer, getPendingOrdersByCustomer, getProcessingOrdersByCustomer, getDispatchedOrdersByCustomer, getInTransitOrdersByCustomer, getDeliveredOrdersByCustomer } from "../controllers/orderController.js";
+import { createOrder, getOrders, updateOrder, getActiveOrderCount, getRecentOrders, getPendingOrderCountByCustomer, getProcessingOrderCountByCustomer, getDispatchedOrderCountByCustomer, getInTransitOrderCountByCustomer, getDeliveredOrderCountByCustomer, getPendingOrdersByCustomer, getProcessingOrdersByCustomer, getDispatchedOrdersByCustomer, getInTransitOrdersByCustomer, getDeliveredOrdersByCustomer } from "../controllers/orderController.js";
 
 const orderRouter = express.Router();
 
@@ -17,6 +17,6 @@ orderRouter.get("/delivered-count/:email", getDeliveredOrderCountByCustomer);
 orderRouter.get("/pending/:email", getPendingOrdersByCustomer);
 orderRouter.get("/processing/:email", getProcessingOrdersByCustomer);
 orderRouter.get("/dispatched/:email", getDispatchedOrdersByCustomer);
-orderRouter.get("/in-transit/:email", getInTransitOrderByCustomer);
+orderRouter.get("/in-transit/:email", getInTransitOrdersByCustomer);
 
 export default orderRouter;
