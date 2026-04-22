@@ -1,6 +1,7 @@
 import Quotation from "../models/Quotation.js";
 import Supplier from "../models/Supplier.js";
 import Requirement from "../models/Requirement.js";
+import User from "../models/User.js";
 
 export const getPendingQuotationCount = async (req, res) => {
     try{
@@ -221,10 +222,12 @@ export const createSupplierQuotation = async (req, res) => {
             });
         }
 
-        // Verify requirement exists (if linked) and extract the customerId
+        // Verify requirement exists (if linked) and extract the customerId + customerName
         let customerId = req.body.customerId || null;
+        let customerName = null;
         if (requirementId) {
-            const requirement = await Requirement.findById(requirementId);
+            const requirement = await Requirement.findById(requirementId)
+                .populate("customerId", "fullName email");
             if (!requirement) {
                 return res.status(404).json({
                     success: false,
@@ -232,7 +235,14 @@ export const createSupplierQuotation = async (req, res) => {
                 });
             }
             // Always use the customerId from the Requirement as the source of truth
-            customerId = requirement.customerId;
+            customerId = requirement.customerId?._id || requirement.customerId;
+            customerName = requirement.customerId?.fullName || null;
+        }
+
+        // If we have customerId but no name yet, look it up directly
+        if (customerId && !customerName) {
+            const customer = await User.findById(customerId).select("fullName");
+            customerName = customer?.fullName || null;
         }
 
         // Prevent duplicate active quotation for same requirement + supplier
@@ -257,7 +267,7 @@ export const createSupplierQuotation = async (req, res) => {
             quotationID:       `QT-TEMP-${Date.now()}`,
             customerId:        customerId    || undefined,   // link to correct customer
             email:             supplierEmail || "admin@system",
-            name:              req.user?.fullName || req.user?.name || "Admin",
+            name:              customerName || "Customer",  // actual customer's name, not admin's
             address:           "",
             total:             total_estimate,
             phonenumber:       0,
