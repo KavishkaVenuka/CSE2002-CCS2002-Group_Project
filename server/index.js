@@ -19,6 +19,7 @@ import bankAccountRoutes from "./routes/bankAccountRouter.js"
 import paymentTransactionRoutes from "./routes/paymentTransactionRoutes.js"
 import requirementRouter from "./routes/requirementRouter.js"   
 import quotationRouter from "./routes/quotationRouter.js"
+import orderRouter from "./routes/orderRouter.js"
 // import invoiceRouter from "./routes/invoiceRouter.js"  
 
 dotenv.config()
@@ -59,7 +60,7 @@ app.use("/api/paymentTransactions", paymentTransactionRoutes);
 app.use("/api/requirements", requirementRouter);
 
 
-// app.use("/api/orders", orderRoutes)
+app.use("/api/orders", orderRouter)
 // app.use("/api/products", productRouter)
 // app.use("/api/requirements", requirementRoutes)
 app.use("/api/quotations", quotationRouter)
