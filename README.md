@@ -129,6 +129,38 @@ Reproduction or redistribution requires permission.
 
 ### ✅ UBMS — Smart, Scalable, Simple.
 
+Server/
+│
+├── controllers/            # Handles request logic (CRUD operations)
+│   ├── orderController.js
+│   ├── productController.js
+│   └── userController.js
+│
+├── middleware/             # Custom middleware (auth, error handling, etc.)
+│   ├── auth.js
+│   └── errorHandler.js
+│
+├── models/                 # Mongoose schemas (MongoDB models)
+│   ├── Order.js
+│   ├── Product.js
+│   └── User.js
+│
+├── routes/                 # Express route files
+│   ├── orderRouter.js
+│   ├── productRouter.js
+│   └── userRouter.js
+│
+├── node_modules/           # Installed dependencies
+│
+├── .env                    # Environment variables (not pushed to GitHub)
+├── .gitignore              # Ignored files
+├── index.js                # Main server entry point
+├── package.json            # Project metadata + scripts + dependencies
+├── package-lock.json       # Exact versions of installed packages
+└── test.js                 # Testing / debugging file
+
+
+
 
 
 
