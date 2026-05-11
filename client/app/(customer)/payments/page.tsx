@@ -27,7 +27,7 @@ export default function PaymentsPage() {
           background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
           boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
         }}>
-          <div style={{ 
+          <div style={{
             padding: "20px 24px", display: "flex", alignItems: "center", gap: 10,
             borderBottom: `1px solid ${T.borderLight}`
           }}>
@@ -49,13 +49,13 @@ export default function PaymentsPage() {
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
                   <div style={{ fontSize: 18, fontWeight: 600, color: "#9F7A00" }}>{inv.amount}</div>
-                  <span style={{ 
+                  <span style={{
                     display: "inline-flex", alignItems: "center", gap: 4,
                     background: "#FFF4CC", color: "#B8860B", border: `1px solid #FFE066`,
                     padding: "3px 10px", borderRadius: 16, fontSize: 11, fontWeight: 600,
                   }}>
-                     <Clock size={12} />
-                     Pending
+                    <Clock size={12} />
+                    Pending
                   </span>
                 </div>
               </div>
@@ -68,7 +68,7 @@ export default function PaymentsPage() {
           background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
           boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
         }}>
-          <div style={{ 
+          <div style={{
             padding: "20px 24px", display: "flex", alignItems: "center", gap: 10,
             borderBottom: `1px solid ${T.borderLight}`
           }}>
@@ -80,24 +80,24 @@ export default function PaymentsPage() {
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.t1, marginBottom: 8 }}>
                 Select Invoice <span style={{ color: T.red }}>*</span>
               </label>
-              <select 
+              <select
                 value={selectedInvoiceId}
                 onChange={(e) => setSelectedInvoiceId(e.target.value)}
                 style={{
                   width: "100%", padding: "12px 14px",
                   background: T.surface, border: `1px solid ${T.borderLight}`, borderRadius: 6,
                   fontSize: 14, color: T.t1, outline: "none", cursor: "pointer", fontFamily: font
-              }}>
+                }}>
                 <option value="">Choose invoice to pay...</option>
                 {PENDING_INVOICES.map(inv => (
-                   <option key={inv.id} value={inv.id}>{inv.id} - {inv.amount}</option>
+                  <option key={inv.id} value={inv.id}>{inv.id} - {inv.amount}</option>
                 ))}
               </select>
             </div>
 
             {selectedInvoice && (
               <div style={{ display: "flex", flexDirection: "column", gap: 24, animation: "fadeIn 0.3s ease-in-out" }}>
-                
+
                 {/* Summary Info Box */}
                 <div style={{
                   background: "#F5F8FF", border: `1px solid #C2D5F2`, borderRadius: 8,
@@ -151,38 +151,38 @@ export default function PaymentsPage() {
                       fontSize: 14, color: T.t1, outline: "none", fontFamily: font, resize: "vertical"
                     }} />
                   </div>
-                  
+
                   <div>
                     <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.t1, marginBottom: 8 }}>
                       Upload Payment Proof <span style={{ color: T.red }}>*</span>
                     </label>
                     <div style={{
-                       border: `2px dashed ${T.borderLight}`, borderRadius: 12, padding: "32px",
-                       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                       background: T.surface, gap: 12
+                      border: `2px dashed ${T.borderLight}`, borderRadius: 12, padding: "32px",
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      background: T.surface, gap: 12
                     }}>
-                       <div style={{ width: 40, height: 40, borderRadius: "50%", background: T.card, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <Upload size={18} color={T.inkHover} />
-                       </div>
-                       <div style={{ textAlign: "center" }}>
-                         <div style={{ fontSize: 13, color: T.t2, marginBottom: 4 }}>Click to upload or drag and drop</div>
-                         <div style={{ fontSize: 11, color: T.t3 }}>PDF, PNG, JPG (Max 5MB)</div>
-                       </div>
-                       <button style={{
-                         background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 6,
-                         padding: "6px 16px", fontSize: 12, fontWeight: 600, color: T.t1, cursor: "pointer",
-                         marginTop: 8
-                       }}>
-                         Choose File
-                       </button>
+                      <div style={{ width: 40, height: 40, borderRadius: "50%", background: T.card, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Upload size={18} color={T.inkHover} />
+                      </div>
+                      <div style={{ textAlign: "center" }}>
+                        <div style={{ fontSize: 13, color: T.t2, marginBottom: 4 }}>Click to upload or drag and drop</div>
+                        <div style={{ fontSize: 11, color: T.t3 }}>PDF, PNG, JPG (Max 5MB)</div>
+                      </div>
+                      <button style={{
+                        background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 6,
+                        padding: "6px 16px", fontSize: 12, fontWeight: 600, color: T.t1, cursor: "pointer",
+                        marginTop: 8
+                      }}>
+                        Choose File
+                      </button>
                     </div>
                   </div>
                 </div>
 
                 {/* Footer Actions */}
-                <div style={{ 
-                  display: "flex", justifyContent: "flex-end", gap: 12, 
-                  paddingTop: 24, borderTop: `1px solid ${T.borderLight}`, marginTop: 8 
+                <div style={{
+                  display: "flex", justifyContent: "flex-end", gap: 12,
+                  paddingTop: 24, borderTop: `1px solid ${T.borderLight}`, marginTop: 8
                 }}>
                   <button style={{
                     display: "flex", alignItems: "center", gap: 8,
