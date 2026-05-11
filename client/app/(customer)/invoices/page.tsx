@@ -29,59 +29,59 @@ export default function InvoicesPage() {
           gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
           gap: 16,
         }}>
-           {/* Card 1: Paid */}
-           <div style={{
-             background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-             padding: "20px", display: "flex", flexDirection: "column", gap: 12,
-             boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-           }}>
-             <div style={{
-               width: 38, height: 38, borderRadius: 10,
-               background: T.greenBg, display: "flex", alignItems: "center", justifyContent: "center"
-             }}>
-               <CheckCircle2 size={18} color={T.green} />
-             </div>
-             <div>
-               <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Paid</div>
-               <div style={{ fontSize: 24, color: T.t1, fontWeight: 700, marginTop: 4, fontFamily: font }}>2</div>
-             </div>
-           </div>
-           
-           {/* Card 2: Unpaid */}
-           <div style={{
-             background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-             padding: "20px", display: "flex", flexDirection: "column", gap: 12,
-             boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-           }}>
-             <div style={{
-               width: 38, height: 38, borderRadius: 10,
-               background: T.amberBg, display: "flex", alignItems: "center", justifyContent: "center"
-             }}>
-               <DollarSign size={18} color={T.amber} />
-             </div>
-             <div>
-               <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Unpaid</div>
-               <div style={{ fontSize: 24, color: T.t1, fontWeight: 700, marginTop: 4, fontFamily: font }}>1</div>
-             </div>
-           </div>
+          {/* Card 1: Paid */}
+          <div style={{
+            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
+            padding: "20px", display: "flex", flexDirection: "column", gap: 12,
+            boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
+          }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: 10,
+              background: T.greenBg, display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <CheckCircle2 size={18} color={T.green} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Paid</div>
+              <div style={{ fontSize: 24, color: T.t1, fontWeight: 700, marginTop: 4, fontFamily: font }}>2</div>
+            </div>
+          </div>
 
-           {/* Card 3: Overdue */}
-           <div style={{
-             background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-             padding: "20px", display: "flex", flexDirection: "column", gap: 12,
-             boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-           }}>
-             <div style={{
-               width: 38, height: 38, borderRadius: 10,
-               background: T.redBg, display: "flex", alignItems: "center", justifyContent: "center"
-             }}>
-               <FileWarning size={18} color={T.red} />
-             </div>
-             <div>
-               <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Overdue</div>
-               <div style={{ fontSize: 24, color: T.t1, fontWeight: 700, marginTop: 4, fontFamily: font }}>1</div>
-             </div>
-           </div>
+          {/* Card 2: Unpaid */}
+          <div style={{
+            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
+            padding: "20px", display: "flex", flexDirection: "column", gap: 12,
+            boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
+          }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: 10,
+              background: T.amberBg, display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <DollarSign size={18} color={T.amber} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Unpaid</div>
+              <div style={{ fontSize: 24, color: T.t1, fontWeight: 700, marginTop: 4, fontFamily: font }}>1</div>
+            </div>
+          </div>
+
+          {/* Card 3: Overdue */}
+          <div style={{
+            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
+            padding: "20px", display: "flex", flexDirection: "column", gap: 12,
+            boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
+          }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: 10,
+              background: T.redBg, display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              <FileWarning size={18} color={T.red} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Overdue</div>
+              <div style={{ fontSize: 24, color: T.t1, fontWeight: 700, marginTop: 4, fontFamily: font }}>1</div>
+            </div>
+          </div>
         </div>
 
         {/* ── TABLE PANEL ─────────────────────────────────────────────────── */}
@@ -89,8 +89,8 @@ export default function InvoicesPage() {
           background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
           boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
         }}>
-           {/* Header Area */}
-          <div style={{ 
+          {/* Header Area */}
+          <div style={{
             padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between",
             borderBottom: `1px solid ${T.borderLight}`
           }}>
@@ -99,7 +99,7 @@ export default function InvoicesPage() {
               <h2 style={{ fontSize: 16, fontWeight: 600, color: T.t1, margin: 0 }}>All Invoices</h2>
             </div>
           </div>
-          
+
           {/* Table */}
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontFamily: font }}>
@@ -119,7 +119,7 @@ export default function InvoicesPage() {
                   if (inv.status === 'unpaid') { badgeBg = T.amberBg; badgeColor = T.amber; badgeBorder = T.amber; badgeText = "unpaid" }
                   else if (inv.status === 'paid') { badgeBg = T.greenBg; badgeColor = T.green; badgeBorder = T.green; badgeText = "paid" }
                   else { badgeBg = T.redBg; badgeColor = T.red; badgeBorder = T.redBg; badgeText = "overdue" }
-                  
+
                   return (
                     <tr key={inv.id} style={{ borderBottom: idx === INVOICES.length - 1 ? "none" : `1px solid ${T.borderLight}` }}>
                       <td style={{ padding: "16px 24px", fontSize: 13, color: T.t1 }}>{inv.id}</td>
@@ -127,32 +127,32 @@ export default function InvoicesPage() {
                       <td style={{ padding: "16px 24px", fontSize: 13, color: T.t2 }}>{inv.date}</td>
                       <td style={{ padding: "16px 24px", fontSize: 13, color: T.t1 }}>{inv.amount}</td>
                       <td style={{ padding: "16px 24px" }}>
-                         <span style={{ 
-                           display: "inline-flex", alignItems: "center",
-                           background: badgeBg, color: badgeColor, border: `1px solid ${badgeBorder}`,
-                           padding: "3px 10px", borderRadius: 16, fontSize: 11, fontWeight: 600,
-                           letterSpacing: "0.02em"
-                         }}>
-                            {badgeText}
-                         </span>
+                        <span style={{
+                          display: "inline-flex", alignItems: "center",
+                          background: badgeBg, color: badgeColor, border: `1px solid ${badgeBorder}`,
+                          padding: "3px 10px", borderRadius: 16, fontSize: 11, fontWeight: 600,
+                          letterSpacing: "0.02em"
+                        }}>
+                          {badgeText}
+                        </span>
                       </td>
                       <td style={{ padding: "16px 24px" }}>
-                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                           <button onClick={() => setSelectedInvoice(inv)} style={{ 
-                             background: "transparent", border: `1px solid ${T.borderLight}`, borderRadius: 8,
-                             width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                             cursor: "pointer", color: T.t3, transition: "background 0.2s"
-                           }} onMouseOver={(e) => e.currentTarget.style.background = T.surface} onMouseOut={(e) => e.currentTarget.style.background = "transparent"} title="View">
-                             <Eye size={14} />
-                           </button>
-                           <button style={{ 
-                             background: "transparent", border: `1px solid ${T.borderLight}`, borderRadius: 8,
-                             width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                             cursor: "pointer", color: T.t3, transition: "background 0.2s"
-                           }} onMouseOver={(e) => e.currentTarget.style.background = T.surface} onMouseOut={(e) => e.currentTarget.style.background = "transparent"} title="Download">
-                             <Download size={14} />
-                           </button>
-                         </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <button onClick={() => setSelectedInvoice(inv)} style={{
+                            background: "transparent", border: `1px solid ${T.borderLight}`, borderRadius: 8,
+                            width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                            cursor: "pointer", color: T.t3, transition: "background 0.2s"
+                          }} onMouseOver={(e) => e.currentTarget.style.background = T.surface} onMouseOut={(e) => e.currentTarget.style.background = "transparent"} title="View">
+                            <Eye size={14} />
+                          </button>
+                          <button style={{
+                            background: "transparent", border: `1px solid ${T.borderLight}`, borderRadius: 8,
+                            width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                            cursor: "pointer", color: T.t3, transition: "background 0.2s"
+                          }} onMouseOver={(e) => e.currentTarget.style.background = T.surface} onMouseOut={(e) => e.currentTarget.style.background = "transparent"} title="Download">
+                            <Download size={14} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -177,30 +177,30 @@ export default function InvoicesPage() {
             display: "flex", flexDirection: "column", fontFamily: font, maxHeight: "90vh"
           }} onClick={e => e.stopPropagation()}>
             <div style={{ padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: T.card, borderBottom: `1px solid ${T.borderLight}` }}>
-               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                 <FileText size={18} color={T.inkHover} />
-                 <h2 style={{ fontSize: 16, fontWeight: 700, color: T.t1, margin: 0 }}>Invoice Preview</h2>
-               </div>
-               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                 <button style={{
-                   display: "flex", alignItems: "center", gap: 8,
-                   background: "transparent", border: `1px solid ${T.border}`, borderRadius: 6,
-                   padding: "6px 12px", cursor: "pointer", color: T.t2, fontSize: 13, fontWeight: 500
-                 }}>
-                   <Printer size={14} /> Print
-                 </button>
-                 <button onClick={() => setSelectedInvoice(null)} style={{
-                   background: "transparent", border: "none",
-                   cursor: "pointer", color: T.t3
-                 }}>
-                   <CloseIcon size={20} />
-                 </button>
-               </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <FileText size={18} color={T.inkHover} />
+                <h2 style={{ fontSize: 16, fontWeight: 700, color: T.t1, margin: 0 }}>Invoice Preview</h2>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                <button style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  background: "transparent", border: `1px solid ${T.border}`, borderRadius: 6,
+                  padding: "6px 12px", cursor: "pointer", color: T.t2, fontSize: 13, fontWeight: 500
+                }}>
+                  <Printer size={14} /> Print
+                </button>
+                <button onClick={() => setSelectedInvoice(null)} style={{
+                  background: "transparent", border: "none",
+                  cursor: "pointer", color: T.t3
+                }}>
+                  <CloseIcon size={20} />
+                </button>
+              </div>
             </div>
-            
+
             <div style={{ flex: 1, overflowY: "auto", padding: "32px", display: "flex", justifyContent: "center" }}>
-              <div style={{ 
-                background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12, 
+              <div style={{
+                background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
                 padding: "40px", width: "100%", maxWidth: 700,
                 boxShadow: "0 4px 12px rgba(26,58,92,0.03)"
               }}>
@@ -221,14 +221,14 @@ export default function InvoicesPage() {
                   </div>
                 </div>
 
-                <div style={{ 
-                  background: T.surface, border: `1px solid ${T.borderLight}`, borderRadius: 8, 
-                  padding: "20px", marginBottom: 32, width: "60%" 
+                <div style={{
+                  background: T.surface, border: `1px solid ${T.borderLight}`, borderRadius: 8,
+                  padding: "20px", marginBottom: 32, width: "60%"
                 }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: T.t3, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>BILL TO:</div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.t1, marginBottom: 4 }}>Your Company Name</div>
                   <div style={{ fontSize: 13, color: T.t2, lineHeight: 1.5 }}>
-                    123 Business Street, Suite 400<br/>New York, NY 10001
+                    123 Business Street, Suite 400<br />New York, NY 10001
                   </div>
                 </div>
 
@@ -264,20 +264,20 @@ export default function InvoicesPage() {
                 </table>
 
                 <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 32 }}>
-                   <div style={{ width: 260, display: "flex", flexDirection: "column", gap: 12 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: 13, color: T.t2 }}>Subtotal:</span>
-                        <span style={{ fontSize: 13, color: T.t1, fontWeight: 500 }}>$134,000</span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: 13, color: T.t2 }}>Tax (10%):</span>
-                        <span style={{ fontSize: 13, color: T.t1, fontWeight: 500 }}>$13,400</span>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 14, borderTop: `1px solid ${T.borderLight}` }}>
-                        <span style={{ fontSize: 14, color: T.t2, fontWeight: 700, textTransform: "uppercase" }}>TOTAL:</span>
-                        <span style={{ fontSize: 16, color: T.ink, fontWeight: 700 }}>$147,400</span>
-                      </div>
-                   </div>
+                  <div style={{ width: 260, display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 13, color: T.t2 }}>Subtotal:</span>
+                      <span style={{ fontSize: 13, color: T.t1, fontWeight: 500 }}>$134,000</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 13, color: T.t2 }}>Tax (10%):</span>
+                      <span style={{ fontSize: 13, color: T.t1, fontWeight: 500 }}>$13,400</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 14, borderTop: `1px solid ${T.borderLight}` }}>
+                      <span style={{ fontSize: 14, color: T.t2, fontWeight: 700, textTransform: "uppercase" }}>TOTAL:</span>
+                      <span style={{ fontSize: 16, color: T.ink, fontWeight: 700 }}>$147,400</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div style={{ textAlign: "center", paddingTop: 32, borderTop: `1px dashed ${T.borderLight}` }}>
