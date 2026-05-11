@@ -1,6 +1,14 @@
 "use client"
 
-import { T, mono } from "@/lib/tokens"
+// Status badge color map — vibrant flat fills, black borders
+const STATUS_STYLES: Record<string, { bg: string; text: string }> = {
+  delivered:    { bg: "#4ADE80", text: "#000" },
+  "in-transit": { bg: "#22D3EE", text: "#000" },
+  dispatched:   { bg: "#FACC15", text: "#000" },
+  confirmed:    { bg: "#4ADE80", text: "#000" },
+  overdue:      { bg: "#EF4444", text: "#fff" },
+  pending:      { bg: "#FACC15", text: "#000" },
+}
 
 interface OrderRowProps {
   order: {
@@ -19,54 +27,43 @@ interface OrderRowProps {
 }
 
 export function OrderRow({ order, status, isLast }: OrderRowProps) {
+  const badge = STATUS_STYLES[order.status] ?? { bg: "#F5F0E8", text: "#000" }
+
   return (
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "1fr 48px 90px 100px",
-      padding: "13px 20px",
-      alignItems: "center",
-      borderBottom: isLast ? "none" : `1px solid ${T.borderLight}`,
-    }}>
-      {/* ID + date */}
+    <div
+      className={`
+        grid grid-cols-[1fr_48px_90px_110px]
+        items-center
+        px-5 py-3
+        ${!isLast ? "border-b-[2px] border-black" : ""}
+        odd:bg-white even:bg-nb-bg
+        hover:bg-nb-yellow transition-colors duration-100
+      `}
+    >
+      {/* Order ID + Date */}
       <div>
-        <div style={{
-          fontFamily: mono,
-          fontSize: 12.5, fontWeight: 500,
-          color: T.t1, letterSpacing: "-0.01em",
-        }}>
+        <div className="font-mono text-sm font-bold text-black tracking-tight">
           {order.id}
         </div>
-        <div style={{ fontSize: 11, color: T.t3, marginTop: 3 }}>
-          {order.date}
-        </div>
+        <div className="font-body text-xs text-gray-500 mt-0.5">{order.date}</div>
       </div>
 
-      {/* Items */}
-      <div style={{
-        fontSize: 13, color: T.t2,
-        textAlign: "center",
-      }}>
+      {/* Items count */}
+      <div className="font-body text-sm text-black text-center">
         {order.items}
       </div>
 
       {/* Amount */}
-      <div style={{
-        fontFamily: mono,
-        fontSize: 13, fontWeight: 500, color: T.t1,
-        textAlign: "right", letterSpacing: "-0.01em",
-      }}>
-        ${order.amount.toLocaleString()}
+      <div className="font-mono text-sm font-bold text-black text-right">
+        Rs.{order.amount.toLocaleString()}
       </div>
 
-      {/* Status badge */}
-      <div style={{ textAlign: "right" }}>
-        <span style={{
-          display: "inline-block",
-          padding: "3px 10px", borderRadius: 100,
-          fontSize: 11, fontWeight: 600,
-          background: status.bg, color: status.color,
-          letterSpacing: "0.01em",
-        }}>
+      {/* Status Badge */}
+      <div className="flex justify-end">
+        <span
+          className="nb-badge"
+          style={{ background: badge.bg, color: badge.text }}
+        >
           {status.label}
         </span>
       </div>
