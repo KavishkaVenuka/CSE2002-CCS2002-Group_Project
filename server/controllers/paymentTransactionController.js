@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import PaymentTransaction from "../models/PaymentTransaction.js";
 import BankAccount from "../models/BankAccount.js";
 import Invoice from "../models/Invoice.js";
+import Finance from "../models/finance.js";
 
 const parseDecimal = (value) => {
   if (value == null) return 0;
@@ -217,11 +218,32 @@ export const addPayment = async (req, res) => {
       status: status || "completed",
       notes: notes || "",
       receiptUrl: receiptUrl || "",
+      isFinanceLinked: true
     });
+
+    // Create Finance Entry for unified tracking
+    if (status === "completed" || !status) {
+      let transaction_type;
+      if (type === 'customer') {
+        transaction_type = paymentMethod === 'cash' ? 'cash_in' : 'bank_deposit';
+      } else {
+        transaction_type = paymentMethod === 'cash' ? 'cash_out' : 'bank_withdraw';
+      }
+
+      await Finance.create({
+        transaction_type,
+        amount: numericAmount,
+        description: `${category}: ${relatedEntity}`,
+        date: date || new Date(),
+        notes: notes || "",
+        bankAccountId: paymentMethod === "bank" ? bankAccountId : null,
+        bankAccountName: paymentMethod === "bank" ? bankAccountName || "" : ""
+      });
+    }
 
     res.status(201).json({
       success: true,
-      message: "Payment added successfully",
+      message: "Payment added and recorded in finance",
       payment,
     });
   } catch (error) {
@@ -229,6 +251,35 @@ export const addPayment = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to add payment",
+      error: error.message,
+    });
+  }
+};
+
+export const updatePayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const payment = await PaymentTransaction.findByIdAndUpdate(id, updateData, { new: true });
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Payment updated successfully",
+      payment,
+    });
+  } catch (error) {
+    console.error("Error updating payment:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to update payment",
       error: error.message,
     });
   }
@@ -262,131 +313,5 @@ export const deletePayment = async (req, res) => {
 };
 
 // ================================
-//   GET PAYMENT HISTORY FOR SUPPLIER
+//   (Supplier-only payment functions removed)
 // ================================
-export const getSupplierPayments = async (req, res) => {
-    try {
-        const supplierEmail = req.user.email;
-
-        const payments = await PaymentTransaction.find({
-            relatedEntity: supplierEmail,
-            type:          "supplier",
-        }).sort({ date: -1 });
-
-        const formatted = payments.map((p) => ({
-            id:               p._id,
-            transaction_id:   p.transaction_id,
-            amount:           parseDecimal(p.amount),
-            paymentMethod:    p.paymentMethod,
-            date:             p.date,
-            status:           p.status,
-            category:         p.category,
-            billRef:          p.billRef          || null,
-            purchaseOrderRef: p.purchaseOrderRef || null,
-            notes:            p.notes,
-        }));
-
-        return res.status(200).json({
-            success: true,
-            payments: formatted,
-        });
-    } catch (error) {
-        console.error("Error fetching supplier payments:", error);
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch supplier payments",
-            error: error.message,
-        });
-    }
-};
-
-// ================================
-//   PAYMENT STATUS PAGE - STAT CARDS
-// ================================
-export const getSupplierPaymentStats = async (req, res) => {
-    try {
-        const supplierEmail = req.user.email;
-
-        const allPayments = await PaymentTransaction.find({
-            relatedEntity: supplierEmail,
-            type:          "supplier",
-        });
-
-        let receivedAmount = 0;
-        let pendingAmount  = 0;
-        let failedCount    = 0;
-
-        allPayments.forEach((p) => {
-            const amount = parseDecimal(p.amount);
-            if (p.status === "completed") receivedAmount += amount;
-            if (p.status === "pending")   pendingAmount  += amount;
-            if (p.status === "failed")    failedCount++;
-        });
-
-        return res.status(200).json({
-            success: true,
-            stats: {
-                receivedAmount,
-                pendingAmount,
-                totalPayments: allPayments.length,
-                failedPayments: failedCount,
-            },
-        });
-    } catch (error) {
-        console.error("Error fetching supplier payment stats:", error);
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-// ================================
-//   PAYMENT STATUS PAGE - TABLE WITH FILTER
-// ================================
-export const getSupplierPaymentsTable = async (req, res) => {
-    try {
-        const supplierEmail = req.user.email;
-        const { status, search } = req.query;
-
-        const filter = { relatedEntity: supplierEmail, type: "supplier" };
-        if (status) filter.status = status;
-        if (search) {
-            filter.$or = [
-                { transaction_id: { $regex: search, $options: "i" } },
-                { billRef:        { $regex: search, $options: "i" } },
-                { purchaseOrderRef: { $regex: search, $options: "i" } },
-            ];
-        }
-
-        const payments = await PaymentTransaction.find(filter)
-            .sort({ date: -1 });
-
-        // Fetch linked invoice for invoiceID display
-        const billRefs = payments.map((p) => p.billRef).filter(Boolean);
-        const invoices = await Invoice.find({ bill_id: { $in: billRefs } })
-            .select("bill_id invoiceID orderID");
-
-        const invoiceMap = {};
-        invoices.forEach((inv) => { invoiceMap[inv.bill_id] = inv; });
-
-        const formatted = payments.map((p) => {
-            const inv = invoiceMap[p.billRef] || null;
-            return {
-                id:               p._id,
-                transaction_id:   p.transaction_id,
-                po_id:            p.purchaseOrderRef || null,
-                invoiceId:        inv?.bill_id       || null,
-                customerName:     "Hardware Store",
-                amount:           parseDecimal(p.amount),
-                paymentMethod:    p.paymentMethod,
-                status:           p.status,
-                date:             p.date,
-                receiptUrl:       p.receiptUrl       || null,
-                notes:            p.notes,
-            };
-        });
-
-        return res.status(200).json({ success: true, payments: formatted });
-    } catch (error) {
-        console.error("Error fetching supplier payments table:", error);
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
