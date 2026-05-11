@@ -1,284 +1,234 @@
 "use client"
 
 import { useState } from "react"
-import { Package, FileText, Plus, Trash2, UploadCloud, Edit3 } from "lucide-react"
-import { T, font } from "@/lib/tokens"
+import { Package, FileText, Plus, Trash2, UploadCloud, Edit3, ChevronDown } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
 
+interface RequirementItem {
+  id: number
+  name: string
+  quantity: string
+  unit: string
+  deliveryDate: string
+  notes: string
+}
+
 export default function SendRequirements() {
-  const [items, setItems] = useState([
-    { id: 1, name: "", quantity: "", unit: "Units", deliveryDate: "", notes: "", attachments: 0 }
+  const [items, setItems] = useState<RequirementItem[]>([
+    { id: 1, name: "", quantity: "", unit: "Units", deliveryDate: "", notes: "" }
   ])
 
   const handleAddItem = () => {
-    setItems([...items, { id: Date.now(), name: "", quantity: "", unit: "Units", deliveryDate: "", notes: "", attachments: 0 }])
+    setItems([...items, {
+      id: Date.now(), name: "", quantity: "",
+      unit: "Units", deliveryDate: "", notes: ""
+    }])
   }
 
   const handleRemoveItem = (id: number) => {
+    if (items.length === 1) return
     setItems(items.filter(item => item.id !== id))
+  }
+
+  const handleChange = (id: number, field: keyof RequirementItem, value: string) => {
+    setItems(items.map(item => item.id === id ? { ...item, [field]: value } : item))
   }
 
   return (
     <>
-      <DashboardHeader title="Send Requirements" dateString="Thursday, 24 April 2026" />
-      <main style={{
-        flex: 1, overflow: "auto",
-        padding: "24px 28px",
-        display: "flex", flexDirection: "column", gap: 20,
-      }}>
-        {/* ── STATS ROW ─────────────────────────────────────────────────── */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 16,
-        }}>
+      <DashboardHeader title="Send Requirements" />
+
+      <main className="flex-1 overflow-auto p-6 space-y-6 bg-nb-bg">
+
+        {/* ── STAT CARDS ───────────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {/* Total Items */}
-          <div style={{
-            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-            padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
-            boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-          }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 10,
-              background: T.blueBg, display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <Package size={22} color={T.blue} />
+          <div className="bg-nb-cyan border-[3px] border-black shadow-[4px_4px_0px_0px_#000] p-5 flex items-center gap-4 nb-interactive">
+            <div className="w-12 h-12 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] flex items-center justify-center">
+              <Package size={22} strokeWidth={2.5} className="text-black" />
             </div>
             <div>
-              <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Total Items</div>
-              <div style={{ fontSize: 22, color: T.t1, fontWeight: 700, marginTop: 2 }}>{items.length}</div>
+              <p className="font-body font-bold text-xs text-black uppercase tracking-wider">Total Items</p>
+              <h3 className="font-display font-black text-3xl text-black leading-none">{items.length}</h3>
             </div>
           </div>
-          
+
           {/* Attachments */}
-          <div style={{
-            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-            padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
-            boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-          }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 10,
-              background: T.greenBg, display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <FileText size={22} color={T.green} />
+          <div className="bg-nb-green border-[3px] border-black shadow-[4px_4px_0px_0px_#000] p-5 flex items-center gap-4 nb-interactive">
+            <div className="w-12 h-12 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] flex items-center justify-center">
+              <FileText size={22} strokeWidth={2.5} className="text-black" />
             </div>
             <div>
-              <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Attachments</div>
-              <div style={{ fontSize: 22, color: T.t1, fontWeight: 700, marginTop: 2 }}>
-                {items.reduce((acc, curr) => acc + curr.attachments, 0)}
-              </div>
+              <p className="font-body font-bold text-xs text-black uppercase tracking-wider">Attachments</p>
+              <h3 className="font-display font-black text-3xl text-black leading-none">0</h3>
             </div>
           </div>
-          
+
           {/* Status */}
-          <div style={{
-            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-            padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
-            boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-          }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 10,
-              background: T.amberBg, display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <Edit3 size={22} color={T.amber} />
+          <div className="bg-nb-yellow border-[3px] border-black shadow-[4px_4px_0px_0px_#000] p-5 flex items-center gap-4 nb-interactive">
+            <div className="w-12 h-12 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] flex items-center justify-center">
+              <Edit3 size={22} strokeWidth={2.5} className="text-black" />
             </div>
             <div>
-              <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Status</div>
-              <div style={{ fontSize: 22, color: T.t1, fontWeight: 700, marginTop: 2 }}>Draft</div>
+              <p className="font-body font-bold text-xs text-black uppercase tracking-wider">Status</p>
+              <h3 className="font-display font-black text-3xl text-black leading-none">Draft</h3>
             </div>
           </div>
         </div>
 
-        {/* ── REQUIREMENTS SECTION ────────────────────────────────────────── */}
-        <div style={{
-          background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-          padding: "24px", boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Package size={20} color={T.ink} />
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: T.t1, margin: 0 }}>Product Requirements</h2>
+        {/* ── REQUIREMENTS SECTION ─────────────────────────────────────── */}
+        <section className="bg-white border-[3px] border-black shadow-[6px_6px_0px_0px_#000] overflow-hidden">
+
+          {/* Section header */}
+          <div className="bg-black px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Package size={18} strokeWidth={2.5} className="text-white" />
+              <h2 className="font-display font-black text-sm text-white uppercase tracking-[0.15em]">
+                Product Requirements
+              </h2>
             </div>
-            <button 
+            <button
               onClick={handleAddItem}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                background: T.primary, color: "#fff",
-                border: "none", borderRadius: 8, padding: "8px 16px",
-                fontSize: 13, fontWeight: 600, cursor: "pointer",
-                fontFamily: font,
-                transition: "background 0.2s"
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = T.primaryHover}
-              onMouseOut={(e) => e.currentTarget.style.background = T.primary}
+              className="flex items-center gap-2 px-4 py-2 bg-nb-yellow text-black font-display font-black text-xs uppercase tracking-widest border-[2px] border-nb-yellow shadow-[2px_2px_0px_0px_#fff] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all duration-100"
             >
-              <Plus size={16} strokeWidth={2.5} />
+              <Plus size={14} strokeWidth={3} />
               Add Item
             </button>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {/* Items list */}
+          <div className="p-6 space-y-6">
             {items.map((item, index) => (
-              <div key={item.id} style={{
-                border: `1px solid ${T.borderLight}`, borderRadius: 8,
-                padding: "20px", background: T.surface
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                  <h3 style={{ fontSize: 14, fontWeight: 600, color: T.ink, margin: 0 }}>Item {index + 1}</h3>
-                  <button 
+              <div
+                key={item.id}
+                className="border-[2px] border-black shadow-[3px_3px_0px_0px_#000] overflow-hidden"
+              >
+                {/* Item header */}
+                <div className="flex items-center justify-between px-5 py-3 bg-nb-bg border-b-[2px] border-black">
+                  <span className="font-display font-black text-xs uppercase tracking-widest text-black">
+                    Item {index + 1}
+                  </span>
+                  <button
                     onClick={() => handleRemoveItem(item.id)}
-                    style={{
-                      background: T.card, border: `1px solid ${T.border}`, color: T.red,
-                      width: 32, height: 32, borderRadius: 6,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: "pointer", transition: "all 0.2s"
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.background = T.redBg;
-                      e.currentTarget.style.borderColor = T.redBg;
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.background = T.card;
-                      e.currentTarget.style.borderColor = T.border;
-                    }}
+                    disabled={items.length === 1}
+                    className="w-8 h-8 flex items-center justify-center bg-white border-[2px] border-black text-nb-red shadow-[2px_2px_0px_0px_#000] hover:bg-nb-red hover:text-white hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all duration-100 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} strokeWidth={2.5} />
                   </button>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)", gap: 20, marginBottom: 16 }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 8 }}>
-                      Item Name <span style={{color: T.red}}>*</span>
-                    </label>
-                    <div style={{ position: "relative" }}>
-                      <select style={{
-                        width: "100%", padding: "10px 14px", borderRadius: 8,
-                        border: `1px solid ${T.border}`, background: T.card,
-                        fontSize: 13, color: T.t1, fontFamily: font, outline: "none",
-                        boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-                        appearance: "none"
-                      }}>
-                        <option value="">Select item...</option>
-                        <option value="Laptop">Laptop</option>
-                        <option value="Monitor">Monitor</option>
-                        <option value="Keyboard">Keyboard</option>
-                      </select>
-                      <div style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: T.t3 }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                {/* Item form */}
+                <div className="p-5 space-y-4">
+                  {/* Row 1: Name + Quantity */}
+                  <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-4">
+                    <div className="space-y-2">
+                      <label className="block font-display font-black text-[10px] uppercase tracking-widest text-black">
+                        Item Name <span className="text-nb-red">*</span>
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={item.name}
+                          onChange={e => handleChange(item.id, "name", e.target.value)}
+                          className="w-full px-4 py-2.5 appearance-none bg-white border-[2px] border-black font-body text-sm text-black shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-100"
+                        >
+                          <option value="">Select item...</option>
+                          <option value="Laptop">Laptop</option>
+                          <option value="Monitor">Monitor</option>
+                          <option value="Keyboard">Keyboard</option>
+                          <option value="Raw Silk">Raw Silk</option>
+                          <option value="Cotton Thread">Cotton Thread</option>
+                          <option value="Linen Fabric">Linen Fabric</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-black pointer-events-none" size={16} strokeWidth={2.5} />
                       </div>
                     </div>
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 8 }}>
-                      Quantity <span style={{color: T.red}}>*</span>
-                    </label>
-                    <input type="number" placeholder="0" style={{
-                      width: "100%", padding: "10px 14px", borderRadius: 8,
-                      border: `1px solid ${T.border}`, background: T.card,
-                      fontSize: 13, color: T.t1, fontFamily: font, outline: "none",
-                      boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
-                    }} />
-                  </div>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 20, marginBottom: 16 }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 8 }}>
-                      Unit
-                    </label>
-                    <div style={{ position: "relative" }}>
-                      <select style={{
-                        width: "100%", padding: "10px 14px", borderRadius: 8,
-                        border: `1px solid ${T.border}`, background: T.card,
-                        fontSize: 13, color: T.t1, fontFamily: font, outline: "none",
-                        boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-                        appearance: "none"
-                      }}>
-                        <option value="Units">Units</option>
-                        <option value="Kg">Kg</option>
-                        <option value="Liters">Liters</option>
-                      </select>
-                      <div style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: T.t3 }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                      </div>
+                    <div className="space-y-2">
+                      <label className="block font-display font-black text-[10px] uppercase tracking-widest text-black">
+                        Quantity <span className="text-nb-red">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={item.quantity}
+                        onChange={e => handleChange(item.id, "quantity", e.target.value)}
+                        className="w-full px-4 py-2.5 bg-white border-[2px] border-black font-body text-sm text-black shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-100"
+                      />
                     </div>
                   </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 8 }}>
-                      Expected Delivery Date <span style={{color: T.red}}>*</span>
-                    </label>
-                    <input type="date" style={{
-                      width: "100%", padding: "10px 14px", borderRadius: 8,
-                      border: `1px solid ${T.border}`, background: T.card,
-                      fontSize: 13, color: T.t1, fontFamily: font, outline: "none",
-                      boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
-                    }} />
-                  </div>
-                </div>
 
-                <div style={{ marginBottom: 20 }}>
-                   <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 8 }}>
+                  {/* Row 2: Unit + Delivery Date */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="block font-display font-black text-[10px] uppercase tracking-widest text-black">
+                        Unit
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={item.unit}
+                          onChange={e => handleChange(item.id, "unit", e.target.value)}
+                          className="w-full px-4 py-2.5 appearance-none bg-nb-yellow border-[2px] border-black font-body font-bold text-sm text-black shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-100"
+                        >
+                          <option value="Units">Units</option>
+                          <option value="Kg">Kg</option>
+                          <option value="Liters">Liters</option>
+                          <option value="Meters">Meters</option>
+                          <option value="Boxes">Boxes</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-black pointer-events-none" size={16} strokeWidth={2.5} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block font-display font-black text-[10px] uppercase tracking-widest text-black">
+                        Expected Delivery <span className="text-nb-red">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={item.deliveryDate}
+                        onChange={e => handleChange(item.id, "deliveryDate", e.target.value)}
+                        className="w-full px-4 py-2.5 bg-white border-[2px] border-black font-body text-sm text-black shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-100"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 3: Notes */}
+                  <div className="space-y-2">
+                    <label className="block font-display font-black text-[10px] uppercase tracking-widest text-black">
                       Notes
                     </label>
-                    <textarea placeholder="Additional specifications or notes..." rows={3} style={{
-                      width: "100%", padding: "10px 14px", borderRadius: 8,
-                      border: `1px solid ${T.border}`, background: T.card,
-                      fontSize: 13, color: T.t1, fontFamily: font, outline: "none",
-                      resize: "vertical", boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
-                    }} />
-                </div>
-                
-                {/* Embedded Document Uploader for Item */}
-                <div style={{ 
-                    display: "flex", alignItems: "center", justifyContent: "space-between", 
-                    paddingTop: 16, borderTop: `1px dashed ${T.border}` 
-                }}>
-                  <div style={{ fontSize: 13, color: T.t2 }}>
-                    Attach supporting documents for this item specifications
+                    <textarea
+                      placeholder="Additional specifications or notes..."
+                      rows={3}
+                      value={item.notes}
+                      onChange={e => handleChange(item.id, "notes", e.target.value)}
+                      className="w-full px-4 py-2.5 bg-white border-[2px] border-black font-body text-sm text-black resize-vertical shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-100 placeholder:text-gray-400"
+                    />
                   </div>
-                  <button style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    background: T.card, color: T.ink,
-                    border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 14px",
-                    fontSize: 13, fontWeight: 600, cursor: "pointer",
-                    fontFamily: font, transition: "all 0.2s",
-                    boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
-                  }}
-                  onMouseOver={(e) => {
-                      e.currentTarget.style.background = T.surface;
-                      e.currentTarget.style.borderColor = T.inkHover;
-                      e.currentTarget.style.color = T.inkHover;
-                  }}
-                  onMouseOut={(e) => {
-                      e.currentTarget.style.background = T.card;
-                      e.currentTarget.style.borderColor = T.border;
-                      e.currentTarget.style.color = T.ink;
-                  }}
-                  >
-                    <UploadCloud size={16} />
-                    Attach Document
-                  </button>
+
+                  {/* Attach Document */}
+                  <div className="flex items-center justify-between pt-4 border-t-[2px] border-dashed border-black">
+                    <p className="font-body text-xs font-bold text-gray-600 uppercase tracking-tight">
+                      Supporting documents
+                    </p>
+                    <button className="flex items-center gap-2 px-4 py-2 bg-white border-[2px] border-black font-body font-bold text-xs uppercase text-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all duration-100">
+                      <UploadCloud size={14} strokeWidth={2.5} />
+                      Attach Document
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-          
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 24, paddingTop: 24, borderTop: `1px solid ${T.borderLight}` }}>
-             <button style={{
-                background: T.primary, color: "#fff",
-                border: "none", borderRadius: 8, padding: "12px 24px",
-                fontSize: 14, fontWeight: 600, cursor: "pointer",
-                fontFamily: font, transition: "background 0.2s",
-                boxShadow: "0 2px 4px rgba(29, 158, 117, 0.2)"
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = T.primaryHover}
-              onMouseOut={(e) => e.currentTarget.style.background = T.primary}
-             >
-                Submit Requirement
-             </button>
+
+          {/* Submit footer */}
+          <div className="flex justify-end items-center gap-4 px-6 py-5 border-t-[3px] border-black bg-nb-bg">
+            <button className="px-5 py-2.5 bg-white text-black font-body font-bold text-sm border-[2px] border-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_#000] transition-all duration-100">
+              Save Draft
+            </button>
+            <button className="px-5 py-2.5 bg-black text-white font-display font-black text-sm uppercase tracking-widest border-[2px] border-black shadow-[4px_4px_0px_0px_#22c55e] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all duration-100">
+              Submit Requirement
+            </button>
           </div>
-        </div>
+        </section>
       </main>
     </>
   )
