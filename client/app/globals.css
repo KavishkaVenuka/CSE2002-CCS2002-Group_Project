@@ -1,26 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=DM+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #F8FAFC;
-  --foreground: #0F172A;
+  --background: #F5F0E8;
+  --foreground: #000000;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  /* Neo Brutalist Core Colors */
+  --color-nb-black:   #000000;
+  --color-nb-white:   #FFFFFF;
+  --color-nb-bg:      #F5F0E8;
+  --color-nb-surface: #FFFFFF;
+
+  /* Neo Brutalist Accent Colors */
+  --color-nb-yellow:  #FACC15;
+  --color-nb-green:   #4ADE80;
+  --color-nb-cyan:    #A5E6DC;
+  --color-nb-red:     #EF4444;
+  --color-nb-orange:  #FB923C;
+
+  /* Legacy alias (supplier pages use this) */
+  --color-nb-lime:    #defa08;
+
+  /* Neo Brutalist Shadows (no blur, hard offset) */
+  --shadow-nb:    4px 4px 0px 0px #000000;
+  --shadow-nb-sm: 2px 2px 0px 0px #000000;
+  --shadow-nb-lg: 6px 6px 0px 0px #000000;
+  --shadow-nb-xl: 8px 8px 0px 0px #000000;
+
+  /* Fonts */
+  --font-display:  "Space Grotesk", sans-serif;
+  --font-body:     "DM Sans", sans-serif;
+  --font-mono:     "Space Mono", monospace;
+  --font-sans:     "DM Sans", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: #F5F0E8;
+    color: #000000;
+    font-family: "DM Sans", sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Space Grotesk", sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* ── The signature "press" interaction ────────────────────────────── */
+  .nb-interactive {
+    transition: all 100ms ease;
+    cursor: pointer;
+  }
+  .nb-interactive:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px 0px #000000;
+  }
+  .nb-interactive:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+  }
+
+  /* ── Card base ────────────────────────────────────────────────────── */
+  .nb-card {
+    background: #FFFFFF;
+    border: 2px solid #000000;
+    box-shadow: 4px 4px 0px 0px #000000;
+    border-radius: 0;
+  }
+
+  /* ── Section divider ──────────────────────────────────────────────── */
+  .nb-divider {
+    border-top: 2px solid #000000;
+    margin: 24px 0;
+  }
 }
