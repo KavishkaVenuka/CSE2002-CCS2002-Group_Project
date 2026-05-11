@@ -1,7 +1,5 @@
 "use client"
 
-import { T, ACT_DOT } from "@/lib/tokens"
-
 interface ActivityItemProps {
   item: {
     text: string
@@ -11,28 +9,28 @@ interface ActivityItemProps {
   isLast: boolean
 }
 
+const DOT_COLORS: Record<string, string> = {
+  green:   "bg-nb-green  border-black",
+  blue:    "bg-nb-cyan   border-black",
+  amber:   "bg-nb-yellow border-black",
+  red:     "bg-nb-red    border-black",
+  primary: "bg-nb-green  border-black",
+}
+
 export function ActivityItem({ item, isLast }: ActivityItemProps) {
-  const dotColor = (ACT_DOT as any)[item.type] || T.t3
+  const dotColor = DOT_COLORS[item.type] ?? "bg-gray-400 border-black"
+
   return (
-    <div style={{
-      padding: "16px 20px",
-      borderRight: isLast ? "none" : `1px solid ${T.borderLight}`,
-      display: "flex", gap: 12, alignItems: "flex-start",
-    }}>
-      <div style={{
-        width: 7, height: 7, borderRadius: "50%",
-        background: dotColor, flexShrink: 0, marginTop: 5,
-      }} />
+    <div className={`p-5 flex gap-3 items-start ${isLast ? "" : "border-r-[2px] border-black"}`}>
+      {/* NB dot indicator — square, not circle */}
+      <div className={`w-3 h-3 border-[2px] shrink-0 mt-1 ${dotColor}`} />
       <div>
-        <div style={{
-          fontSize: 12.5, color: T.t1,
-          lineHeight: 1.55, fontWeight: 500,
-        }}>
+        <p className="font-body font-bold text-sm text-black leading-snug">
           {item.text}
-        </div>
-        <div style={{ fontSize: 11, color: T.t3, marginTop: 5 }}>
+        </p>
+        <p className="font-mono text-[10px] text-gray-500 uppercase tracking-wider mt-1">
           {item.time}
-        </div>
+        </p>
       </div>
     </div>
   )
