@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { GlobalSidebar } from "@/components/ui/GlobalSidebar"
+import { GlobalSidebar } from "@/components/common/GlobalSidebar"
 import {
   LayoutDashboard, Send, FileText, ShoppingBag,
   Truck, Receipt, CreditCard, CheckSquare, Boxes,
@@ -9,14 +9,14 @@ import {
 } from "lucide-react"
 
 const NAV_ITEMS = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: Send,             label: "Send Requirements", href: "/send-requirements" },
-  { icon: FileText,         label: "Quotations", href: "/quotations" },
-  { icon: ShoppingBag,      label: "My Orders", href: "/my-orders" },
-  { icon: Truck,            label: "Delivery Tracking", href: "/delivery-tracking" },
-  { icon: Receipt,          label: "Invoices", href: "/invoices" },
-  { icon: CreditCard,       label: "Payments", href: "/payments" },
-  { icon: CheckSquare,      label: "Order Confirmation", href: "/order-confirmation" },
+  { icon: LayoutDashboard, label: "Dashboard",        href: "/dashboard" },
+  { icon: Send,            label: "Send Requirements", href: "/send-requirements" },
+  { icon: FileText,        label: "Quotations",        href: "/quotations" },
+  { icon: ShoppingBag,     label: "My Orders",         href: "/my-orders" },
+  { icon: Truck,           label: "Delivery Tracking", href: "/delivery-tracking" },
+  { icon: Receipt,         label: "Invoices",          href: "/invoices" },
+  { icon: CreditCard,      label: "Payments",          href: "/payments" },
+  { icon: CheckSquare,     label: "Order Confirmation",href: "/order-confirmation" },
 ]
 
 export function Sidebar() {

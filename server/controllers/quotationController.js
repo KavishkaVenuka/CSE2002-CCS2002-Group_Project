@@ -1,8 +1,9 @@
-import Quotation from "../models/Order.js";
-import Supplier from "../models/Supplier.js";
 import Quotation from "../models/Quotation.js";
+import Requirement from "../models/Requirement.js";
+import User from "../models/User.js";
+import Order from "../models/Order.js";
 
-exports.getPendingQuotationCount = async (req, res) => {
+export const getPendingQuotationCount = async (req, res) => {
     try{
         const email = req.params.email;
         const pendingQuotationCount = await Quotation.countDocuments({
@@ -20,7 +21,7 @@ exports.getPendingQuotationCount = async (req, res) => {
     }
 }
 
-exports.getPendingQuotations = async (req, res) => {
+export const getPendingQuotations = async (req, res) => {
     try{
         const email = req.params.email;
         const pendingQuotations = await Quotation.find({
@@ -36,7 +37,7 @@ exports.getPendingQuotations = async (req, res) => {
     }
 }   
 
-exports.getAcceptedQuotationsCount = async (req, res) => {
+export const getAcceptedQuotationsCount = async (req, res) => {
     try{
         const {email} = req.query;
         if(!email){
@@ -57,7 +58,7 @@ exports.getAcceptedQuotationsCount = async (req, res) => {
     }
 };
 
-exports.getRejectedQuotationsCount = async (req, res) => {
+export const getRejectedQuotationsCount = async (req, res) => {
     try{
         const {email} = req.query;
         if(!email){
@@ -77,7 +78,7 @@ exports.getRejectedQuotationsCount = async (req, res) => {
     }
 };
 
-exports.getExpiredQuotationsCount = async (req, res) => {
+export const getExpiredQuotationsCount = async (req, res) => {
     try{
         const {email} = req.query; 
         if(!email){
@@ -99,15 +100,28 @@ exports.getExpiredQuotationsCount = async (req, res) => {
     }
 }
 
-exports.getAllQuotationsByCustomer = async (req, res) => {
-    try{
-        const email = req.params.email;
+export const getAllQuotations = async (req, res) => {
+    try {
+        const quotations = await Quotation.find().sort({ date: -1 });
+        res.status(200).json({ success: true, quotations: quotations });
+    } catch (err) {
+        res.status(500).json({
+            success: false,      
+            message: "Error getting all quotations",      
+            error: err.message
+        });
+    }
+}
 
-        if(!email) {
-            return res.status(400).json({ success: false, message: "Email is required" });
+export const getAllQuotationsByCustomer = async (req, res) => {
+    try{
+        const customerId = req.params.customerId;
+
+        if(!customerId) {
+            return res.status(400).json({ success: false, message: "Customer ID is required" });
         }
 
-        const quotations = await Quotation.find({ email: email }).sort({ date: -1 });
+        const quotations = await Quotation.find({ customerId }).sort({ createdAt: -1 });
         res.status(200).json({ success: true, quotations: quotations });
     } catch (err) {
         res.status(500).json({
@@ -118,7 +132,7 @@ exports.getAllQuotationsByCustomer = async (req, res) => {
     }
 }
 
-exports.getPendingQuotationsByCustomer = async (req, res) => {
+export const getPendingQuotationsByCustomer = async (req, res) => {
     try{
         const email = req.params.email;         
         if(!email) {
@@ -136,13 +150,10 @@ exports.getPendingQuotationsByCustomer = async (req, res) => {
     }
 }
 
-exports.rejectQuotation = async (req, res) => {
+export const rejectQuotation = async (req, res) => {
     try{
-        const { quotationID, email } = req.body;
-        if(!quotationID || !email) {
-            return res.status(400).json({ success: false, message: "Quotation ID and email are required" });
-        }
-        const quotation = await Quotation.findOne({ _id: quotationID, email: email });
+        const id = req.params.id;
+        const quotation = await Quotation.findById(id);
 
         if(!quotation) {
             return res.status(404).json({ success: false, message: "Quotation not found" });
@@ -160,26 +171,72 @@ exports.rejectQuotation = async (req, res) => {
     }
 }
 
+export const acceptQuotation = async (req, res) => {
+    try{
+        const id = req.params.id;
+        const quotation = await Quotation.findById(id);
+
+        if(!quotation) {
+            return res.status(404).json({ success: false, message: "Quotation not found" });
+        }  
+        quotation.status = "accepted";
+        await quotation.save();
+
+        // If it's a supplier quotation, automatically create a Purchase Order (Order of type 'purchase')
+        if (quotation.quotationType === "supplier") {
+            const purchaseOrder = new Order({
+                orderID: `PO-${Date.now()}`,
+                quotationRef: quotation.sq_id || quotation.quotationID,
+                supplierEmail: quotation.supplierEmail,
+                name: "Hardware Store", // Admin's business name
+                email: quotation.supplierEmail,
+                items: quotation.items.map(item => ({
+                    productID: item.productID,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    unit: item.unit
+                })),
+                total: quotation.total,
+                status: "pending",
+                orderType: "purchase",
+                date: new Date()
+            });
+            await purchaseOrder.save();
+        }
+
+        res.status(200).json({ success: true, message: "Quotation accepted and Purchase Order created successfully" });
+         
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: "Error accepting quotation",
+            error: err.message
+        });
+    }
+}
+
 // ================================
-//   CREATE SUPPLIER QUOTATION
+//   CREATE SUPPLIER / ADMIN QUOTATION
 // ================================
-exports.createSupplierQuotation = async (req, res) => {
+export const createSupplierQuotation = async (req, res) => {
     try {
-        const supplierId    = req.user.id;
-        const supplierEmail = req.user.email;
+        // Works for both: a logged-in supplier (req.user populated) OR an admin calling on behalf
+        const supplierId    = req.user?.id    || null;
+        const supplierEmail = req.user?.email || null;
 
         const {
             requirementId,
-            items,           
+            items,
             subtotal,
             tax_amount,
             total_estimate,
             currency,
             notes,
             validUntil,
-            delivery_timeline, 
-            payment_terms,     
-            status,            
+            delivery_timeline,
+            payment_terms,
+            status,
         } = req.body;
 
         if (!items || items.length === 0 || !total_estimate) {
@@ -189,19 +246,31 @@ exports.createSupplierQuotation = async (req, res) => {
             });
         }
 
-        // Verify requirement exists
+        // Verify requirement exists (if linked) and extract the customerId + customerName
+        let customerId = req.body.customerId || null;
+        let customerName = null;
         if (requirementId) {
-            const requirement = await Requirement.findById(requirementId);
+            const requirement = await Requirement.findById(requirementId)
+                .populate("customerId", "fullName email");
             if (!requirement) {
                 return res.status(404).json({
                     success: false,
                     message: "Requirement not found",
                 });
             }
+            // Always use the customerId from the Requirement as the source of truth
+            customerId = requirement.customerId?._id || requirement.customerId;
+            customerName = requirement.customerId?.fullName || null;
         }
 
-        // Prevent duplicate active quotation for same requirement
-        if (requirementId && status !== "draft") {
+        // If we have customerId but no name yet, look it up directly
+        if (customerId && !customerName) {
+            const customer = await User.findById(customerId).select("fullName");
+            customerName = customer?.fullName || null;
+        }
+
+        // Prevent duplicate active quotation for same requirement + supplier
+        if (requirementId && supplierId && status !== "draft") {
             const existing = await Quotation.findOne({
                 supplierId,
                 quotationType: "supplier",
@@ -219,47 +288,43 @@ exports.createSupplierQuotation = async (req, res) => {
         const quotationStatus = status === "draft" ? "draft" : "pending";
 
         const quotation = new Quotation({
-            quotationID:       `SQ-TEMP-${Date.now()}`,
-            email:             supplierEmail,
-            name:              req.user.fullName || "Supplier",
+            quotationID:       `QT-TEMP-${Date.now()}`,
+            customerId:        customerId    || undefined,   // link to correct customer
+            email:             supplierEmail || "admin@system",
+            name:              customerName || "Customer",  // actual customer's name, not admin's
             address:           "",
             total:             total_estimate,
             phonenumber:       0,
             items: items.map(item => ({
-                productID:   item.itemName,   
+                productID:   item.itemName,
                 name:        item.itemName,
                 price:       item.unitPrice || 0,
-                quantity:    item.quantity || 0,
-                image:       "",
+                quantity:    item.quantity  || 0,
                 unit:        item.unit        || "pieces",
                 unitPrice:   item.unitPrice   || 0,
                 totalPrice:  item.totalPrice  || 0,
                 description: item.description || "",
             })),
             requirementId:     requirementId || null,
-            supplierId,
-            supplierEmail,
+            supplierId:        supplierId    || null,
+            supplierEmail:     supplierEmail || null,
             total_estimate,
             subtotal:          subtotal       || 0,
             tax_amount:        tax_amount     || 0,
             currency:          currency       || "LKR",
             notes:             notes          || "",
             validUntil:        validUntil     || null,
-            delivery_timeline: delivery_timeline || "",
-            payment_terms:     payment_terms  || "Net 30",
             quotationType:     "supplier",
             status:            quotationStatus,
         });
 
         await quotation.save();
 
-        quotation.quotationID = quotation.sq_id;
-        await quotation.save();
 
+        // When quotation is SENT (not draft), mark the Requirement as "quoted"
+        // Admin side → shows as "Sent" | Customer side → shows as "Received"
         if (requirementId && quotationStatus === "pending") {
-            await Supplier.findByIdAndUpdate(supplierId, {
-                $addToSet: { quotedRequirementIds: requirementId },
-            });
+            await Requirement.findByIdAndUpdate(requirementId, { status: "quoted" });
         }
 
         return res.status(201).json({
@@ -280,10 +345,11 @@ exports.createSupplierQuotation = async (req, res) => {
     }
 };
 
+
 // ================================
 //   GET ALL QUOTATIONS FOR THIS SUPPLIER
 // ================================
-exports.getSupplierQuotations = async (req, res) => {
+export const getSupplierQuotations = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
 
@@ -307,7 +373,7 @@ exports.getSupplierQuotations = async (req, res) => {
 // ================================
 //   GET SINGLE SUPPLIER QUOTATION
 // ================================
-exports.getSupplierQuotationById = async (req, res) => {
+export const getSupplierQuotationById = async (req, res) => {
     try {
         const supplierEmail = req.user.email;
 
@@ -339,7 +405,7 @@ exports.getSupplierQuotationById = async (req, res) => {
 // ================================
 //   UPDATE / EDIT A DRAFT QUOTATION
 // ================================
-exports.updateSupplierQuotation = async (req, res) => {
+export const updateSupplierQuotation = async (req, res) => {
     try {
         const supplierId    = req.user.id;
         const supplierEmail = req.user.email;
@@ -404,11 +470,6 @@ exports.updateSupplierQuotation = async (req, res) => {
         // Allow promoting a draft to submitted
         if (status === "pending" && quotation.status === "draft") {
             quotation.status = "pending";
-            if (quotation.requirementId) {
-                await Supplier.findByIdAndUpdate(supplierId, {
-                    $addToSet: { quotedRequirementIds: quotation.requirementId },
-                });
-            }
         }
 
         await quotation.save();
@@ -434,7 +495,7 @@ exports.updateSupplierQuotation = async (req, res) => {
 // ================================
 //   SUBMIT A SAVED DRAFT
 // ================================
-exports.submitDraftQuotation = async (req, res) => {
+export const submitDraftQuotation = async (req, res) => {
     try {
         const supplierId = req.user.id;
 
@@ -455,12 +516,6 @@ exports.submitDraftQuotation = async (req, res) => {
         quotation.status = "pending";
         await quotation.save();
 
-        if (quotation.requirementId) {
-            await Supplier.findByIdAndUpdate(supplierId, {
-                $addToSet: { quotedRequirementIds: quotation.requirementId },
-            });
-        }
-
         return res.status(200).json({
             success: true,
             message: "Quotation submitted successfully",
@@ -476,111 +531,5 @@ exports.submitDraftQuotation = async (req, res) => {
 };
 
 // ================================
-//   QUOTATION STATUS PAGE - STAT CARDS
+//   (Supplier-only quotation functions removed)
 // ================================
-exports.getSupplierQuotationStats = async (req, res) => {
-    try {
-        const supplierId = req.user.id;
-
-        const pending = await Quotation.countDocuments({
-            supplierId, quotationType: "supplier", status: "pending"
-        });
-        const approved = await Quotation.countDocuments({
-            supplierId, quotationType: "supplier", status: "accepted"
-        });
-        const rejected = await Quotation.countDocuments({
-            supplierId, quotationType: "supplier", status: "rejected"
-        });
-
-        return res.status(200).json({
-            success: true,
-            stats: { pending, approved, rejected },
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-// ================================
-//   QUOTATION STATUS PAGE - TABLE
-// ================================
-exports.getSupplierQuotationsTable = async (req, res) => {
-    try {
-        const supplierEmail = req.user.email;
-        const { status, search } = req.query;
-
-        const filter = { supplierEmail, quotationType: "supplier" };
-        if (status) filter.status = status;
-        if (search) {
-            filter.$or = [
-                { sq_id: { $regex: search, $options: "i" } },
-                { quotationID: { $regex: search, $options: "i" } },
-            ];
-        }
-
-        const quotations = await Quotation.find(filter)
-            .sort({ createdAt: -1 });
-
-        const formatted = quotations.map((q) => ({
-            id:            q._id,
-            sq_id:         q.sq_id,
-            quotationID:   q.quotationID,
-            requirementId: q.requirementId
-                ? `REQ-${q.requirementId.toString().slice(-5).toUpperCase()}`
-                : null,
-            requirementObjectId: q.requirementId || null,
-            customerName:  "Hardware Store",   // Admin side customer — adjust if your Requirement model stores customer name
-            total_estimate: q.total_estimate,
-            date:          q.createdAt,
-            status:        q.status,
-            adminNotes:    q.adminNotes || null,
-        }));
-
-        return res.status(200).json({ success: true, quotations: formatted });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-// ================================
-//   QUOTATION DETAIL BOX
-// ================================
-exports.getSupplierQuotationDetail = async (req, res) => {
-    try {
-        const supplierId = req.user.id;
-
-        const q = await Quotation.findOne({
-            _id: req.params.id,
-            supplierId,
-            quotationType: "supplier",
-        });
-
-        if (!q) {
-            return res.status(404).json({ success: false, message: "Quotation not found" });
-        }
-
-        return res.status(200).json({
-            success: true,
-            quotation: {
-                id:            q._id,
-                sq_id:         q.sq_id,
-                requirementId: q.requirementId
-                    ? `REQ-${q.requirementId.toString().slice(-5).toUpperCase()}`
-                    : null,
-                requirementObjectId: q.requirementId || null,
-                customerName:  "Hardware Store",
-                date:          q.createdAt,
-                total_estimate: q.total_estimate,
-                status:        q.status,
-                adminNotes:    q.adminNotes || null,
-                items:         q.items,
-                notes:         q.notes,
-                delivery_timeline: q.delivery_timeline || null,
-                payment_terms: q.payment_terms || null,
-                validUntil:    q.validUntil || null,
-            },
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};

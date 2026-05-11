@@ -1,12 +1,12 @@
 "use client"
 
 import {
-  FileText, CheckSquare, Package, AlertCircle,
+  FileText, Package, AlertCircle,
 } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
 import { Panel } from "@/components/ui/Panel"
 import { ActivityItem } from "@/components/customer/ActivityItem"
-import { GlobalStatCard } from "@/components/ui/GlobalStatCard"
+import { GlobalStatCard } from "@/components/common/GlobalStatCard"
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const ACTIVITY = [
@@ -96,8 +96,20 @@ export default function CustomerDashboard() {
                 isLast={i === ACTIVITY.length - 1}
               />
             ))}
+          </Panel>
+        </section>
+
+        {/* ── QUOTATIONS ──────────────────────────────────────────────── */}
+        <section>
+          <h2 className="font-display font-black text-xl text-black mb-4">
+            Open Quotations
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {QUOTATIONS.map((q) => (
+              <QuotationCard key={q.id} q={q} />
+            ))}
           </div>
-        </Panel>
+        </section>
 
       </main>
     </>

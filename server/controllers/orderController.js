@@ -1,799 +1,375 @@
+import mongoose from "mongoose";
 import Order from "../models/Order.js";
-import Product from "../models/Product.js";
+import StockItem from "../models/Stock.js";
+import Quotation from "../models/Quotation.js";
 
-exports.createOrder = async (req, res) => {
+// 1. GET: Customer kenekta adala orders tika pamanak ganna (Table eka sandaha)
+export const getOrdersByCustomerId = async (req, res) => {
+    try {
+        const { customerId } = req.params;
+        // Search by customerId OR email (some orders might have only email or business ID)
+        const orders = await Order.find({
+            $or: [
+                { customerId: customerId },
+                { email: customerId } 
+            ]
+        }).sort({ date: -1 });
 
-    if(req.user == null){
-        return res.status(401).json({ message: "Authentication required" });
+        // Frontend eke interface ekata galapena widiyata map kirima
+        const mappedOrders = orders.map(o => ({
+            _id: o._id,
+            orderID: o.orderID,
+            email: o.email,
+            quotationRef: o.quotationRef || null,
+            orderDate: o.date,
+            totalAmount: o.total || o.totalCost,
+            totalItems: o.items?.length || 0,
+            status: o.status.toLowerCase(),
+            customerID: o.customerId,
+            items: o.items, // Include items for tracking
+            invoiced: o.invoiced || false,
+            statusDates: o.statusDates
+        }));
 
+        res.status(200).json(mappedOrders);
+    } catch (err) {
+        res.status(500).json({ message: "Server error", error: err.message });
     }
-    try{const latestOrder = await Order.findOne().sort({ date: -1 });
+};
 
-    let orderID = "ORD000001";
-
-    if(latestOrder !== null){
-        let latestOrderID= latestOrder.orderID;
-        let latestOrderNumberString = latestOrderID.replace("ORD", "");
-        let latestOrderNumber = parseInt(latestOrderNumberString);
-        let newOrderNumber = latestOrderNumber + 1;
-        orderID = "ORD" + newOrderNumber.toString().padStart(6, '0');
-
+// 2. GET: Pending Count
+export const getPendingOrderCountByCustomer = async (req, res) => {
+    try {
+        const { customerId } = req.params;
+        const count = await Order.countDocuments({ customerId, status: { $regex: /^pending$/i } });
+        res.status(200).json({ count });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-    const items = []
-    let total = 0
+};
 
-    for(let i=0 ; i < req.body.items.length; i++){
-        const product = await Product.findOne({
-            productID: req.body.items[i].productID
-        })
-  
-    if(product == null ){
-        return res.status(400).json({
-            message : `Product with ID ${req.body.items[i].productID}not found`
-        })}
-
-    if(product.stock < req.body.items[i].quantity){
-        return res.status(400).json({
-            message:`only ${product.stock} items available in stock for product ID ${req.body.items[i].productID} `})}    
-    
-     items.push({
-                    productID: product.productID,
-                    name: product.name,
-                    price: product.price,
-                    quantity: req.body.items[i].quantity,
-                    image: product.images[0]
-                });
-        total += product.price * req.body.items[i].quantity;
-    
-        } 
-    let name = req.body.name;         
-    if(req.body.name == null ) {
-        name = req.user.firstName + " " + req.user.lastName;
-    }  
-    const newOrder = new Order({
-        orderID: orderID,
-        email : req.user.email,
-        address : req.body.address,
-        notes: req.body.notes ?? req.body.note ?? undefined,
-        total : total,
-        items : items,
-        phonenumber: req.body.phonenumber,
-        name: name
-    })
-
-    await newOrder.save();
-
-    for(let i=0 ; i < req.body.items.length; i++){
-        await Product.updateOne(
-            { productID: req.body.items[i].productID },
-            {$inc: { stock: -req.body.items[i].quantity }   })}
-
-    return res.json({
-        message: "Order created successfully",
-        orderID: orderID
-    });
-
-                
-    }catch(err){ 
-        return res.status(500).json({ message: "Server error", error: err.message });   
+// 3. GET: Processing Count
+export const getProcessingOrderCountByCustomer = async (req, res) => {
+    try {
+        const { customerId } = req.params;
+        const count = await Order.countDocuments({ customerId, status: { $regex: /^processing$/i } });
+        res.status(200).json({ count });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-    
+};
 
-        }
-
-exports.getOrders = async (req, res) => {
-    if(req.user == null){
-        return res.status(401).json({ message: "Authentication required" });        
+// 4. GET: Dispatched Count
+export const getDispatchedOrderCountByCustomer = async (req, res) => {
+    try {
+        const { customerId } = req.params;
+        const count = await Order.countDocuments({ customerId, status: { $regex: /^dispatched$/i } });
+        res.status(200).json({ count });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-    if(req.user.role === "admin"){
+};
+
+// 5. GET: In-Transit Count
+export const getInTransitOrderCountByCustomer = async (req, res) => {
+    try {
+        const { customerId } = req.params;
+        const count = await Order.countDocuments({ customerId, status: { $regex: /^in-transit$/i } });
+        res.status(200).json({ count });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// 6. GET: Delivered Count
+export const getDeliveredOrderCountByCustomer = async (req, res) => {
+    try {
+        const { customerId } = req.params;
+        const count = await Order.countDocuments({ customerId, status: { $regex: /^delivered$/i } });
+        res.status(200).json({ count });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// Get all orders for Admin
+export const getAllOrders = async (req, res) => {
+    try {
         const orders = await Order.find().sort({ date: -1 });
-        return res.json(orders);
-    }else{
-        const orders = await Order.find({ email: req.user.email }).sort({ date: -1 });
-        return res.json(orders);
-    }
-}    
-
-exports.updateOrder = async (req, res) => {
-    if(req.user == null || req.user.role !== "admin"){
-        return res.status(401).json({ message: "Authentication required" });         
-    }
-    try{
-    const orderID = req.params.orderID;
-    const status = req.body.status;
-    const notes = req.body.notes ?? req.body.note ?? undefined;
-
-    await Order.updateOne(
-        { orderID: orderID },
-        { $set: { status: status, notes: notes } }
-    );
-    return res.json({ message: "Order updated successfully" });
-    }catch(err){
-        return res.status(500).json({ message: "Server error", error: err.message });
-    }
-}
-
-exports.getActiveOrderCount = async (req, res) => {
-    try{
-        const email = req.params.email;
-        const activeOrderCount = await Order.countDocuments({
-             email: email, 
-             status: { $in: ["pending", "processing", "in_transit"] } 
-        });
         
-        res.status(200).json({ success: true, activeOrderCount: activeOrderCount });
-
-    } catch (err) {
-        res.status(500).json({
-             success: false, 
-             message: "Error getting active order count", 
-             error: err.message });
-    }
-}
-
-exports.getDeliveredOrderCount = async (req, res) => {
-    try{
-        const email = req.params.email;
-        const activeOrderCount = await Order.countDocuments({
-             email: email, 
-             status: { $in: ["delivered"] } 
-        });
-        
-        res.status(200).json({ success: true, deliveredOrderCount: deliveredOrderCount });
-
-    } catch (err) {
-        res.status(500).json({
-             success: false, 
-             message: "Error getting delivered order count", 
-             error: err.message });
-    }
-}
-
-exports.getRecentOrders = async (req, res) => {
-    try{
-        const email = req.params.email;
-        const recentOrders = await Order.find({ email: email }).sort({ date: -1 }).limit(3).select('orderID status date totalCost items');
-
-        const formattedOrders = recentOrders.map(order => ({
-            orderID: order.orderID,
-            status: order.status,
-            date: order.date,
-            totalCost: order.totalCost,
-            itemCount: order.items.length
+        const mappedOrders = orders.map(o => ({
+            id: o.orderID,
+            customer: o.name || "Customer",
+            email: o.email,
+            phonenumber: o.phonenumber,
+            address: o.address,
+            quotationRef: o.quotationRef || "N/A",
+            orderDate: o.date,
+            totalItems: o.items?.length || 0,
+            totalAmount: o.total || o.totalCost || 0,
+            status: o.status.toLowerCase(),
+            items: o.items, // Include items for detail view
+            _id: o._id
         }));
 
-        res.status(200).json({ success: true, recentOrders: formattedOrders });
-
-    } catch (err) {
-        res.status(500).json({
-             success: false, 
-             message: "Error getting recent orders", 
-             error: err.message });
-    }
-}
-
-exports.getPendingOrderCountByCustomer = async (req, res) => {
-    try{
-        const email = req.params.email;
-        const pendingOrderCount = await Order.countDocuments({
-             email: email, 
-             status: "pending" 
-        });
-        
-        res.status(200).json({ success: true, pendingOrderCount: pendingOrderCount });
-
-    } catch (err) {
-        res.status(500).json({
-             success: false, 
-             message: "Error getting pending order count", 
-             error: err.message });
-    }
-}
-
-exports.getProcessingOrderCountByCustomer = async (req, res) => {
-    try{
-        const email = req.params.email;
-        const processingOrderCount = await Order.countDocuments({
-             email: email, 
-             status: "processing" 
-        });
-        
-        res.status(200).json({ success: true, processingOrderCount: processingOrderCount });
-    } catch (err) {
-        res.status(500).json({
-             success: false, 
-             message: "Error getting processing order count", 
-             error: err.message });
-    }
-}
-
-exports.getDispatchedOrderCountByCustomer = async (req, res) => {
-    try{
-        const email = req.params.email;
-        const dispatchedOrderCount = await Order.countDocuments({
-             email: email, 
-             status: "in_transit" 
-        });
-        
-        res.status(200).json({ success: true, dispatchedOrderCount: dispatchedOrderCount });
-    } catch (err) {
-        res.status(500).json({
-             success: false, 
-             message: "Error getting dispatched order count", 
-             error: err.message });
-    }
-}
-
-exports.getDeliveredOrderCountByCustomer = async (req, res) => {
-    try{
-        const email = req.params.email;
-        const deliveredOrderCount = await Order.countDocuments({
-             email: email, 
-             status: "delivered" 
-        });
-        
-        res.status(200).json({ success: true, deliveredOrderCount: deliveredOrderCount });
-    } catch (err) {
-        res.status(500).json({
-             success: false, 
-             message: "Error getting delivered order count", 
-             error: err.message });
-    }
-}
-
-exports.getPendingOrdersByCustomer = async (req, res) => {
-    try{
-        const { email } = req.query;
-        if(!email){
-            return res.status(400).json({ success: false, message: "Email is required" });
-        }
-        const pendingOrders = await Order.find({
-            email: email,
-            status: "pending"
-        }).sort({ date: -1 });
-
-        const formattedOrders = pendingOrders.map(order => ({
-            orderID: order.orderID,
-            status: order.status,
-            quotationRef: order.quotationRef || null,
-            date: order.date,
-            totalCost: order.totalCost,
-            itemCount: order.items.length
-        }));
-        res.status(200).json({ success: true, pendingOrders: formattedOrders });
-    } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "Error getting pending orders",
-            error: err.message
-        });
-    }
-}
-
-exports.getProcessingOrdersByCustomer = async (req, res) => {
-    try{
-        const { email } = req.query;
-        if(!email){
-            return res.status(400).json({ success: false, message: "Email is required" });
-        }
-        const processingOrders = await Order.find({
-            email: email,
-            status: "processing"
-        }).sort({ date: -1 });
-
-        const formattedOrders = processingOrders.map(order => ({
-            orderID: order.orderID,
-            status: order.status,
-            quotationRef: order.quotationRef || null,
-            date: order.date,
-            totalCost: order.totalCost,
-            itemCount: order.items.length
-        }));
-        res.status(200).json({ success: true, processingOrders: formattedOrders });
-    } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "Error getting processing orders",
-            error: err.message
-        });
-    }
-}
-
-exports.getDispatchedOrdersByCustomer = async (req, res) => {
-    try{
-        const { email } = req.query;
-        if(!email){
-            return res.status(400).json({ success: false, message: "Email is required" });
-        }
-        const dispatchedOrders = await Order.find({
-            email: email,
-            status: "dispatched"
-        }).sort({ date: -1 });
-
-        const formattedOrders = dispatchedOrders.map(order => ({
-            orderID: order.orderID,
-            status: order.status,
-            quotationRef: order.quotationRef || null,
-            date: order.date,
-            totalCost: order.totalCost,
-            itemCount: order.items.length
-        }));
-        res.status(200).json({ success: true, dispatchedOrders: formattedOrders });
-    } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "Error getting dispatched orders",
-            error: err.message
-        });
-    }
-}
-
-exports.getInTransitOrdersByCustomer = async (req, res) => {
-    try{
-        const { email } = req.query;
-        if(!email){
-            return res.status(400).json({ success: false, message: "Email is required" });
-        }
-        const inTransitOrders = await Order.find({
-            email: email,
-            status: "in-transit"
-        }).sort({ date: -1 });
-
-        const formattedOrders = inTransitOrders.map(order => ({
-            orderID: order.orderID,
-            status: order.status,
-            quotationRef: order.quotationRef || null,
-            date: order.date,
-            totalCost: order.totalCost,
-            itemCount: order.items.length
-        }));
-        res.status(200).json({ success: true, inTransitOrders: formattedOrders });
-    } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "Error getting in-transit orders",
-            error: err.message
-        });
-    }
-}
-
-exports.getDeliveredOrdersByCustomer = async (req, res) => {
-    try{
-        const { email } = req.query;
-        if(!email){
-            return res.status(400).json({ success: false, message: "Email is required" });
-        }
-        const deliveredOrders = await Order.find({
-            email: email,
-            status: "delivered"
-        }).sort({ date: -1 });
-
-        const formattedOrders = deliveredOrders.map(order => ({
-            orderID: order.orderID,
-            status: order.status,
-            quotationRef: order.quotationRef || null,
-            date: order.date,
-            totalCost: order.totalCost,
-            itemCount: order.items.length
-        }));
-        res.status(200).json({ success: true, deliveredOrders: formattedOrders });
-    } catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "Error getting delivered orders",
-            error: err.message
-        });
-    }
-}
-
-exports.uploadDeliveryProof = async (req, res) => {
-    try{
-        const { orderID } = req.body;
-        if(!orderID || !req.file){
-            return res.status(400).json({ success: false, message: "Order ID and delivery proof are required" });
-        }
-
-        const order = await Order.findOne({ orderID: orderID });
-        if(!order){
-            return res.status(404).json({ success: false, message: "Order not found" });
-        }
-        
-        order.deliveryProof = req.file.path;
-        await order.save();
-
-        res.status(200).json({ success: true, message: "Delivery proof uploaded successfully" });
-    } 
-    catch (err) {
-        res.status(500).json({
-            success: false,
-            message: "Error uploading delivery proof",
-            error: err.message
-        });
-    }
-}
-
-// ================================
-//   GET ALL PURCHASE ORDERS FOR THIS SUPPLIER
-// ================================
-exports.getSupplierOrders = async (req, res) => {
-    try {
-        const supplierEmail = req.user.email;
-
-        const orders = await Order.find({
-            supplierEmail,
-            orderType: "purchase",
-        }).sort({ createdAt: -1 });
-
-        return res.status(200).json({
-            success: true,
-            orders,
-        });
+        res.status(200).json(mappedOrders);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Error getting supplier orders",
-            error: error.message,
-        });
+        res.status(500).json({ message: "Orders ලබා ගැනීමට නොහැකි විය", error: error.message });
     }
 };
 
-// ================================
-//   GET SINGLE PURCHASE ORDER
-// ================================
-exports.getSupplierOrderById = async (req, res) => {
+// Update order status
+export const updateOrderStatus = async (req, res) => {
     try {
-        const supplierEmail = req.user.email;
+        const { id } = req.params;
+        const { status } = req.body;
 
-        const order = await Order.findOne({
-            _id:           req.params.id,
-            supplierEmail,
-            orderType:     "purchase",
-        });
+        const updatedOrder = await Order.findByIdAndUpdate(
+            id,
+            { status: status },
+            { new: true }
+        );
 
-        if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: "Order not found",
-            });
+        if (!updatedOrder) {
+            return res.status(404).json({ message: "Order not found" });
         }
 
-        return res.status(200).json({
-            success: true,
-            order,
-        });
+        res.status(200).json(updatedOrder);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Error getting supplier order",
-            error: error.message,
-        });
+        res.status(500).json({ message: "Error updating status", error: error.message });
     }
 };
 
-// ================================
-//   UPDATE PURCHASE ORDER STATUS
-// ================================
-exports.updateSupplierOrderStatus = async (req, res) => {
+// Issue items from an order
+export const issueOrderItems = async (req, res) => {
     try {
-        const supplierEmail     = req.user.email;
-        const { status, notes } = req.body;
+        const { id } = req.params;
+        const { issuedItems } = req.body; // Array of { productID, quantityToIssue }
 
-        const allowed = ["confirmed", "dispatched", "delivered", "cancelled"];
-        if (!status || !allowed.includes(status)) {
-            return res.status(400).json({
-                success: false,
-                message: `status must be one of: ${allowed.join(", ")}`,
-            });
+        const order = await Order.findById(id);
+        if (!order) {
+            return res.status(404).json({ message: "Order not found" });
         }
 
-        const order = await Order.findOne({
-            _id:       req.params.id,
-            supplierEmail,
-            orderType: "purchase",
+        // Update issuedQuantity for each item
+        issuedItems.forEach(issuedItem => {
+            const item = order.items.find(i => i.productID === issuedItem.productID);
+            if (item) {
+                item.issuedQuantity = (item.issuedQuantity || 0) + issuedItem.quantityToIssue;
+                // Cap at ordered quantity
+                if (item.issuedQuantity > item.quantity) {
+                    item.issuedQuantity = item.quantity;
+                }
+            }
         });
 
-        if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: "Order not found",
-            });
-        }
-
-        order.status = status;
-        if (notes) order.notes = notes;
-
-        // Record status-change dates using the existing statusDates field
-        if (status === "dispatched") {
-            order.statusDates = order.statusDates || {};
+        // Check if all items are fully issued
+        const allIssued = order.items.every(item => (item.issuedQuantity || 0) >= item.quantity);
+        if (allIssued) {
+            order.status = "dispatched"; 
             order.statusDates.dispatchedDate = new Date();
-        }
-        if (status === "delivered") {
-            order.statusDates = order.statusDates || {};
-            order.statusDates.inTransitDate = new Date();
+        } else {
+            order.status = "partially-issued";
         }
 
         await order.save();
-
-        return res.status(200).json({
-            success: true,
-            message: "Order status updated successfully",
-            order: {
-                id:     order._id,
-                po_id:  order.po_id,
-                status: order.status,
-            },
-        });
+        res.status(200).json(order);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Error updating supplier order status",
-            error: error.message,
-        });
+        res.status(500).json({ message: "Error issuing items", error: error.message });
     }
 };
-
-// ================================
-//   CUSTOMER ORDERS PAGE - STAT CARDS
-// ================================
-exports.getSupplierOrderStats = async (req, res) => {
+// Confirm delivery by customer
+export const confirmOrderDelivery = async (req, res) => {
     try {
-        const supplierEmail = req.user.email;
+        const { id } = req.params;
+        const { receivedItems } = req.body; // Array of { productID, receivedQuantity }
 
-        const pending      = await Order.countDocuments({ supplierEmail, orderType: "purchase", status: "pending" });
-        const acknowledged = await Order.countDocuments({ supplierEmail, orderType: "purchase", status: "confirmed" });
-        const preparing    = await Order.countDocuments({ supplierEmail, orderType: "purchase", status: "preparing" });
-        const ready        = await Order.countDocuments({ supplierEmail, orderType: "purchase", status: "ready" });
-        const dispatched   = await Order.countDocuments({ supplierEmail, orderType: "purchase", status: "dispatched" });
-
-        return res.status(200).json({
-            success: true,
-            stats: { pending, acknowledged, preparing, ready, dispatched },
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-// ================================
-//   CUSTOMER ORDERS PAGE - TABLE
-// ================================
-exports.getSupplierOrdersTable = async (req, res) => {
-    try {
-        const supplierEmail = req.user.email;
-        const { status, search } = req.query;
-
-        const filter = { supplierEmail, orderType: "purchase" };
-        if (status) filter.status = status;
-        if (search) {
-            filter.$or = [
-                { po_id:   { $regex: search, $options: "i" } },
-                { orderID: { $regex: search, $options: "i" } },
-            ];
-        }
-
-        const orders = await Order.find(filter).sort({ createdAt: -1 });
-
-        const formatted = orders.map((o) => ({
-            id:           o._id,
-            po_id:        o.po_id,
-            customerName: o.name || "Hardware Store",
-            totalItems:   o.items?.length || 0,
-            totalAmount:  o.total,
-            orderDate:    o.date,
-            status:       o.status,
-            items:        o.items,
-        }));
-
-        return res.status(200).json({ success: true, orders: formatted });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-// ================================
-//   ACKNOWLEDGE ORDER
-// ================================
-exports.acknowledgeSupplierOrder = async (req, res) => {
-    try {
-        const supplierEmail = req.user.email;
-
-        const order = await Order.findOne({
-            _id:           req.params.id,
-            supplierEmail,
-            orderType:     "purchase",
-            status:        "pending",
-        });
-
+        const order = await Order.findById(id);
         if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: "Pending order not found",
-            });
+            return res.status(404).json({ message: "Order not found" });
         }
 
-        order.status = "confirmed";
-        order.statusDates = order.statusDates || {};
-        order.statusDates.quotationAcceptedDate = new Date();
+        receivedItems.forEach(recItem => {
+            const item = order.items.find(i => i.productID === recItem.productID);
+            if (item) {
+                item.receivedQuantity = recItem.receivedQuantity;
+                item.rejectedQuantity = (item.issuedQuantity || 0) - recItem.receivedQuantity;
+                if (item.rejectedQuantity < 0) item.rejectedQuantity = 0;
+            }
+        });
+
+        order.status = "delivered";
+        order.statusDates.deliveredDate = new Date();
+        await order.save();
+        res.status(200).json(order);
+    } catch (error) {
+        res.status(500).json({ message: "Error confirming delivery", error: error.message });
+    }
+};
+
+// Restock rejected items by admin
+export const restockRejectedItems = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { productID } = req.body;
+
+        const order = await Order.findById(id);
+        if (!order) {
+            return res.status(404).json({ message: "Order not found" });
+        }
+
+        const item = order.items.find(i => i.productID === productID);
+        if (!item || item.rejectedQuantity <= 0 || item.restocked) {
+            return res.status(400).json({ message: "Item not found or already restocked" });
+        }
+
+        // Increase stock - try finding by ID first, then by name as fallback
+        let stock = null;
+        try {
+            if (mongoose.Types.ObjectId.isValid(item.productID)) {
+                stock = await StockItem.findById(item.productID);
+            }
+        } catch (e) {
+            console.log("Restock: ID lookup failed, trying name...");
+        }
+
+        if (!stock) {
+            stock = await StockItem.findOne({ item_name: item.name });
+        }
+
+        if (stock) {
+            stock.quantity += item.rejectedQuantity;
+            await stock.save();
+            console.log(`Restocked ${item.rejectedQuantity} of ${item.name}`);
+        } else {
+            console.warn(`Could not find stock item for ${item.name} to restock.`);
+            // We still mark as restocked in the order to avoid duplicate attempts
+            // but you might want to return an error if stock must be updated.
+        }
+
+        item.restocked = true;
         await order.save();
 
-        return res.status(200).json({
-            success: true,
-            message: "Order acknowledged successfully",
-            order: { id: order._id, po_id: order.po_id, status: order.status },
-        });
+        res.status(200).json({ message: "Item restocked successfully", order });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ message: "Error restocking item", error: error.message });
     }
 };
 
-// ================================
-//   DELIVERY PROGRESS PAGE - ORDER DROPDOWN
-// ================================
-exports.getDispatchOrderList = async (req, res) => {
+// Create a new order (called by Customer when accepting a quotation)
+export const createOrder = async (req, res) => {
     try {
-        const supplierEmail = req.user.email;
-
-        const orders = await Order.find({
-            supplierEmail,
-            orderType: "purchase",
-            status: { $nin: ["pending", "delivered"] },
-        })
-            .sort({ createdAt: -1 })
-            .select("po_id name status");
-
-        const formatted = orders.map((o) => ({
-            id:           o._id,
-            po_id:        o.po_id,
-            customerName: o.name || "Hardware Store",
-            status:       o.status,
-            label:        `${o.po_id} — ${o.name || "Hardware Store"}`,
-        }));
-
-        return res.status(200).json({ success: true, orders: formatted });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-// ================================
-//   DELIVERY PROGRESS PAGE - GET ORDER TIMELINE
-// ================================
-exports.getDeliveryProgress = async (req, res) => {
-    try {
-        const supplierEmail = req.user.email;
-
-        const order = await Order.findOne({
-            _id:           req.params.id,
-            supplierEmail,
-            orderType:     "purchase",
-        });
-
-        if (!order) {
-            return res.status(404).json({ success: false, message: "Order not found" });
-        }
-
-        // Map statuses to timeline steps
-        const statusRank = {
-            pending:    0,
-            confirmed:  1,
-            preparing:  2,
-            ready:      3,
-            dispatched: 4,
-            delivered:  5,
-        };
-
-        const currentRank = statusRank[order.status] ?? 0;
-
-        const timeline = [
-            {
-                step:        "order_received",
-                label:       "Order Received",
-                description: "Order confirmed from customer",
-                completed:   currentRank >= 1,
-                date:        order.statusDates?.quotationAcceptedDate || null,
-            },
-            {
-                step:        "goods_prepared",
-                label:       "Goods Prepared",
-                description: "All items packed and ready",
-                completed:   currentRank >= 3,
-                date:        order.statusDates?.preparedDate || null,
-            },
-            {
-                step:        "dispatched",
-                label:       "Dispatched",
-                description: currentRank >= 4 ? order.dispatchDetails?.deliveryNotes || "Dispatched" : "Enter dispatch details",
-                completed:   currentRank >= 4,
-                inProgress:  currentRank === 3,
-                date:        order.statusDates?.dispatchedDate || null,
-            },
-            {
-                step:        "in_transit",
-                label:       "In Transit",
-                description: currentRank >= 4 ? "Package in transit" : "Awaiting dispatch",
-                completed:   currentRank >= 5,
-                date:        order.statusDates?.inTransitDate || null,
-            },
-            {
-                step:        "delivered",
-                label:       "Delivered",
-                description: currentRank >= 5 ? "Delivered successfully" : "Awaiting delivery confirmation",
-                completed:   currentRank >= 5,
-                date:        order.statusDates?.deliveredDate || null,
-            },
-        ];
-
-        return res.status(200).json({
-            success: true,
-            order: {
-                id:     order._id,
-                po_id:  order.po_id,
-                status: order.status,
-            },
-            timeline,
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-// ================================
-//   DISPATCH DETAILS - MARK AS DISPATCHED
-// ================================
-exports.dispatchSupplierOrder = async (req, res) => {
-    try {
-        const supplierEmail = req.user.email;
-        const {
-            trackingNumber,
-            vehicleNumber,
-            driverName,
-            dispatchDate,
-            deliveryNotes,
-            deliveryNoteFileUrl,  
+        const { 
+            name, 
+            customerId, 
+            address, 
+            phonenumber, 
+            notes, 
+            items, 
+            quotationId,
+            email 
         } = req.body;
 
-        const order = await Order.findOne({
-            _id:           req.params.id,
-            supplierEmail,
-            orderType:     "purchase",
-            status:        { $in: ["confirmed", "preparing", "ready"] },
-        });
+        console.log("Creating Order with payload:", { name, customerId, quotationId });
 
-        if (!order) {
-            return res.status(404).json({
-                success: false,
-                message: "Order not found or cannot be dispatched in its current status",
-            });
+        if (!items || items.length === 0) {
+            return res.status(400).json({ message: "Items are required to create an order" });
         }
 
-        order.status = "dispatched";
-        order.delivery = {
-            trackingNumber:          trackingNumber        || "",
-            estimatedDeliveryDate:   order.expectedDeliveryDate || null,
-            deliveryAddress:         order.address         || "",
-        };
-        order.dispatchDetails = {
-            vehicleNumber:      vehicleNumber      || "",
-            driverName:         driverName         || "",
-            dispatchDate:       dispatchDate        ? new Date(dispatchDate) : new Date(),
-            deliveryNotes:      deliveryNotes       || "",
-            deliveryNoteFileUrl: deliveryNoteFileUrl || "",
-        };
-        order.statusDates = order.statusDates || {};
-        order.statusDates.dispatchedDate = new Date();
+        // Calculate total
+        const total = items.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0);
 
-        await order.save();
+        // Fetch Quotation to get the source email if not provided
+        let customerEmail = email || req.user?.email;
+        
+        if (!customerEmail && quotationId) {
+            const quotation = await Quotation.findById(quotationId);
+            if (quotation) {
+                customerEmail = quotation.email;
+            }
+        }
 
-        return res.status(200).json({
-            success: true,
-            message: "Order marked as dispatched",
-            order: {
-                id:     order._id,
-                po_id:  order.po_id,
-                status: order.status,
-            },
+        if (!customerEmail) {
+            return res.status(400).json({ message: "Customer email is required" });
+        }
+        
+        // Generate unique Order ID
+        const orderCount = await Order.countDocuments();
+        const orderID = `ORD-${Date.now()}-${String(orderCount + 1).padStart(3, '0')}`;
+
+        const newOrder = new Order({
+            orderID,
+            customerId: customerId || req.user?.id,
+            email: customerEmail,
+            name,
+            address,
+            phonenumber: Number(phonenumber), // Ensure it's a number
+            notes: notes || "",
+            items: items.map(item => ({
+                ...item,
+                price: Number(item.price),
+                quantity: Number(item.quantity)
+            })),
+            total,
+            totalCost: total,
+            status: "Pending",
+            orderType: "customer",
+            quotationRef: quotationId,
+            date: new Date()
         });
+
+        await newOrder.save();
+        console.log("Order created successfully:", newOrder.orderID);
+        res.status(201).json({ success: true, message: "Order created successfully", order: newOrder });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error("Create Order Internal Error:", error);
+        res.status(500).json({ 
+            success: false,
+            message: "Failed to create order", 
+            error: error.message 
+        });
+    }
+};
+
+// =============================================================
+//   (Supplier-specific order functions removed)
+// =============================================================
+
+
+
+// GET: All purchase orders for Admin
+export const getAllPurchaseOrders = async (req, res) => {
+    try {
+        const orders = await Order.find({ orderType: "purchase" }).sort({ date: -1 });
+        const mapped = orders.map(o => ({
+            id: o._id,
+            po_id: o.orderID || "PO-NEW",
+            supplier: o.supplierEmail || "Unknown Supplier",
+            orderDate: o.date,
+            expectedDelivery: o.dispatchDetails?.dispatchDate || "Pending",
+            totalItems: o.items?.length || 0,
+            totalAmount: o.total || 0,
+            status: o.status.toLowerCase(),
+            items: o.items
+        }));
+        return res.status(200).json({ success: true, orders: mapped });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// PUT: Update PO status by Admin
+export const updatePurchaseOrderStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        const order = await Order.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        );
+        if (!order) return res.status(404).json({ message: "Purchase Order not found" });
+        return res.status(200).json({ success: true, order });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };

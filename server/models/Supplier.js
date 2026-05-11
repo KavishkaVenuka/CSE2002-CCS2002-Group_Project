@@ -73,8 +73,14 @@ const SupplierSchema = new mongoose.Schema(
 
     businessType: {
       type: String,
-      enum: ["Manufacturer", "Distributor", "Service Provider", "Other", null],
-      required: false,
+      enum: ["Manufacturer", "Distributor", "Service Provider", "Other"],
+      required: true,
+    },
+
+    role: {
+      type: String,
+      enum: ["Supplier", "Customer", "Admin"],
+      default: "Supplier", // Default role
     },
 
     natureOfBusiness: {
@@ -88,11 +94,26 @@ const SupplierSchema = new mongoose.Schema(
       },
     ],
 
-    role: {
+    contactPersonName: {
       type: String,
-      enum: ["Supplier", "Customer", "Admin"],
-      default: "Supplier",
+      required: true,
     },
+
+    contactPersonPhone: {
+      type: String,
+      required: true,
+    },
+
+    bankDetails: {
+      bankName: { type: String },
+      accountNumber: { type: String },
+      branch: { type: String },
+    },
+
+    paymentTerms: {
+      type: String,
+    },
+
   },
   { timestamps: true }
 );

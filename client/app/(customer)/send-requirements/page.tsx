@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { Package, FileText, Plus, Trash2, UploadCloud, Edit3, ChevronDown } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
+import { GlobalStatCard } from "@/components/common/GlobalStatCard"
+import { Panel } from "@/components/common/Panel"
 
 interface RequirementItem {
   id: number
