@@ -1,5 +1,78 @@
 import Finance from "../models/finance.js";
 import BankAccount from "../models/bankAccount.js";
+import PaymentTransaction from "../models/PaymentTransaction.js";
+
+// Helper to get total cash in hand
+const getCashInHand = async () => {
+  const financeStats = await Finance.aggregate([
+    {
+      $group: {
+        _id: "$transaction_type",
+        total: { $sum: { $toDouble: "$amount" } }
+      }
+    }
+  ]);
+
+  const stats = {};
+  financeStats.forEach(s => stats[s._id] = s.total);
+
+  const payments = await PaymentTransaction.aggregate([
+    { $match: { isFinanceLinked: false, status: { $ne: 'failed' }, paymentMethod: 'cash' } },
+    {
+      $group: {
+        _id: "$type",
+        total: { $sum: { $toDouble: "$amount" } }
+      }
+    }
+  ]);
+
+  const pStats = {};
+  payments.forEach(p => pStats[p._id] = p.total);
+
+  const cashIn = (stats.cash_in || 0) + (stats.bank_withdraw || 0) + (pStats.customer || 0);
+  const cashOut = (stats.cash_out || 0) + (stats.bank_deposit || 0) + (pStats.supplier || 0) + (pStats.expense || 0);
+
+  return cashIn - cashOut;
+};
+
+// Helper to get bank balance
+const getBankBalance = async (bankAccountId) => {
+  const bank = await BankAccount.findById(bankAccountId);
+  if (!bank) return 0;
+
+  const openingBalance = Number(bank.opening_balance || 0);
+
+  const financeStats = await Finance.aggregate([
+    { $match: { bankAccountId: bank._id } },
+    {
+      $group: {
+        _id: "$transaction_type",
+        total: { $sum: { $toDouble: "$amount" } }
+      }
+    }
+  ]);
+
+  const stats = {};
+  financeStats.forEach(s => stats[s._id] = s.total);
+
+  const payments = await PaymentTransaction.aggregate([
+    { $match: { isFinanceLinked: false, status: { $ne: 'failed' }, paymentMethod: 'bank', bankAccountId: bank._id } },
+    {
+      $group: {
+        _id: "$type",
+        total: { $sum: { $toDouble: "$amount" } }
+      }
+    }
+  ]);
+
+  const pStats = {};
+  payments.forEach(p => pStats[p._id] = p.total);
+
+  const deposits = (stats.bank_deposit || 0) + (pStats.customer || 0);
+  const withdrawals = (stats.bank_withdraw || 0) + (pStats.supplier || 0) + (pStats.expense || 0);
+
+  return openingBalance + deposits - withdrawals;
+};
 
 export const addTransaction = async (req, res) => {
   try {
@@ -15,62 +88,32 @@ export const addTransaction = async (req, res) => {
 
     const numericAmount = Number(amount);
 
-    // 🔴 BANK WITHDRAW VALIDATION
+    // 1. Validate Bank Withdraw (Money leaving Bank -> going to Cash)
     if (transaction_type === 'bank_withdraw') {
-      if (!bankAccountId) {
-        return res.status(400).json({
-          success: false,
-          message: "Bank account is required",
-        });
-      }
-
+      if (!bankAccountId) return res.status(400).json({ success: false, message: "Bank account is required" });
       const balance = await getBankBalance(bankAccountId);
-
       if (numericAmount > balance) {
-        return res.status(400).json({
-          success: false,
-          message: `Insufficient bank balance. Available: ${balance}`,
-        });
+        return res.status(400).json({ success: false, message: `Insufficient bank balance. Available: LKR ${balance.toLocaleString()}` });
       }
     }
 
-    // 🔴 BANK DEPOSIT VALIDATION (optional advanced)
+    // 2. Validate Bank Deposit (Money leaving Cash -> going to Bank)
     if (transaction_type === 'bank_deposit') {
-      const cashIn = await Finance.aggregate([
-        { $match: { transaction_type: 'cash_in' } },
-        { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }
-      ]);
-
-      const cashOut = await Finance.aggregate([
-        { $match: { transaction_type: 'cash_out' } },
-        { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }
-      ]);
-
-      const withdraw = await Finance.aggregate([
-        { $match: { transaction_type: 'bank_withdraw' } },
-        { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }
-      ]);
-
-      const deposit = await Finance.aggregate([
-        { $match: { transaction_type: 'bank_deposit' } },
-        { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }
-      ]);
-
-      const cashBalance =
-        (cashIn[0]?.total || 0) +
-        (withdraw[0]?.total || 0) -
-        (cashOut[0]?.total || 0) -
-        (deposit[0]?.total || 0);
-
+      if (!bankAccountId) return res.status(400).json({ success: false, message: "Bank account is required" });
+      const cashBalance = await getCashInHand();
       if (numericAmount > cashBalance) {
-        return res.status(400).json({
-          success: false,
-          message: `Not enough cash in hand. Available: ${cashBalance}`,
-        });
+        return res.status(400).json({ success: false, message: `Insufficient cash in hand. Available: LKR ${cashBalance.toLocaleString()}` });
       }
     }
 
-    // ✅ CREATE TRANSACTION
+    // 3. Validate Cash Out (Money leaving Cash)
+    if (transaction_type === 'cash_out') {
+      const cashBalance = await getCashInHand();
+      if (numericAmount > cashBalance) {
+        return res.status(400).json({ success: false, message: `Insufficient cash in hand. Available: LKR ${cashBalance.toLocaleString()}` });
+      }
+    }
+
     const transaction = await Finance.create({
       transaction_type,
       amount,
@@ -89,164 +132,50 @@ export const addTransaction = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      success: false,
-      message: "Error adding transaction",
-    });
+    res.status(500).json({ success: false, message: "Error adding transaction: " + error.message });
   }
 };
 
 export const getAllTransactions = async (req, res) => {
   try {
     const transactions = await Finance.find().sort({ date: -1 });
-
     const formattedTransactions = transactions.map((item) => ({
       ...item.toObject(),
       amount: Number(item.amount?.toString?.() || item.amount || 0),
     }));
 
-    res.status(200).json({
-      success: true,
-      data: formattedTransactions,
-    });
+    res.status(200).json({ success: true, data: formattedTransactions });
   } catch (error) {
-    console.error("Error fetching transactions:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const getTransactionById = async (req, res) => {
   try {
     const transaction = await Finance.findById(req.params.id);
-
-    if (!transaction) {
-      return res.status(404).json({
-        success: false,
-        message: "Transaction not found",
-      });
-    }
-
-    const formattedTransaction = {
-      ...transaction.toObject(),
-      amount: Number(transaction.amount?.toString?.() || transaction.amount || 0),
-    };
-
-    res.status(200).json({
-      success: true,
-      data: formattedTransaction,
-    });
+    if (!transaction) return res.status(404).json({ success: false, message: "Transaction not found" });
+    res.status(200).json({ success: true, data: { ...transaction.toObject(), amount: Number(transaction.amount?.toString() || 0) } });
   } catch (error) {
-    console.error("Error fetching transaction:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const updateTransaction = async (req, res) => {
   try {
-    const {
-      transaction_type,
-      amount,
-      description,
-      date,
-      category,
-      payment_method,
-      status,
-      module,
-      notes,
-    } = req.body;
-
-    const transaction = await Finance.findByIdAndUpdate(
-      req.params.id,
-      {
-        transaction_type,
-        amount,
-        description,
-        date,
-        category,
-        payment_method,
-        status,
-        module,
-        notes,
-      },
-      { new: true, runValidators: true }
-    );
-
-    if (!transaction) {
-      return res.status(404).json({
-        success: false,
-        message: "Transaction not found",
-      });
-    }
-
-    const formattedTransaction = {
-      ...transaction.toObject(),
-      amount: Number(transaction.amount?.toString?.() || transaction.amount || 0),
-    };
-
-    res.status(200).json({
-      success: true,
-      message: "Transaction updated successfully",
-      data: formattedTransaction,
-    });
+    const transaction = await Finance.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!transaction) return res.status(404).json({ success: false, message: "Transaction not found" });
+    res.status(200).json({ success: true, message: "Transaction updated successfully", data: transaction });
   } catch (error) {
-    console.error("Error updating transaction:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 export const deleteTransaction = async (req, res) => {
   try {
     const transaction = await Finance.findByIdAndDelete(req.params.id);
-
-    if (!transaction) {
-      return res.status(404).json({
-        success: false,
-        message: "Transaction not found",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Transaction deleted successfully",
-      data: transaction,
-    });
+    if (!transaction) return res.status(404).json({ success: false, message: "Transaction not found" });
+    res.status(200).json({ success: true, message: "Transaction deleted successfully" });
   } catch (error) {
-    console.error("Error deleting transaction:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
-};
-
-const getBankBalance = async (bankAccountId) => {
-  const bank = await BankAccount.findById(bankAccountId);
-
-  if (!bank) return 0;
-
-  const openingBalance = Number(bank.opening_balance || 0);
-
-  const deposits = await Finance.aggregate([
-    { $match: { bankAccountId: bank._id, transaction_type: 'bank_deposit' } },
-    { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }
-  ]);
-
-  const withdrawals = await Finance.aggregate([
-    { $match: { bankAccountId: bank._id, transaction_type: 'bank_withdraw' } },
-    { $group: { _id: null, total: { $sum: { $toDouble: "$amount" } } } }
-  ]);
-
-  const totalDeposits = deposits[0]?.total || 0;
-  const totalWithdrawals = withdrawals[0]?.total || 0;
-
-  return openingBalance + totalDeposits - totalWithdrawals;
 };
