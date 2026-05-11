@@ -1,76 +1,85 @@
 "use client"
 
 import { Search, Bell, Plus } from "lucide-react"
-import { T, font } from "@/lib/tokens"
+import Link from "next/link"
 
 interface DashboardHeaderProps {
   title: string
-  dateString: string
+  dateString?: string
 }
 
 export function DashboardHeader({ title }: DashboardHeaderProps) {
   return (
-    <header style={{
-      background: T.card,
-      borderBottom: `1px solid ${T.border}`,
-      padding: "0 28px",
-      height: 62,
-      display: "flex", alignItems: "center", gap: 14,
-      flexShrink: 0,
-    }}>
-      {/* Page title */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontSize: 16, fontWeight: 700, color: T.t1,
-          letterSpacing: "-0.035em",
-        }}>
-          {title}
+    <header className="
+      h-16 flex-shrink-0
+      flex items-center justify-between
+      px-6 gap-4
+      bg-white
+      border-b-[3px] border-black
+    ">
+      {/* Page Title */}
+      <h1 className="font-display font-black text-2xl text-black tracking-tight flex-1 min-w-0">
+        {title}
+      </h1>
+
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {/* Search */}
+        <div className="relative">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-black pointer-events-none"
+            size={14}
+            strokeWidth={2.5}
+          />
+          <input
+            type="text"
+            placeholder="Search orders, quotes…"
+            className="
+              pl-9 pr-4 py-2 w-52
+              bg-white
+              border-[2px] border-black
+              shadow-[2px_2px_0px_0px_#000]
+              font-body text-sm text-black placeholder:text-gray-500
+              outline-none
+              transition-all duration-100
+              focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-none
+            "
+          />
         </div>
+
+        {/* Notification Bell */}
+        <button className="
+          w-10 h-10
+          flex items-center justify-center
+          bg-white
+          border-[2px] border-black
+          shadow-[2px_2px_0px_0px_#000]
+          nb-interactive
+          relative
+        ">
+          <Bell size={16} strokeWidth={2} />
+          <div className="
+            absolute top-2 right-2
+            w-1.5 h-1.5 bg-nb-red
+            border-[1.5px] border-white
+            allow-rounded
+          " />
+        </button>
+
+        {/* Primary CTA */}
+        <Link href="/send-requirements">
+          <button className="
+            flex items-center gap-2 px-4 py-2
+            bg-black text-white
+            font-body font-bold text-sm
+            border-[2px] border-black
+            shadow-[4px_4px_0px_0px_#000]
+            nb-interactive
+          ">
+            <Plus size={14} strokeWidth={2.5} />
+            New Requirement
+          </button>
+        </Link>
       </div>
-
-      {/* Search */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 8,
-        background: T.surface,
-        border: `1px solid ${T.border}`,
-        borderRadius: 8, padding: "8px 13px",
-        width: 220, flexShrink: 0,
-      }}>
-        <Search size={13} color={T.t3} strokeWidth={1.75} />
-        <span style={{ fontSize: 13, color: T.t3 }}>
-          Search orders, quotes…
-        </span>
-      </div>
-
-      {/* Notification bell */}
-      <button style={{
-        width: 38, height: 38, borderRadius: 9,
-        background: T.surface,
-        border: `1px solid ${T.border}`,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        cursor: "pointer", position: "relative", flexShrink: 0,
-      }}>
-        <Bell size={15} color={T.t2} strokeWidth={1.75} />
-        <div style={{
-          position: "absolute", top: 9, right: 9,
-          width: 6, height: 6, borderRadius: "50%",
-          background: T.red, border: "1.5px solid #fff",
-        }} />
-      </button>
-
-      {/* Primary CTA */}
-      <button style={{
-        display: "flex", alignItems: "center", gap: 7,
-        padding: "9px 17px", borderRadius: 8,
-        background: T.primary, color: "#fff",
-        border: "none", cursor: "pointer",
-        fontSize: 13, fontWeight: 600,
-        fontFamily: font, letterSpacing: "-0.015em",
-        flexShrink: 0,
-      }}>
-        <Plus size={13} strokeWidth={2.5} />
-        New Requirement
-      </button>
     </header>
   )
 }
