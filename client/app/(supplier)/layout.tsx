@@ -1,10 +1,6 @@
 "use client"
 
-<<<<<<< HEAD
 import { ReactNode, useEffect } from "react"
-=======
-import { ReactNode } from "react"
->>>>>>> 49e02909b531e5dc0065d6d7086be57ba9239f3f
 import { Sidebar } from "@/components/supplier/Sidebar"
 
 interface SupplierLayoutProps {
@@ -12,7 +8,6 @@ interface SupplierLayoutProps {
 }
 
 export default function SupplierLayout({ children }: SupplierLayoutProps) {
-<<<<<<< HEAD
   // Load distinctive fonts for Neo Brutalism
   useEffect(() => {
     const id = "nb-fonts"
@@ -28,12 +23,6 @@ export default function SupplierLayout({ children }: SupplierLayoutProps) {
     <div className="flex h-screen bg-nb-bg overflow-hidden font-body selection:bg-nb-yellow">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-=======
-  return (
-    <div className="flex h-screen overflow-hidden bg-nb-bg">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
->>>>>>> 49e02909b531e5dc0065d6d7086be57ba9239f3f
         {children}
       </div>
     </div>
