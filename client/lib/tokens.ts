@@ -1,53 +1,55 @@
-// ─── Design Tokens ───────────────────────────────────────────────────────────
+// ─── Design Tokens — Neo Brutalism ───────────────────────────────────────────
+// These are used by components that still use inline styles.
+// Colors align with the Neo Brutalism palette defined in globals.css @theme.
 export const T = {
-    // 30% – Sidebar, Primary Headers, Secondary UI
-    ink: "#1A3A5C",      // Deep Navy
-    inkHover: "#2A5580", // Primary Light
-    
-    // 60% – Backgrounds & Large Surfaces
-    surface: "#F2F6FB",  // Pale Blue-White
-    card: "#FFFFFF",     // Base White
-    
-    // 10% – Primary Accent / Call-to-Action
-    primary: "#1D9E75",       // Emerald Green
-    primaryHover: "#0F6E56",  // Accent Dark
-    primaryBg: "#E1F5EE",     // Accent Light
-    primaryBorder: "#1D9E75", // Emerald Green
-    
-    // Semantic Status Colors
-    green: "#22C55E",   // Success / In Stock
-    greenBg: "#E1F5EE",
-    blue: "#1A3A5C",    // Info / Processing
-    blueBg: "#EBF3FF",
-    red: "#EF4444",     // Danger / Out of Stock
-    redBg: "#FEE2E2",
-    amber: "#F59E0B",   // Warning / Low Stock
-    amberBg: "#FEF3C7",
-    amberBorder: "#F59E0B",
+  // Surfaces
+  surface: "#F5F0E8",   // warm off-white page background
+  card:    "#FFFFFF",   // card / panel background
 
-    // Borders
-    border: "#CCD9E8",      // Base Border
-    borderLight: "#E0EAF5", // Light Border
+  // Primary accent (used by customer portal CTA)
+  primary:      "#000000",
+  primaryHover: "#333333",
+  primaryBg:    "#FACC15", // yellow accent bg
 
-    // Typography (WCAG AA Compliant)
-    t1: "#1A3A5C", // Primary text
-    t2: "#4A6582", // Secondary text
-    t3: "#6B7280", // Muted text
+  // Semantic status colors — vibrant, flat, no pastels
+  green:    "#4ADE80",
+  greenBg:  "#4ADE80",
+  blue:     "#22D3EE",
+  blueBg:   "#22D3EE",
+  red:      "#EF4444",
+  redBg:    "#EF4444",
+  amber:    "#FACC15",
+  amberBg:  "#FACC15",
+
+  // Borders — everything is hard black in Neo Brutalism
+  border:      "#000000",
+  borderLight: "#000000",
+
+  // Typography — all black
+  t1: "#000000",
+  t2: "#000000",
+  t3: "#444444",
+
+  // Legacy compat aliases
+  amberBorder: "#000000",
+  primaryBorder: "#000000",
+  ink:      "#000000",
+  inkHover: "#333333",
 }
 
-export const font = "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
-export const mono = "'DM Mono', 'JetBrains Mono', 'Courier New', monospace"
+export const font = '"DM Sans", system-ui, sans-serif'
+export const mono = '"Space Mono", "Courier New", monospace'
 
 export const STATUS_MAP = {
-    delivered: { color: T.green, bg: T.greenBg, label: "Delivered" },
-    "in-transit": { color: T.blue, bg: T.blueBg, label: "In Transit" },
-    dispatched: { color: T.amber, bg: T.amberBg, label: "Dispatched" },
+  delivered:    { color: "#000000", bg: "#4ADE80", label: "Delivered" },
+  "in-transit": { color: "#000000", bg: "#22D3EE", label: "In Transit" },
+  dispatched:   { color: "#000000", bg: "#FACC15", label: "Dispatched" },
 }
 
-export const ACT_DOT = { 
-    green: T.green, 
-    blue: T.blue, 
-    amber: T.amber, 
-    red: T.red,
-    primary: T.primary 
+export const ACT_DOT = {
+  green:   "#4ADE80",
+  blue:    "#22D3EE",
+  amber:   "#FACC15",
+  red:     "#EF4444",
+  primary: "#000000",
 }
