@@ -3,12 +3,11 @@
 import { Search, Bell, Plus } from "lucide-react"
 import Link from "next/link"
 
-interface DashboardHeaderProps {
+interface HeaderProps {
   title: string
-  dateString?: string
 }
 
-export function DashboardHeader({ title }: DashboardHeaderProps) {
+export function Header({ title }: HeaderProps) {
   return (
     <header className="
       h-16 flex-shrink-0
@@ -17,7 +16,6 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
       bg-white
       border-b-[3px] border-black
     ">
-      {/* Page Title */}
       <h1 className="font-display font-black text-2xl text-black tracking-tight flex-1 min-w-0">
         {title}
       </h1>
@@ -32,13 +30,12 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
           />
           <input
             type="text"
-            placeholder="Search orders, quotes…"
+            placeholder="Search orders, quotations…"
             className="
               pl-9 pr-4 py-2 w-52
-              bg-white
-              border-[2px] border-black
+              bg-white border-[2px] border-black
               shadow-[2px_2px_0px_0px_#000]
-              font-body text-sm text-black placeholder:text-gray-500
+              font-body text-sm placeholder:text-gray-500
               outline-none
               transition-all duration-100
               focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-none
@@ -46,37 +43,25 @@ export function DashboardHeader({ title }: DashboardHeaderProps) {
           />
         </div>
 
-        {/* Notification Bell */}
+        {/* Bell */}
         <button className="
-          w-10 h-10
-          flex items-center justify-center
-          bg-white
-          border-[2px] border-black
-          shadow-[2px_2px_0px_0px_#000]
+          w-10 h-10 flex items-center justify-center
+          bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000]
           nb-interactive
-          relative
         ">
           <Bell size={16} strokeWidth={2} />
-          <div className="
-            absolute top-2 right-2
-            w-1.5 h-1.5 bg-nb-red
-            border-[1.5px] border-white
-            allow-rounded
-          " />
         </button>
 
-        {/* Primary CTA */}
-        <Link href="/send-requirements">
+        {/* CTA */}
+        <Link href="/create-quotations">
           <button className="
             flex items-center gap-2 px-4 py-2
-            bg-black text-white
-            font-body font-bold text-sm
-            border-[2px] border-black
-            shadow-[4px_4px_0px_0px_#000]
+            bg-black text-white font-body font-bold text-sm
+            border-[2px] border-black shadow-[4px_4px_0px_0px_#000]
             nb-interactive
           ">
             <Plus size={14} strokeWidth={2.5} />
-            New Requirement
+            New Quotation
           </button>
         </Link>
       </div>

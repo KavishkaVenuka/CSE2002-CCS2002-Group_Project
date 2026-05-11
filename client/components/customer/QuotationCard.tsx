@@ -1,7 +1,6 @@
 "use client"
 
 import { Clock } from "lucide-react"
-import { T, font, mono } from "@/lib/tokens"
 
 interface QuotationProps {
   q: {
@@ -14,60 +13,49 @@ interface QuotationProps {
 
 export function QuotationCard({ q }: QuotationProps) {
   return (
-    <div style={{
-      border: `1px solid ${T.primaryBorder}`,
-      borderLeft: `3px solid ${T.primary}`,
-      borderRadius: 9,
-      padding: "14px 16px",
-      background: T.primaryBg,
-    }}>
+    <div
+      className="
+        bg-white
+        border-[2px] border-black
+        shadow-[4px_4px_0px_0px_#000]
+        p-4
+        flex flex-col gap-3
+      "
+    >
       {/* Header row */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        marginBottom: 12,
-      }}>
+      <div className="flex items-start justify-between">
         <div>
-          <div style={{
-            fontFamily: mono,
-            fontSize: 12.5, fontWeight: 500,
-            color: T.t1, letterSpacing: "-0.01em",
-          }}>
+          <div className="font-mono text-sm font-bold text-black tracking-tight">
             {q.id}
           </div>
-          <div style={{ fontSize: 11, color: T.t2, marginTop: 3 }}>
+          <div className="font-body text-xs text-gray-500 mt-0.5">
             Ref: {q.req}
           </div>
         </div>
-        <div style={{
-          fontFamily: mono,
-          fontSize: 16, fontWeight: 700,
-          color: T.t1, letterSpacing: "-0.03em",
-        }}>
-          ${q.amount.toLocaleString()}
+        <div className="font-mono text-lg font-black text-black">
+          Rs.{q.amount.toLocaleString()}
         </div>
       </div>
 
+      {/* Divider */}
+      <div className="border-t-[2px] border-black" />
+
       {/* Footer row */}
-      <div style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <Clock size={11} color={T.t3} strokeWidth={1.75} />
-          <span style={{ fontSize: 11, color: T.t3 }}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <Clock size={11} strokeWidth={2} className="text-gray-500" />
+          <span className="font-body text-xs text-gray-500">
             Expires {q.expires}
           </span>
         </div>
-        <button style={{
-          padding: "5px 14px", borderRadius: 7,
-          background: T.primary, color: "#fff",
-          border: "none", cursor: "pointer",
-          fontSize: 12, fontWeight: 600,
-          fontFamily: font, letterSpacing: "-0.01em",
-        }}>
+        <button className="
+          px-4 py-1.5
+          bg-black text-white
+          font-body font-bold text-xs
+          border-[2px] border-black
+          shadow-[2px_2px_0px_0px_#000]
+          nb-interactive
+        ">
           Review →
         </button>
       </div>

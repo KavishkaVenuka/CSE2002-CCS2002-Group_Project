@@ -1,13 +1,13 @@
 "use client"
 
 import { ReactNode } from "react"
-import { Sidebar } from "@/components/customer/Sidebar"
+import { Sidebar } from "@/components/supplier/Sidebar"
 
-interface CustomerLayoutProps {
+interface SupplierLayoutProps {
   children: ReactNode
 }
 
-export default function CustomerLayout({ children }: CustomerLayoutProps) {
+export default function SupplierLayout({ children }: SupplierLayoutProps) {
   return (
     <div className="flex h-screen overflow-hidden bg-nb-bg">
       <Sidebar />

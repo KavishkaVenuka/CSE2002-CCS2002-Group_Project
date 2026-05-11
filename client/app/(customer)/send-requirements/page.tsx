@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Package, FileText, Plus, Trash2, UploadCloud, Edit3 } from "lucide-react"
-import { T, font } from "@/lib/tokens"
+import { Package, FileText, Plus, Trash2, UploadCloud, Edit3, ChevronDown } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
+import { GlobalStatCard } from "@/components/common/GlobalStatCard"
+import { Panel } from "@/components/common/Panel"
 
 export default function SendRequirements() {
   const [items, setItems] = useState([
@@ -20,265 +21,254 @@ export default function SendRequirements() {
 
   return (
     <>
-      <DashboardHeader title="Send Requirements" dateString="Thursday, 24 April 2026" />
-      <main style={{
-        flex: 1, overflow: "auto",
-        padding: "24px 28px",
-        display: "flex", flexDirection: "column", gap: 20,
-      }}>
+      <DashboardHeader title="Send Requirements" />
+
+      <main className="flex-1 overflow-auto p-6 flex flex-col gap-6 bg-nb-bg">
+
         {/* ── STATS ROW ─────────────────────────────────────────────────── */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 16,
-        }}>
-          {/* Total Items */}
-          <div style={{
-            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-            padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
-            boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-          }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 10,
-              background: T.blueBg, display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <Package size={22} color={T.blue} />
-            </div>
-            <div>
-              <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Total Items</div>
-              <div style={{ fontSize: 22, color: T.t1, fontWeight: 700, marginTop: 2 }}>{items.length}</div>
-            </div>
-          </div>
-          
-          {/* Attachments */}
-          <div style={{
-            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-            padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
-            boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-          }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 10,
-              background: T.greenBg, display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <FileText size={22} color={T.green} />
-            </div>
-            <div>
-              <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Attachments</div>
-              <div style={{ fontSize: 22, color: T.t1, fontWeight: 700, marginTop: 2 }}>
-                {items.reduce((acc, curr) => acc + curr.attachments, 0)}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Total Items — Green */}
+          <GlobalStatCard
+            iconSvgOrEmoji={<Package className="w-6 h-6 text-white" />}
+            introTitle="Total Items"
+            orderCount={items.length}
+            monetaryValue="Items"
+            footerText="In this requirement"
+            themeClasses={{
+              cardBackground: "bg-nb-green",
+              iconContainerBackground: "bg-black",
+              titleTextColor: "text-black",
+              orderCountContainer: "bg-white",
+              orderCountText: "text-black",
+              monetaryContainer: "bg-[#166534]",
+              monetaryText: "text-white font-mono",
+              footerContainer: "bg-[#14532D]",
+              footerText: "text-white",
+            }}
+          />
+
+          {/* Attachments — Cyan */}
+          <GlobalStatCard
+            iconSvgOrEmoji={<FileText className="w-6 h-6 text-white" />}
+            introTitle="Attachments"
+            orderCount={items.reduce((acc, curr) => acc + curr.attachments, 0)}
+            monetaryValue="Files"
+            footerText="Supporting docs"
+            themeClasses={{
+              cardBackground: "bg-nb-cyan",
+              iconContainerBackground: "bg-black",
+              titleTextColor: "text-black",
+              orderCountContainer: "bg-white",
+              orderCountText: "text-black",
+              monetaryContainer: "bg-[#0E7490]",
+              monetaryText: "text-white font-mono",
+              footerContainer: "bg-[#155E75]",
+              footerText: "text-white",
+            }}
+          />
+
+          {/* Status — Yellow */}
+          <GlobalStatCard
+            iconSvgOrEmoji={<Edit3 className="w-6 h-6 text-black" />}
+            introTitle="Current Status"
+            orderCount={0}
+            monetaryValue="DRAFT"
+            footerText="Unsubmitted"
+            themeClasses={{
+              cardBackground: "bg-nb-yellow",
+              iconContainerBackground: "bg-black",
+              titleTextColor: "text-black",
+              orderCountContainer: "bg-white",
+              orderCountText: "text-black",
+              monetaryContainer: "bg-[#713F12]",
+              monetaryText: "text-white font-mono font-black",
+              footerContainer: "bg-[#a16207]",
+              footerText: "text-white",
+            }}
+          />
+        </section>
+
+        <div className="nb-divider" />
+
+        {/* ── REQUIREMENTS FORM ─────────────────────────────────────────── */}
+        <section>
+          <Panel title="Product Requirements" badge={items.length} noTopPad>
+            {/* Header Action */}
+            <div className="flex items-center justify-between p-5 border-b-[2px] border-black bg-white">
+              <div className="flex items-center gap-2">
+                <Package size={20} className="text-black" />
+                <span className="font-display font-black text-black">Line Items</span>
               </div>
+              <button
+                onClick={handleAddItem}
+                className="
+                  flex items-center gap-2 px-4 py-2
+                  bg-nb-yellow text-black font-body font-bold text-sm
+                  border-[2px] border-black shadow-[4px_4px_0px_0px_#000]
+                  nb-interactive
+                "
+              >
+                <Plus size={16} strokeWidth={2.5} />
+                Add Item
+              </button>
             </div>
-          </div>
-          
-          {/* Status */}
-          <div style={{
-            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-            padding: "16px 20px", display: "flex", alignItems: "center", gap: 14,
-            boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-          }}>
-            <div style={{
-              width: 44, height: 44, borderRadius: 10,
-              background: T.amberBg, display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <Edit3 size={22} color={T.amber} />
-            </div>
-            <div>
-              <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Status</div>
-              <div style={{ fontSize: 22, color: T.t1, fontWeight: 700, marginTop: 2 }}>Draft</div>
-            </div>
-          </div>
-        </div>
 
-        {/* ── REQUIREMENTS SECTION ────────────────────────────────────────── */}
-        <div style={{
-          background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-          padding: "24px", boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Package size={20} color={T.ink} />
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: T.t1, margin: 0 }}>Product Requirements</h2>
-            </div>
-            <button 
-              onClick={handleAddItem}
-              style={{
-                display: "flex", alignItems: "center", gap: 6,
-                background: T.primary, color: "#fff",
-                border: "none", borderRadius: 8, padding: "8px 16px",
-                fontSize: 13, fontWeight: 600, cursor: "pointer",
-                fontFamily: font,
-                transition: "background 0.2s"
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = T.primaryHover}
-              onMouseOut={(e) => e.currentTarget.style.background = T.primary}
-            >
-              <Plus size={16} strokeWidth={2.5} />
-              Add Item
-            </button>
-          </div>
+            <div className="p-6 flex flex-col gap-8">
+              {items.map((item, index) => (
+                <div key={item.id} className="
+                  border-[2px] border-black
+                  shadow-[4px_4px_0px_0px_#000]
+                  bg-white p-6
+                  relative
+                ">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <span className="
+                        w-8 h-8 flex items-center justify-center
+                        bg-black text-white font-mono font-bold text-sm
+                       ">
+                        {index + 1}
+                      </span>
+                      <h3 className="font-display font-black text-lg text-black uppercase tracking-tight">
+                        Item Specification
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveItem(item.id)}
+                      className="
+                        w-10 h-10 flex items-center justify-center
+                        bg-nb-red text-white border-[2px] border-black
+                        shadow-[2px_2px_0px_0px_#000]
+                        nb-interactive
+                      "
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {items.map((item, index) => (
-              <div key={item.id} style={{
-                border: `1px solid ${T.borderLight}`, borderRadius: 8,
-                padding: "20px", background: T.surface
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                  <h3 style={{ fontSize: 14, fontWeight: 600, color: T.ink, margin: 0 }}>Item {index + 1}</h3>
-                  <button 
-                    onClick={() => handleRemoveItem(item.id)}
-                    style={{
-                      background: T.card, border: `1px solid ${T.border}`, color: T.red,
-                      width: 32, height: 32, borderRadius: 6,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: "pointer", transition: "all 0.2s"
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.background = T.redBg;
-                      e.currentTarget.style.borderColor = T.redBg;
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.background = T.card;
-                      e.currentTarget.style.borderColor = T.border;
-                    }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)", gap: 20, marginBottom: 16 }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 8 }}>
-                      Item Name <span style={{color: T.red}}>*</span>
-                    </label>
-                    <div style={{ position: "relative" }}>
-                      <select style={{
-                        width: "100%", padding: "10px 14px", borderRadius: 8,
-                        border: `1px solid ${T.border}`, background: T.card,
-                        fontSize: 13, color: T.t1, fontFamily: font, outline: "none",
-                        boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-                        appearance: "none"
-                      }}>
-                        <option value="">Select item...</option>
-                        <option value="Laptop">Laptop</option>
-                        <option value="Monitor">Monitor</option>
-                        <option value="Keyboard">Keyboard</option>
-                      </select>
-                      <div style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: T.t3 }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Item Name */}
+                    <div className="lg:col-span-2">
+                      <label className="block font-display font-black text-xs uppercase text-black mb-2">
+                        Item Name <span className="text-nb-red">*</span>
+                      </label>
+                      <div className="relative">
+                        <select className="
+                          w-100 w-full px-4 py-3
+                          bg-white border-[2px] border-black
+                          font-body text-sm text-black
+                          appearance-none outline-none
+                          focus:bg-nb-bg
+                        ">
+                          <option value="">Select item...</option>
+                          <option value="Laptop">Laptop</option>
+                          <option value="Monitor">Monitor</option>
+                          <option value="Keyboard">Keyboard</option>
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={16} />
                       </div>
                     </div>
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 8 }}>
-                      Quantity <span style={{color: T.red}}>*</span>
-                    </label>
-                    <input type="number" placeholder="0" style={{
-                      width: "100%", padding: "10px 14px", borderRadius: 8,
-                      border: `1px solid ${T.border}`, background: T.card,
-                      fontSize: 13, color: T.t1, fontFamily: font, outline: "none",
-                      boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
-                    }} />
-                  </div>
-                </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 20, marginBottom: 16 }}>
-                  <div>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 8 }}>
-                      Unit
-                    </label>
-                    <div style={{ position: "relative" }}>
-                      <select style={{
-                        width: "100%", padding: "10px 14px", borderRadius: 8,
-                        border: `1px solid ${T.border}`, background: T.card,
-                        fontSize: 13, color: T.t1, fontFamily: font, outline: "none",
-                        boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-                        appearance: "none"
-                      }}>
-                        <option value="Units">Units</option>
-                        <option value="Kg">Kg</option>
-                        <option value="Liters">Liters</option>
-                      </select>
-                      <div style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: T.t3 }}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    {/* Quantity */}
+                    <div>
+                      <label className="block font-display font-black text-xs uppercase text-black mb-2">
+                        Quantity <span className="text-nb-red">*</span>
+                      </label>
+                      <input type="number" placeholder="0" className="
+                        w-full px-4 py-3
+                        bg-white border-[2px] border-black
+                        font-mono text-sm text-black
+                        outline-none focus:bg-nb-bg
+                      " />
+                    </div>
+
+                    {/* Unit */}
+                    <div>
+                      <label className="block font-display font-black text-xs uppercase text-black mb-2">
+                        Unit
+                      </label>
+                      <div className="relative">
+                        <select className="
+                          w-full px-4 py-3
+                          bg-white border-[2px] border-black
+                          font-body text-sm text-black
+                          appearance-none outline-none
+                          focus:bg-nb-bg
+                        ">
+                          <option value="Units">Units</option>
+                          <option value="Kg">Kg</option>
+                          <option value="Liters">Liters</option>
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={16} />
                       </div>
                     </div>
-                  </div>
-                  <div>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 8 }}>
-                      Expected Delivery Date <span style={{color: T.red}}>*</span>
-                    </label>
-                    <input type="date" style={{
-                      width: "100%", padding: "10px 14px", borderRadius: 8,
-                      border: `1px solid ${T.border}`, background: T.card,
-                      fontSize: 13, color: T.t1, fontFamily: font, outline: "none",
-                      boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
-                    }} />
-                  </div>
-                </div>
 
-                <div style={{ marginBottom: 20 }}>
-                   <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 8 }}>
-                      Notes
-                    </label>
-                    <textarea placeholder="Additional specifications or notes..." rows={3} style={{
-                      width: "100%", padding: "10px 14px", borderRadius: 8,
-                      border: `1px solid ${T.border}`, background: T.card,
-                      fontSize: 13, color: T.t1, fontFamily: font, outline: "none",
-                      resize: "vertical", boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
-                    }} />
-                </div>
-                
-                {/* Embedded Document Uploader for Item */}
-                <div style={{ 
-                    display: "flex", alignItems: "center", justifyContent: "space-between", 
-                    paddingTop: 16, borderTop: `1px dashed ${T.border}` 
-                }}>
-                  <div style={{ fontSize: 13, color: T.t2 }}>
-                    Attach supporting documents for this item specifications
+                    {/* Delivery Date */}
+                    <div>
+                      <label className="block font-display font-black text-xs uppercase text-black mb-2">
+                        Expected Delivery <span className="text-nb-red">*</span>
+                      </label>
+                      <input type="date" className="
+                        w-full px-4 py-3
+                        bg-white border-[2px] border-black
+                        font-mono text-sm text-black
+                        outline-none focus:bg-nb-bg
+                      " />
+                    </div>
+
+                    {/* Notes */}
+                    <div className="md:col-span-2 lg:col-span-3">
+                      <label className="block font-display font-black text-xs uppercase text-black mb-2">
+                        Technical Notes / Requirements
+                      </label>
+                      <textarea
+                        placeholder="Additional specifications or notes..."
+                        rows={3}
+                        className="
+                          w-full px-4 py-3
+                          bg-white border-[2px] border-black
+                          font-body text-sm text-black
+                          outline-none focus:bg-nb-bg
+                          resize-none
+                        "
+                      />
+                    </div>
                   </div>
-                  <button style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    background: T.card, color: T.ink,
-                    border: `1px solid ${T.border}`, borderRadius: 8, padding: "8px 14px",
-                    fontSize: 13, fontWeight: 600, cursor: "pointer",
-                    fontFamily: font, transition: "all 0.2s",
-                    boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
-                  }}
-                  onMouseOver={(e) => {
-                      e.currentTarget.style.background = T.surface;
-                      e.currentTarget.style.borderColor = T.inkHover;
-                      e.currentTarget.style.color = T.inkHover;
-                  }}
-                  onMouseOut={(e) => {
-                      e.currentTarget.style.background = T.card;
-                      e.currentTarget.style.borderColor = T.border;
-                      e.currentTarget.style.color = T.ink;
-                  }}
-                  >
-                    <UploadCloud size={16} />
-                    Attach Document
-                  </button>
+
+                  {/* Footer Action */}
+                  <div className="mt-8 pt-6 border-t-[2px] border-black border-dashed flex flex-col md:flex-row items-center justify-between gap-4">
+                    <p className="font-body text-xs text-gray-500">
+                      Attach supporting documents for this item specifications
+                    </p>
+                    <button className="
+                      flex items-center gap-2 px-4 py-2
+                      bg-white text-black font-body font-bold text-xs
+                      border-[2px] border-black shadow-[2px_2px_0px_0px_#000]
+                      nb-interactive
+                    ">
+                      <UploadCloud size={16} />
+                      Attach Document
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 24, paddingTop: 24, borderTop: `1px solid ${T.borderLight}` }}>
-             <button style={{
-                background: T.primary, color: "#fff",
-                border: "none", borderRadius: 8, padding: "12px 24px",
-                fontSize: 14, fontWeight: 600, cursor: "pointer",
-                fontFamily: font, transition: "background 0.2s",
-                boxShadow: "0 2px 4px rgba(29, 158, 117, 0.2)"
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = T.primaryHover}
-              onMouseOut={(e) => e.currentTarget.style.background = T.primary}
-             >
+              ))}
+            </div>
+
+            {/* Form Actions */}
+            <div className="p-6 border-t-[2px] border-black bg-nb-bg flex justify-end">
+              <button className="
+                  px-8 py-4
+                  bg-black text-white
+                  font-display font-black text-lg uppercase tracking-tight
+                  border-[2px] border-black
+                  shadow-[6px_6px_0px_0px_#4ADE80]
+                  nb-interactive
+                ">
                 Submit Requirement
-             </button>
-          </div>
-        </div>
+              </button>
+            </div>
+          </Panel>
+        </section>
       </main>
     </>
   )

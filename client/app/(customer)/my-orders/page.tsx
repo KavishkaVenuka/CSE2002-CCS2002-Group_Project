@@ -63,8 +63,8 @@ export default function MyOrdersPage() {
           background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
           boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
         }}>
-           {/* Header Area */}
-          <div style={{ 
+          {/* Header Area */}
+          <div style={{
             padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between",
             borderBottom: `1px solid ${T.borderLight}`
           }}>
@@ -72,28 +72,28 @@ export default function MyOrdersPage() {
               <ShoppingBag size={20} color={T.ink} />
               <h2 style={{ fontSize: 16, fontWeight: 600, color: T.t1, margin: 0 }}>All Orders</h2>
             </div>
-            
+
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-               <div style={{ 
-                 display: "flex", alignItems: "center", gap: 8, background: T.surface, 
-                 border: `1px solid ${T.borderLight}`, borderRadius: 8, padding: "8px 12px", width: 240
-               }}>
-                 <Search size={16} color={T.t3} />
-                 <input type="text" placeholder="Search orders..." style={{ 
-                   background: "transparent", border: "none", outline: "none", fontSize: 13, color: T.t1, width: "100%", fontFamily: font
-                 }} />
-               </div>
-               
-               <div style={{ 
-                 display: "flex", alignItems: "center", gap: 8, background: T.surface, 
-                 border: `1px solid ${T.borderLight}`, borderRadius: 8, padding: "8px 12px", cursor: "pointer"
-               }}>
-                 <span style={{ fontSize: 13, color: T.t1, fontWeight: 500 }}>All Status</span>
-                 <ChevronDown size={14} color={T.t2} />
-               </div>
+              <div style={{
+                display: "flex", alignItems: "center", gap: 8, background: T.surface,
+                border: `1px solid ${T.borderLight}`, borderRadius: 8, padding: "8px 12px", width: 240
+              }}>
+                <Search size={16} color={T.t3} />
+                <input type="text" placeholder="Search orders..." style={{
+                  background: "transparent", border: "none", outline: "none", fontSize: 13, color: T.t1, width: "100%", fontFamily: font
+                }} />
+              </div>
+
+              <div style={{
+                display: "flex", alignItems: "center", gap: 8, background: T.surface,
+                border: `1px solid ${T.borderLight}`, borderRadius: 8, padding: "8px 12px", cursor: "pointer"
+              }}>
+                <span style={{ fontSize: 13, color: T.t1, fontWeight: 500 }}>All Status</span>
+                <ChevronDown size={14} color={T.t2} />
+              </div>
             </div>
           </div>
-          
+
           {/* Table */}
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontFamily: font }}>
@@ -120,35 +120,35 @@ export default function MyOrdersPage() {
                       <td style={{ padding: "16px 24px", fontSize: 13, color: T.t2 }}>{ord.items}</td>
                       <td style={{ padding: "16px 24px", fontSize: 13, color: T.t1 }}>{ord.amount}</td>
                       <td style={{ padding: "16px 24px" }}>
-                         <span style={{ 
-                           display: "inline-flex", alignItems: "center", gap: 6,
-                           background: sConf.bg, color: sConf.color, border: `1px solid ${sConf.color}40`,
-                           padding: "4px 10px", borderRadius: 16, fontSize: 11, fontWeight: 600,
-                         }}>
-                            <StatusIcon size={12} strokeWidth={2.5} />
-                            {ord.status}
-                         </span>
+                        <span style={{
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                          background: sConf.bg, color: sConf.color, border: `1px solid ${sConf.color}40`,
+                          padding: "4px 10px", borderRadius: 16, fontSize: 11, fontWeight: 600,
+                        }}>
+                          <StatusIcon size={12} strokeWidth={2.5} />
+                          {ord.status}
+                        </span>
                       </td>
                       <td style={{ padding: "16px 24px" }}>
-                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                           <button style={{ 
-                             background: "transparent", border: `1px solid ${T.borderLight}`, borderRadius: 8,
-                             width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                             cursor: "pointer", color: T.t3, transition: "background 0.2s"
-                           }} onMouseOver={(e) => e.currentTarget.style.background = T.surface} onMouseOut={(e) => e.currentTarget.style.background = "transparent"} title="View">
-                             <Eye size={14} />
-                           </button>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <button style={{
+                            background: "transparent", border: `1px solid ${T.borderLight}`, borderRadius: 8,
+                            width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                            cursor: "pointer", color: T.t3, transition: "background 0.2s"
+                          }} onMouseOver={(e) => e.currentTarget.style.background = T.surface} onMouseOut={(e) => e.currentTarget.style.background = "transparent"} title="View">
+                            <Eye size={14} />
+                          </button>
 
-                           {ord.status === "pending" && (
-                             <button style={{ 
-                               background: "transparent", border: `1px solid ${T.red}40`, borderRadius: 8,
-                               width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                               cursor: "pointer", color: T.red, transition: "background 0.2s"
-                             }} onMouseOver={(e) => e.currentTarget.style.background = T.redBg} onMouseOut={(e) => e.currentTarget.style.background = "transparent"} title="Cancel Order">
-                               <X size={14} />
-                             </button>
-                           )}
-                         </div>
+                          {ord.status === "pending" && (
+                            <button style={{
+                              background: "transparent", border: `1px solid ${T.red}40`, borderRadius: 8,
+                              width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                              cursor: "pointer", color: T.red, transition: "background 0.2s"
+                            }} onMouseOver={(e) => e.currentTarget.style.background = T.redBg} onMouseOut={(e) => e.currentTarget.style.background = "transparent"} title="Cancel Order">
+                              <X size={14} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )
