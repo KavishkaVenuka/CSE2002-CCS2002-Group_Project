@@ -22,7 +22,7 @@ export default function DeliveryTrackingPage() {
         padding: "24px 28px",
         display: "flex", flexDirection: "column", gap: 24,
       }}>
-        
+
         {/* Select Order to Track */}
         <div style={{
           background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
@@ -33,7 +33,7 @@ export default function DeliveryTrackingPage() {
             <h2 style={{ fontSize: 16, fontWeight: 600, color: T.t1, margin: 0 }}>Select Order to Track</h2>
           </div>
           <div style={{ position: "relative" }}>
-            <select 
+            <select
               value={selectedOrderId}
               onChange={(e) => setSelectedOrderId(e.target.value)}
               style={{
@@ -51,7 +51,7 @@ export default function DeliveryTrackingPage() {
               ))}
             </select>
             <div style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: T.t3 }}>
-               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
           </div>
         </div>
@@ -126,22 +126,22 @@ export default function DeliveryTrackingPage() {
 
           <div style={{ display: "flex", flexDirection: "column", position: "relative" }}>
             {/* The vertical timeline line mapping */}
-            <div style={{ 
-              position: "absolute", left: 16, top: 20, bottom: 20, 
-              width: 2, background: T.borderLight, zIndex: 0 
+            <div style={{
+              position: "absolute", left: 16, top: 20, bottom: 20,
+              width: 2, background: T.borderLight, zIndex: 0
             }} />
 
             {/* Timeline Item 1 */}
             <div style={{ display: "flex", gap: 20, marginBottom: 20, position: "relative", zIndex: 1 }}>
-              <div style={{ 
+              <div style={{
                 width: 32, height: 32, borderRadius: "50%", background: T.greenBg, border: `2px solid ${T.card}`,
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
               }}>
                 <CheckCircle2 size={16} color={T.green} />
               </div>
-              <div style={{ 
-                flex: 1, background: T.greenBg, border: `1px solid ${T.green}`, borderRadius: 8, 
-                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" 
+              <div style={{
+                flex: 1, background: T.greenBg, border: `1px solid ${T.green}`, borderRadius: 8,
+                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start"
               }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.green, marginBottom: 6 }}>Quotation Accepted</div>
@@ -155,15 +155,15 @@ export default function DeliveryTrackingPage() {
 
             {/* Timeline Item 2 */}
             <div style={{ display: "flex", gap: 20, marginBottom: 20, position: "relative", zIndex: 1 }}>
-              <div style={{ 
+              <div style={{
                 width: 32, height: 32, borderRadius: "50%", background: T.greenBg, border: `2px solid ${T.card}`,
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
               }}>
                 <CheckCircle2 size={16} color={T.green} />
               </div>
-              <div style={{ 
-                flex: 1, background: T.greenBg, border: `1px solid ${T.green}`, borderRadius: 8, 
-                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" 
+              <div style={{
+                flex: 1, background: T.greenBg, border: `1px solid ${T.green}`, borderRadius: 8,
+                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start"
               }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.green, marginBottom: 6 }}>Order Created</div>
@@ -177,15 +177,15 @@ export default function DeliveryTrackingPage() {
 
             {/* Timeline Item 3 */}
             <div style={{ display: "flex", gap: 20, marginBottom: 20, position: "relative", zIndex: 1 }}>
-              <div style={{ 
+              <div style={{
                 width: 32, height: 32, borderRadius: "50%", background: T.greenBg, border: `2px solid ${T.card}`,
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
               }}>
                 <CheckCircle2 size={16} color={T.green} />
               </div>
-              <div style={{ 
-                flex: 1, background: T.greenBg, border: `1px solid ${T.green}`, borderRadius: 8, 
-                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" 
+              <div style={{
+                flex: 1, background: T.greenBg, border: `1px solid ${T.green}`, borderRadius: 8,
+                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start"
               }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.green, marginBottom: 6 }}>Dispatched</div>
@@ -199,15 +199,15 @@ export default function DeliveryTrackingPage() {
 
             {/* Timeline Item 4 */}
             <div style={{ display: "flex", gap: 20, marginBottom: 20, position: "relative", zIndex: 1 }}>
-              <div style={{ 
+              <div style={{
                 width: 32, height: 32, borderRadius: "50%", background: T.blue, border: `2px solid ${T.card}`,
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
               }}>
                 <Clock size={16} color="#fff" />
               </div>
-              <div style={{ 
-                flex: 1, background: T.blueBg, border: `1px solid ${T.blue}`, borderRadius: 8, 
-                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" 
+              <div style={{
+                flex: 1, background: T.blueBg, border: `1px solid ${T.blue}`, borderRadius: 8,
+                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start"
               }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.blue, marginBottom: 6 }}>In Transit</div>
@@ -221,15 +221,15 @@ export default function DeliveryTrackingPage() {
 
             {/* Timeline Item 5 - Pending/Future */}
             <div style={{ display: "flex", gap: 20, position: "relative", zIndex: 1 }}>
-              <div style={{ 
+              <div style={{
                 width: 32, height: 32, borderRadius: "50%", background: T.surface, border: `2px solid ${T.card}`,
                 display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
               }}>
                 <div style={{ width: 10, height: 10, borderRadius: "50%", background: T.t3 }} />
               </div>
-              <div style={{ 
-                flex: 1, background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 8, 
-                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" 
+              <div style={{
+                flex: 1, background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 8,
+                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start"
               }}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: T.t2, marginBottom: 6 }}>Delivered</div>
@@ -252,28 +252,28 @@ export default function DeliveryTrackingPage() {
             </div>
             <div style={{ fontSize: 13, color: T.t2 }}>If you received partial delivery or have concerns</div>
           </div>
-          
+
           <div style={{
             border: `2px dashed ${T.borderLight}`, borderRadius: 12,
             padding: "48px 24px", display: "flex", flexDirection: "column",
             alignItems: "center", justifyContent: "center", gap: 14,
             background: T.surface, cursor: "pointer", transition: "all 0.2s"
           }}
-          onMouseOver={(e) => {
+            onMouseOver={(e) => {
               e.currentTarget.style.background = T.blueBg;
               e.currentTarget.style.borderColor = T.blue;
-          }}
-          onMouseOut={(e) => {
+            }}
+            onMouseOut={(e) => {
               e.currentTarget.style.background = T.surface;
               e.currentTarget.style.borderColor = T.borderLight;
-          }}
+            }}
           >
             <div style={{ width: 56, height: 56, borderRadius: "50%", background: T.card, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-               <UploadCloud size={24} color={T.ink} />
+              <UploadCloud size={24} color={T.ink} />
             </div>
             <div style={{ textAlign: "center" }}>
-               <div style={{ fontSize: 14, fontWeight: 600, color: T.t1, marginBottom: 6 }}>Click to upload or drag and drop</div>
-               <div style={{ fontSize: 13, color: T.t3 }}>SVG, PNG, JPG or PDF (max. 10MB)</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: T.t1, marginBottom: 6 }}>Click to upload or drag and drop</div>
+              <div style={{ fontSize: 13, color: T.t3 }}>SVG, PNG, JPG or PDF (max. 10MB)</div>
             </div>
           </div>
         </div>
