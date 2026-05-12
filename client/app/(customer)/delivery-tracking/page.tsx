@@ -120,7 +120,7 @@ export default function DeliveryTrackingPage() {
                       <p className="font-body text-xs text-gray-600 mt-1">{step.sub}</p>
                     </div>
                     {step.time && (
-                      <span className="flex items-center gap-1 font-mono text-[10px] font-bold text-black shrink-0">
+                      <span className="flex items-center gap-1 font-mono text-[13px] font-bold text-black shrink-0">
                         <Calendar size={10} strokeWidth={2.5} /> {step.time}
                       </span>
                     )}
