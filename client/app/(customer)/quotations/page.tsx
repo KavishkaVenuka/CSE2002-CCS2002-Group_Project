@@ -90,7 +90,7 @@ export default function QuotationsPage() {
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <div className="grid grid-cols-[140px_140px_110px_110px_70px_110px_120px_110px] gap-0 px-5 py-3 border-b-[2px] border-black bg-nb-bg min-w-[900px]">
+            <div className="grid grid-cols-[1.5fr_1.5fr_1fr_1fr_0.5fr_1fr_1.5fr_110px] gap-6 px-5 py-3 border-b-[2px] border-black bg-nb-bg min-w-[900px]">
               {["Quotation ID","Req. Ref","Date","Expiry","Items","Amount","Status","Actions"].map(h => (
                 <div key={h} className="font-display font-black text-[10px] uppercase tracking-widest text-black">{h}</div>
               ))}
@@ -102,7 +102,7 @@ export default function QuotationsPage() {
                 return (
                   <div
                     key={q.id}
-                    className={`grid grid-cols-[140px_140px_110px_110px_70px_110px_120px_110px] gap-0 items-center px-5 py-4 hover:bg-nb-yellow/20 transition-colors ${i < QUOTATIONS.length - 1 ? "border-b-[2px] border-black" : ""}`}
+                    className={`grid grid-cols-[1.5fr_1.5fr_1fr_1fr_0.5fr_1fr_1.5fr_110px] gap-6 items-center px-5 py-4 hover:bg-nb-yellow/20 transition-colors ${i < QUOTATIONS.length - 1 ? "border-b-[2px] border-black" : ""}`}
                   >
                     <div className="font-mono text-sm font-bold text-black">{q.id}</div>
                     <div className="font-mono text-xs text-black">{q.reqRef}</div>

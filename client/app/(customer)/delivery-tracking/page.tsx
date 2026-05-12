@@ -131,25 +131,6 @@ export default function DeliveryTrackingPage() {
           </div>
         </section>
 
-        {/* ── UPLOAD PROOF ──────────────────────────────────────── */}
-        <section className="bg-white border-[3px] border-black shadow-[4px_4px_0px_0px_#000] overflow-hidden">
-          <div className="bg-black px-5 py-3 flex items-center gap-3">
-            <UploadCloud size={16} strokeWidth={2.5} className="text-white" />
-            <h2 className="font-display font-black text-xs text-white uppercase tracking-[0.15em]">Upload Delivery Proof</h2>
-          </div>
-          <div className="p-6">
-            <p className="font-body text-sm text-gray-600 mb-4">If you received partial delivery or have concerns</p>
-            <div className="border-[2px] border-dashed border-black py-12 flex flex-col items-center gap-4 bg-nb-bg hover:bg-nb-cyan/20 hover:border-nb-cyan transition-all cursor-pointer">
-              <div className="w-14 h-14 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] flex items-center justify-center">
-                <UploadCloud size={24} strokeWidth={2.5} className="text-black" />
-              </div>
-              <div className="text-center">
-                <p className="font-display font-black text-sm text-black">Click to upload or drag and drop</p>
-                <p className="font-body text-xs text-gray-500 mt-1">SVG, PNG, JPG or PDF (max. 10MB)</p>
-              </div>
-            </div>
-          </div>
-        </section>
 
       </main>
     </>

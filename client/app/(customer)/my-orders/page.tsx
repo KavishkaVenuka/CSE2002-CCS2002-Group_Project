@@ -65,7 +65,7 @@ export default function MyOrdersPage() {
 
           <div className="overflow-x-auto">
             <div className="grid grid-cols-[1.4fr_1.2fr_1fr_70px_110px_150px_110px] px-6 py-3 border-b-[2px] border-black bg-nb-bg min-w-[900px]">
-              {["Order ID","Quotation Ref","Order Date","Items","Amount","Status","Actions"].map(h => (
+              {["Order ID","Quotation Ref","Order Date","Items","Amount","Status"].map(h => (
                 <div key={h} className="font-display font-black text-[10px] uppercase tracking-widest text-black">{h}</div>
               ))}
             </div>
@@ -84,16 +84,6 @@ export default function MyOrdersPage() {
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 border-[2px] border-black font-mono font-bold text-[10px] uppercase ${cfg.color}`}>
                         <StatusIcon size={10} strokeWidth={2.5} /> {ord.status}
                       </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button className="w-8 h-8 flex items-center justify-center bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all" title="View">
-                        <Eye size={14} strokeWidth={2.5} />
-                      </button>
-                      {ord.status === "pending" && (
-                        <button className="w-8 h-8 flex items-center justify-center bg-nb-red border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all" title="Cancel">
-                          <X size={14} strokeWidth={2.5} />
-                        </button>
-                      )}
                     </div>
                   </div>
                 )
