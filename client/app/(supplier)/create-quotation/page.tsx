@@ -223,7 +223,7 @@ export default function CreateQuotationPage() {
               <div className="bg-nb-yellow p-4 border-[3px] border-black shadow-nb flex gap-3">
                 <Info size={24} className="shrink-0" strokeWidth={3} />
                 <p className="font-body text-[11px] font-bold leading-tight">
-                  Submission will lock this quotation. You can edit it from the "Quotation Status" page until reviewed.
+                  Submission will lock this quotation. You can edit it from the ``Quotation Status`` page until reviewed.
                 </p>
               </div>
 
