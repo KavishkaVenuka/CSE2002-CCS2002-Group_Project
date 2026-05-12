@@ -1,15 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Space+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 
-/* ─── Neo Brutalism Design Tokens (Tailwind v4 CSS-first) ─────────────────── */
+/* ─── Neo Brutalism Design Tokens (Tailwind v4) ────────────────────────── */
 @theme {
-  /* Colors */
+  /* Core Colors */
   --color-nb-black:   #000000;
   --color-nb-white:   #FFFFFF;
   --color-nb-bg:      #F5F0E8;
+  
+  /* Accent Colors */
   --color-nb-yellow:  #FACC15;
   --color-nb-green:   #4ADE80;
-  --color-nb-cyan:    #22D3EE;
+  --color-nb-cyan:    #A5E6DC; /* Signature Supplier Teal */
   --color-nb-red:     #EF4444;
   --color-nb-orange:  #FB923C;
 
@@ -38,7 +40,7 @@
     box-sizing: border-box;
   }
 
-  /* Opt-out escape hatch (use sparingly) */
+  /* Opt-out escape hatch */
   .allow-rounded {
     border-radius: revert !important;
   }
@@ -79,14 +81,12 @@
     box-shadow: none;
   }
 
-  /* Base card */
   .nb-card {
     background: #FFFFFF;
     border: 2px solid #000000;
     box-shadow: 4px 4px 0px 0px #000000;
   }
 
-  /* Section divider */
   .nb-divider {
     border-top: 2px solid #000000;
     margin: 24px 0;

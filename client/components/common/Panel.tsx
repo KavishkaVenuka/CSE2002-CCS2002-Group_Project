@@ -1,64 +1,35 @@
 "use client"
 
-import { ReactNode } from "react"
-import { ChevronRight } from "lucide-react"
+import React from "react"
 
 interface PanelProps {
   title: string
-  badge?: number | string
-  badgeColor?: string
-  badgeBg?: string
-  children: ReactNode
+  children: React.ReactNode
   noTopPad?: boolean
+  badge?: React.ReactNode
+  icon?: React.ReactNode
+  dark?: boolean
 }
 
-export function Panel({ title, badge, children, noTopPad }: PanelProps) {
+export function Panel({ title, children, noTopPad = false, badge, icon, dark = false }: PanelProps) {
   return (
-    <div
-      className="border-[3px] border-black shadow-[6px_6px_0px_0px_#000000] overflow-hidden bg-white"
-    >
-      {/* ── Panel Header — black bar ──────────────────────────────── */}
-      <div
-        className="
-          flex items-center justify-between
-          px-5 py-3
-          bg-black
-          border-b-[2px] border-black
-        "
-      >
+    <section className={`${dark ? "bg-black" : "bg-white"} border-[3px] border-black shadow-nb overflow-hidden`}>
+      <div className={`${dark ? "bg-black border-white/10" : "bg-white border-black"} px-6 py-4 border-b-[2.5px] flex items-center justify-between`}>
         <div className="flex items-center gap-3">
-          <span className="font-display font-black text-sm text-white tracking-tight uppercase">
+          {icon && <div className="flex-shrink-0">{icon}</div>}
+          <h2 className={`font-display font-black text-sm uppercase tracking-[0.15em] ${dark ? "text-white" : "text-black"}`}>
             {title}
-          </span>
-          {badge !== undefined && (
-            <span className="
-              font-mono text-xs font-bold text-black bg-nb-yellow
-              px-2 py-0.5
-              border-[2px] border-white
-              shadow-[1px_1px_0px_0px_#fff]
-            ">
-              {badge}
-            </span>
-          )}
+          </h2>
         </div>
-
-        <button className="
-          flex items-center gap-1
-          px-3 py-1
-          bg-nb-yellow text-black
-          font-body font-bold text-xs
-          border-[2px] border-nb-yellow
-          shadow-[2px_2px_0px_0px_#fff]
-          nb-interactive
-        ">
-          View all <ChevronRight size={12} strokeWidth={2.5} />
-        </button>
+        {badge !== undefined && (
+          <div className="flex-shrink-0">
+            {badge}
+          </div>
+        )}
       </div>
-
-      {/* ── Panel Body ─────────────────────────────────────────────── */}
-      <div style={{ paddingTop: noTopPad ? 0 : undefined }}>
+      <div className={`${noTopPad ? "" : "p-6"} ${dark ? "text-white" : "text-black"}`}>
         {children}
       </div>
-    </div>
+    </section>
   )
 }

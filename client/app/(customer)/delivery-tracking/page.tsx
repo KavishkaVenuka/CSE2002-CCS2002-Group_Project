@@ -1,282 +1,155 @@
 "use client"
 
 import { useState } from "react"
-import { Package, MapPin, Truck, CheckCircle2, Clock, UploadCloud, Calendar } from "lucide-react"
-import { T, font } from "@/lib/tokens"
+import { Package, MapPin, Truck, CheckCircle2, Clock, UploadCloud, Calendar, ChevronDown } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
 
 const ORDERS = [
   { id: "ORD-20240114", date: "Jan 14, 2024", amount: "$22,000", status: "In Transit", items: 5, tracking: "TRK-2024-5678", estDelivery: "January 17, 2024", address: "123 Business Street, Suite 400\nNew York, NY 10001" },
-  { id: "ORD-20240115", date: "Jan 15, 2024", amount: "$15,000", status: "Delivered", items: 3, tracking: "TRK-2024-5679", estDelivery: "January 16, 2024", address: "456 Tech Park\nAustin, TX 78701" },
+  { id: "ORD-20240115", date: "Jan 15, 2024", amount: "$15,000", status: "Delivered",  items: 3, tracking: "TRK-2024-5679", estDelivery: "January 16, 2024", address: "456 Tech Park\nAustin, TX 78701" },
+]
+
+const TIMELINE = [
+  { label: "Quotation Accepted", sub: "Quotation accepted and order created", time: "2024-01-14 10:00 AM", done: true },
+  { label: "Order Created",      sub: "Order confirmed by supplier",           time: "2024-01-14 10:15 AM", done: true },
+  { label: "Dispatched",         sub: "Package dispatched from warehouse",     time: "2024-01-15 09:00 AM", done: true },
+  { label: "In Transit",         sub: "Package in transit — ETA 1 day",       time: "2024-01-15 03:00 PM", done: false, active: true },
+  { label: "Delivered",          sub: "Awaiting delivery",                     time: "",                    done: false },
 ]
 
 export default function DeliveryTrackingPage() {
-  const [selectedOrderId, setSelectedOrderId] = useState("ORD-20240114");
-  const selectedOrder = ORDERS.find(o => o.id === selectedOrderId) || ORDERS[0];
+  const [selectedOrderId, setSelectedOrderId] = useState("ORD-20240114")
+  const order = ORDERS.find(o => o.id === selectedOrderId) || ORDERS[0]
 
   return (
     <>
-      <DashboardHeader title="Delivery Tracking" dateString="Thursday, 24 April 2026" />
-      <main style={{
-        flex: 1, overflow: "auto",
-        padding: "24px 28px",
-        display: "flex", flexDirection: "column", gap: 24,
-      }}>
+      <DashboardHeader title="Delivery Tracking" />
+      <main className="flex-1 overflow-auto p-6 space-y-6 bg-nb-bg">
 
-        {/* Select Order to Track */}
-        <div style={{
-          background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-          padding: "24px", boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <Package size={20} color={T.ink} />
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: T.t1, margin: 0 }}>Select Order to Track</h2>
+        {/* ── ORDER SELECTOR ────────────────────────────────────── */}
+        <section className="bg-white border-[3px] border-black shadow-[4px_4px_0px_0px_#000] p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Package size={20} strokeWidth={2.5} className="text-black" />
+            <h2 className="font-display font-black text-sm uppercase tracking-widest">Select Order to Track</h2>
           </div>
-          <div style={{ position: "relative" }}>
+          <div className="relative">
             <select
               value={selectedOrderId}
-              onChange={(e) => setSelectedOrderId(e.target.value)}
-              style={{
-                width: "100%", padding: "12px 16px", borderRadius: 8,
-                border: `1px solid ${T.border}`, background: T.surface,
-                fontSize: 14, color: T.t1, fontFamily: font, outline: "none",
-                fontWeight: 600, appearance: "none", cursor: "pointer",
-                boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
-              }}
+              onChange={e => setSelectedOrderId(e.target.value)}
+              className="w-full appearance-none px-4 py-3 bg-nb-yellow border-[2px] border-black font-body font-bold text-sm text-black shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all cursor-pointer"
             >
               {ORDERS.map(o => (
-                <option key={o.id} value={o.id}>
-                  {o.id} - {o.date} - {o.amount}
-                </option>
+                <option key={o.id} value={o.id}>{o.id} — {o.date} — {o.amount}</option>
               ))}
             </select>
-            <div style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: T.t3 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-black" size={16} strokeWidth={2.5} />
           </div>
+        </section>
+
+        {/* ── DETAILS GRID ──────────────────────────────────────── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Delivery details */}
+          <section className="bg-white border-[3px] border-black shadow-[4px_4px_0px_0px_#000] overflow-hidden">
+            <div className="bg-black px-5 py-3 flex items-center gap-3">
+              <MapPin size={16} strokeWidth={2.5} className="text-white" />
+              <h2 className="font-display font-black text-xs text-white uppercase tracking-[0.15em]">Delivery Details</h2>
+            </div>
+            <div className="p-5 space-y-5">
+              {[
+                ["Tracking Number", order.tracking],
+                ["Estimated Delivery", order.estDelivery],
+                ["Delivery Address", order.address],
+              ].map(([label, value]) => (
+                <div key={label} className="border-l-[3px] border-nb-cyan pl-4">
+                  <p className="font-body font-bold text-[10px] uppercase tracking-widest text-gray-500 mb-1">{label}</p>
+                  <p className="font-body font-bold text-sm text-black whitespace-pre-wrap">{value}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Order summary */}
+          <section className="bg-white border-[3px] border-black shadow-[4px_4px_0px_0px_#000] overflow-hidden">
+            <div className="bg-black px-5 py-3 flex items-center gap-3">
+              <Package size={16} strokeWidth={2.5} className="text-white" />
+              <h2 className="font-display font-black text-xs text-white uppercase tracking-[0.15em]">Order Summary</h2>
+            </div>
+            <div className="p-5 space-y-5">
+              {[
+                ["Order ID", order.id],
+                ["Total Items", `${order.items} items`],
+                ["Order Amount", order.amount],
+              ].map(([label, value]) => (
+                <div key={label} className="border-l-[3px] border-nb-green pl-4">
+                  <p className="font-body font-bold text-[10px] uppercase tracking-widest text-gray-500 mb-1">{label}</p>
+                  <p className="font-body font-bold text-sm text-black">{value}</p>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
 
-        {/* DETAILS & SUMMARY GRID */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
-          {/* Delivery Details */}
-          <div style={{
-            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-            padding: "24px", boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-              <MapPin size={20} color={T.ink} />
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: T.t1, margin: 0 }}>Delivery Details</h2>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 6 }}>Tracking Number</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: T.t1 }}>{selectedOrder.tracking}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 6 }}>Estimated Delivery</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: T.t1 }}>{selectedOrder.estDelivery}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 6 }}>Delivery Address</div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: T.t1, whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
-                  {selectedOrder.address}
+        {/* ── DELIVERY TIMELINE ─────────────────────────────────── */}
+        <section className="bg-white border-[3px] border-black shadow-[4px_4px_0px_0px_#000] overflow-hidden">
+          <div className="bg-black px-5 py-3 flex items-center gap-3">
+            <Truck size={16} strokeWidth={2.5} className="text-white" />
+            <h2 className="font-display font-black text-xs text-white uppercase tracking-[0.15em]">Delivery Timeline</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            {TIMELINE.map((step, i) => (
+              <div key={i} className="flex gap-4">
+                {/* Step indicator */}
+                <div className="flex flex-col items-center">
+                  <div className={`w-8 h-8 border-[2px] border-black flex items-center justify-center shrink-0 shadow-[2px_2px_0px_0px_#000] ${step.done ? "bg-nb-green" : step.active ? "bg-nb-cyan" : "bg-white"}`}>
+                    {step.done
+                      ? <CheckCircle2 size={16} strokeWidth={2.5} className="text-black" />
+                      : step.active
+                      ? <Clock size={16} strokeWidth={2.5} className="text-black" />
+                      : <div className="w-2 h-2 bg-gray-400" />
+                    }
+                  </div>
+                  {i < TIMELINE.length - 1 && (
+                    <div className={`w-0.5 flex-1 mt-1 min-h-[24px] ${step.done ? "bg-nb-green" : "bg-gray-300"}`} />
+                  )}
                 </div>
+                {/* Step content */}
+                <div className={`flex-1 border-[2px] border-black p-4 mb-4 ${step.done ? "bg-nb-green/20" : step.active ? "bg-nb-cyan/30" : "bg-nb-bg"}`}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-display font-black text-sm text-black">{step.label}</p>
+                      <p className="font-body text-xs text-gray-600 mt-1">{step.sub}</p>
+                    </div>
+                    {step.time && (
+                      <span className="flex items-center gap-1 font-mono text-[10px] font-bold text-black shrink-0">
+                        <Calendar size={10} strokeWidth={2.5} /> {step.time}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── UPLOAD PROOF ──────────────────────────────────────── */}
+        <section className="bg-white border-[3px] border-black shadow-[4px_4px_0px_0px_#000] overflow-hidden">
+          <div className="bg-black px-5 py-3 flex items-center gap-3">
+            <UploadCloud size={16} strokeWidth={2.5} className="text-white" />
+            <h2 className="font-display font-black text-xs text-white uppercase tracking-[0.15em]">Upload Delivery Proof</h2>
+          </div>
+          <div className="p-6">
+            <p className="font-body text-sm text-gray-600 mb-4">If you received partial delivery or have concerns</p>
+            <div className="border-[2px] border-dashed border-black py-12 flex flex-col items-center gap-4 bg-nb-bg hover:bg-nb-cyan/20 hover:border-nb-cyan transition-all cursor-pointer">
+              <div className="w-14 h-14 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] flex items-center justify-center">
+                <UploadCloud size={24} strokeWidth={2.5} className="text-black" />
+              </div>
+              <div className="text-center">
+                <p className="font-display font-black text-sm text-black">Click to upload or drag and drop</p>
+                <p className="font-body text-xs text-gray-500 mt-1">SVG, PNG, JPG or PDF (max. 10MB)</p>
               </div>
             </div>
           </div>
-
-          {/* Order Summary */}
-          <div style={{
-            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-            padding: "24px", boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-              <Package size={20} color={T.ink} />
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: T.t1, margin: 0 }}>Order Summary</h2>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 6 }}>Order ID</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: T.t1 }}>{selectedOrder.id}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 6 }}>Total Items</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: T.t1 }}>{selectedOrder.items} items</div>
-              </div>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: T.t2, marginBottom: 6 }}>Order Amount</div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: T.t1 }}>{selectedOrder.amount}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* DELIVERY TIMELINE */}
-        <div style={{
-          background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-          padding: "24px", boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-        }}>
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <Truck size={20} color={T.ink} />
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: T.t1, margin: 0 }}>Delivery Timeline</h2>
-            </div>
-            <div style={{ fontSize: 13, color: T.t2 }}>Track your order progress from quotation to delivery</div>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", position: "relative" }}>
-            {/* The vertical timeline line mapping */}
-            <div style={{
-              position: "absolute", left: 16, top: 20, bottom: 20,
-              width: 2, background: T.borderLight, zIndex: 0
-            }} />
-
-            {/* Timeline Item 1 */}
-            <div style={{ display: "flex", gap: 20, marginBottom: 20, position: "relative", zIndex: 1 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: "50%", background: T.greenBg, border: `2px solid ${T.card}`,
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-              }}>
-                <CheckCircle2 size={16} color={T.green} />
-              </div>
-              <div style={{
-                flex: 1, background: T.greenBg, border: `1px solid ${T.green}`, borderRadius: 8,
-                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start"
-              }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: T.green, marginBottom: 6 }}>Quotation Accepted</div>
-                  <div style={{ fontSize: 13, color: T.green }}>Quotation accepted and order created</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.green, fontWeight: 600 }}>
-                  <Calendar size={12} /> 2024-01-14 10:00 AM
-                </div>
-              </div>
-            </div>
-
-            {/* Timeline Item 2 */}
-            <div style={{ display: "flex", gap: 20, marginBottom: 20, position: "relative", zIndex: 1 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: "50%", background: T.greenBg, border: `2px solid ${T.card}`,
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-              }}>
-                <CheckCircle2 size={16} color={T.green} />
-              </div>
-              <div style={{
-                flex: 1, background: T.greenBg, border: `1px solid ${T.green}`, borderRadius: 8,
-                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start"
-              }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: T.green, marginBottom: 6 }}>Order Created</div>
-                  <div style={{ fontSize: 13, color: T.green }}>Order confirmed by supplier</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.green, fontWeight: 600 }}>
-                  <Calendar size={12} /> 2024-01-14 10:15 AM
-                </div>
-              </div>
-            </div>
-
-            {/* Timeline Item 3 */}
-            <div style={{ display: "flex", gap: 20, marginBottom: 20, position: "relative", zIndex: 1 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: "50%", background: T.greenBg, border: `2px solid ${T.card}`,
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-              }}>
-                <CheckCircle2 size={16} color={T.green} />
-              </div>
-              <div style={{
-                flex: 1, background: T.greenBg, border: `1px solid ${T.green}`, borderRadius: 8,
-                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start"
-              }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: T.green, marginBottom: 6 }}>Dispatched</div>
-                  <div style={{ fontSize: 13, color: T.green }}>Package dispatched from warehouse</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.green, fontWeight: 600 }}>
-                  <Calendar size={12} /> 2024-01-15 09:00 AM
-                </div>
-              </div>
-            </div>
-
-            {/* Timeline Item 4 */}
-            <div style={{ display: "flex", gap: 20, marginBottom: 20, position: "relative", zIndex: 1 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: "50%", background: T.blue, border: `2px solid ${T.card}`,
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-              }}>
-                <Clock size={16} color="#fff" />
-              </div>
-              <div style={{
-                flex: 1, background: T.blueBg, border: `1px solid ${T.blue}`, borderRadius: 8,
-                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start"
-              }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: T.blue, marginBottom: 6 }}>In Transit</div>
-                  <div style={{ fontSize: 13, color: T.blue }}>Package in transit - ETA 1 day</div>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: T.blue, fontWeight: 600 }}>
-                  <Calendar size={12} /> 2024-01-15 03:00 PM
-                </div>
-              </div>
-            </div>
-
-            {/* Timeline Item 5 - Pending/Future */}
-            <div style={{ display: "flex", gap: 20, position: "relative", zIndex: 1 }}>
-              <div style={{
-                width: 32, height: 32, borderRadius: "50%", background: T.surface, border: `2px solid ${T.card}`,
-                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
-              }}>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: T.t3 }} />
-              </div>
-              <div style={{
-                flex: 1, background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 8,
-                padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "flex-start"
-              }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: T.t2, marginBottom: 6 }}>Delivered</div>
-                  <div style={{ fontSize: 13, color: T.t3 }}>Awaiting delivery</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* UPLOAD DELIVERY PROOF */}
-        <div style={{
-          background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-          padding: "24px", boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-        }}>
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <UploadCloud size={20} color={T.ink} />
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: T.t1, margin: 0 }}>Upload Delivery Proof (Optional)</h2>
-            </div>
-            <div style={{ fontSize: 13, color: T.t2 }}>If you received partial delivery or have concerns</div>
-          </div>
-
-          <div style={{
-            border: `2px dashed ${T.borderLight}`, borderRadius: 12,
-            padding: "48px 24px", display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center", gap: 14,
-            background: T.surface, cursor: "pointer", transition: "all 0.2s"
-          }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.background = T.blueBg;
-              e.currentTarget.style.borderColor = T.blue;
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.background = T.surface;
-              e.currentTarget.style.borderColor = T.borderLight;
-            }}
-          >
-            <div style={{ width: 56, height: 56, borderRadius: "50%", background: T.card, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-              <UploadCloud size={24} color={T.ink} />
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: T.t1, marginBottom: 6 }}>Click to upload or drag and drop</div>
-              <div style={{ fontSize: 13, color: T.t3 }}>SVG, PNG, JPG or PDF (max. 10MB)</div>
-            </div>
-          </div>
-        </div>
+        </section>
 
       </main>
     </>

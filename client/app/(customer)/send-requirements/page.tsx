@@ -6,268 +6,230 @@ import { DashboardHeader } from "@/components/customer/DashboardHeader"
 import { GlobalStatCard } from "@/components/common/GlobalStatCard"
 import { Panel } from "@/components/common/Panel"
 
+interface RequirementItem {
+  id: number
+  name: string
+  quantity: string
+  unit: string
+  deliveryDate: string
+  notes: string
+}
+
 export default function SendRequirements() {
-  const [items, setItems] = useState([
-    { id: 1, name: "", quantity: "", unit: "Units", deliveryDate: "", notes: "", attachments: 0 }
+  const [items, setItems] = useState<RequirementItem[]>([
+    { id: 1, name: "", quantity: "", unit: "Units", deliveryDate: "", notes: "" }
   ])
 
   const handleAddItem = () => {
-    setItems([...items, { id: Date.now(), name: "", quantity: "", unit: "Units", deliveryDate: "", notes: "", attachments: 0 }])
+    setItems([...items, {
+      id: Date.now(), name: "", quantity: "",
+      unit: "Units", deliveryDate: "", notes: ""
+    }])
   }
 
   const handleRemoveItem = (id: number) => {
+    if (items.length === 1) return
     setItems(items.filter(item => item.id !== id))
+  }
+
+  const handleChange = (id: number, field: keyof RequirementItem, value: string) => {
+    setItems(items.map(item => item.id === id ? { ...item, [field]: value } : item))
   }
 
   return (
     <>
       <DashboardHeader title="Send Requirements" />
 
-      <main className="flex-1 overflow-auto p-6 flex flex-col gap-6 bg-nb-bg">
+      <main className="flex-1 overflow-auto p-6 space-y-6 bg-nb-bg">
 
-        {/* ── STATS ROW ─────────────────────────────────────────────────── */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Total Items — Green */}
-          <GlobalStatCard
-            iconSvgOrEmoji={<Package className="w-6 h-6 text-white" />}
-            introTitle="Total Items"
-            orderCount={items.length}
-            monetaryValue="Items"
-            footerText="In this requirement"
-            themeClasses={{
-              cardBackground: "bg-nb-green",
-              iconContainerBackground: "bg-black",
-              titleTextColor: "text-black",
-              orderCountContainer: "bg-white",
-              orderCountText: "text-black",
-              monetaryContainer: "bg-[#166534]",
-              monetaryText: "text-white font-mono",
-              footerContainer: "bg-[#14532D]",
-              footerText: "text-white",
-            }}
-          />
-
-          {/* Attachments — Cyan */}
-          <GlobalStatCard
-            iconSvgOrEmoji={<FileText className="w-6 h-6 text-white" />}
-            introTitle="Attachments"
-            orderCount={items.reduce((acc, curr) => acc + curr.attachments, 0)}
-            monetaryValue="Files"
-            footerText="Supporting docs"
-            themeClasses={{
-              cardBackground: "bg-nb-cyan",
-              iconContainerBackground: "bg-black",
-              titleTextColor: "text-black",
-              orderCountContainer: "bg-white",
-              orderCountText: "text-black",
-              monetaryContainer: "bg-[#0E7490]",
-              monetaryText: "text-white font-mono",
-              footerContainer: "bg-[#155E75]",
-              footerText: "text-white",
-            }}
-          />
-
-          {/* Status — Yellow */}
-          <GlobalStatCard
-            iconSvgOrEmoji={<Edit3 className="w-6 h-6 text-black" />}
-            introTitle="Current Status"
-            orderCount={0}
-            monetaryValue="DRAFT"
-            footerText="Unsubmitted"
-            themeClasses={{
-              cardBackground: "bg-nb-yellow",
-              iconContainerBackground: "bg-black",
-              titleTextColor: "text-black",
-              orderCountContainer: "bg-white",
-              orderCountText: "text-black",
-              monetaryContainer: "bg-[#713F12]",
-              monetaryText: "text-white font-mono font-black",
-              footerContainer: "bg-[#a16207]",
-              footerText: "text-white",
-            }}
-          />
-        </section>
-
-        <div className="nb-divider" />
-
-        {/* ── REQUIREMENTS FORM ─────────────────────────────────────────── */}
-        <section>
-          <Panel title="Product Requirements" badge={items.length} noTopPad>
-            {/* Header Action */}
-            <div className="flex items-center justify-between p-5 border-b-[2px] border-black bg-white">
-              <div className="flex items-center gap-2">
-                <Package size={20} className="text-black" />
-                <span className="font-display font-black text-black">Line Items</span>
-              </div>
-              <button
-                onClick={handleAddItem}
-                className="
-                  flex items-center gap-2 px-4 py-2
-                  bg-nb-yellow text-black font-body font-bold text-sm
-                  border-[2px] border-black shadow-[4px_4px_0px_0px_#000]
-                  nb-interactive
-                "
-              >
-                <Plus size={16} strokeWidth={2.5} />
-                Add Item
-              </button>
+        {/* ── STAT CARDS ───────────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {/* Total Items */}
+          <div className="bg-nb-cyan border-[3px] border-black shadow-[4px_4px_0px_0px_#000] p-5 flex items-center gap-4 nb-interactive">
+            <div className="w-12 h-12 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] flex items-center justify-center">
+              <Package size={22} strokeWidth={2.5} className="text-black" />
             </div>
+            <div>
+              <p className="font-body font-bold text-xs text-black uppercase tracking-wider">Total Items</p>
+              <h3 className="font-display font-black text-3xl text-black leading-none">{items.length}</h3>
+            </div>
+          </div>
 
-            <div className="p-6 flex flex-col gap-8">
-              {items.map((item, index) => (
-                <div key={item.id} className="
-                  border-[2px] border-black
-                  shadow-[4px_4px_0px_0px_#000]
-                  bg-white p-6
-                  relative
-                ">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <span className="
-                        w-8 h-8 flex items-center justify-center
-                        bg-black text-white font-mono font-bold text-sm
-                       ">
-                        {index + 1}
-                      </span>
-                      <h3 className="font-display font-black text-lg text-black uppercase tracking-tight">
-                        Item Specification
-                      </h3>
-                    </div>
-                    <button
-                      onClick={() => handleRemoveItem(item.id)}
-                      className="
-                        w-10 h-10 flex items-center justify-center
-                        bg-nb-red text-white border-[2px] border-black
-                        shadow-[2px_2px_0px_0px_#000]
-                        nb-interactive
-                      "
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
+          {/* Attachments */}
+          <div className="bg-nb-green border-[3px] border-black shadow-[4px_4px_0px_0px_#000] p-5 flex items-center gap-4 nb-interactive">
+            <div className="w-12 h-12 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] flex items-center justify-center">
+              <FileText size={22} strokeWidth={2.5} className="text-black" />
+            </div>
+            <div>
+              <p className="font-body font-bold text-xs text-black uppercase tracking-wider">Attachments</p>
+              <h3 className="font-display font-black text-3xl text-black leading-none">0</h3>
+            </div>
+          </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Item Name */}
-                    <div className="lg:col-span-2">
-                      <label className="block font-display font-black text-xs uppercase text-black mb-2">
+          {/* Status */}
+          <div className="bg-nb-yellow border-[3px] border-black shadow-[4px_4px_0px_0px_#000] p-5 flex items-center gap-4 nb-interactive">
+            <div className="w-12 h-12 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] flex items-center justify-center">
+              <Edit3 size={22} strokeWidth={2.5} className="text-black" />
+            </div>
+            <div>
+              <p className="font-body font-bold text-xs text-black uppercase tracking-wider">Status</p>
+              <h3 className="font-display font-black text-3xl text-black leading-none">Draft</h3>
+            </div>
+          </div>
+        </div>
+
+        {/* ── REQUIREMENTS SECTION ─────────────────────────────────────── */}
+        <section className="bg-white border-[3px] border-black shadow-[6px_6px_0px_0px_#000] overflow-hidden">
+
+          {/* Section header */}
+          <div className="bg-black px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Package size={18} strokeWidth={2.5} className="text-white" />
+              <h2 className="font-display font-black text-sm text-white uppercase tracking-[0.15em]">
+                Product Requirements
+              </h2>
+            </div>
+            <button
+              onClick={handleAddItem}
+              className="flex items-center gap-2 px-4 py-2 bg-nb-yellow text-black font-display font-black text-xs uppercase tracking-widest border-[2px] border-nb-yellow shadow-[2px_2px_0px_0px_#fff] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all duration-100"
+            >
+              <Plus size={14} strokeWidth={3} />
+              Add Item
+            </button>
+          </div>
+
+          {/* Items list */}
+          <div className="p-6 space-y-6">
+            {items.map((item, index) => (
+              <div
+                key={item.id}
+                className="border-[2px] border-black shadow-[3px_3px_0px_0px_#000] overflow-hidden"
+              >
+                {/* Item header */}
+                <div className="flex items-center justify-between px-5 py-3 bg-nb-bg border-b-[2px] border-black">
+                  <span className="font-display font-black text-xs uppercase tracking-widest text-black">
+                    Item {index + 1}
+                  </span>
+                  <button
+                    onClick={() => handleRemoveItem(item.id)}
+                    disabled={items.length === 1}
+                    className="w-8 h-8 flex items-center justify-center bg-white border-[2px] border-black text-nb-red shadow-[2px_2px_0px_0px_#000] hover:bg-nb-red hover:text-white hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all duration-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 size={14} strokeWidth={2.5} />
+                  </button>
+                </div>
+
+                {/* Item form */}
+                <div className="p-5 space-y-4">
+                  {/* Row 1: Name + Quantity */}
+                  <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-4">
+                    <div className="space-y-2">
+                      <label className="block font-display font-black text-[10px] uppercase tracking-widest text-black">
                         Item Name <span className="text-nb-red">*</span>
                       </label>
                       <div className="relative">
-                        <select className="
-                          w-100 w-full px-4 py-3
-                          bg-white border-[2px] border-black
-                          font-body text-sm text-black
-                          appearance-none outline-none
-                          focus:bg-nb-bg
-                        ">
+                        <select
+                          value={item.name}
+                          onChange={e => handleChange(item.id, "name", e.target.value)}
+                          className="w-full px-4 py-2.5 appearance-none bg-white border-[2px] border-black font-body text-sm text-black shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-100"
+                        >
                           <option value="">Select item...</option>
                           <option value="Laptop">Laptop</option>
                           <option value="Monitor">Monitor</option>
                           <option value="Keyboard">Keyboard</option>
+                          <option value="Raw Silk">Raw Silk</option>
+                          <option value="Cotton Thread">Cotton Thread</option>
+                          <option value="Linen Fabric">Linen Fabric</option>
                         </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={16} />
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-black pointer-events-none" size={16} strokeWidth={2.5} />
                       </div>
                     </div>
-
-                    {/* Quantity */}
-                    <div>
-                      <label className="block font-display font-black text-xs uppercase text-black mb-2">
+                    <div className="space-y-2">
+                      <label className="block font-display font-black text-[10px] uppercase tracking-widest text-black">
                         Quantity <span className="text-nb-red">*</span>
                       </label>
-                      <input type="number" placeholder="0" className="
-                        w-full px-4 py-3
-                        bg-white border-[2px] border-black
-                        font-mono text-sm text-black
-                        outline-none focus:bg-nb-bg
-                      " />
-                    </div>
-
-                    {/* Unit */}
-                    <div>
-                      <label className="block font-display font-black text-xs uppercase text-black mb-2">
-                        Unit
-                      </label>
-                      <div className="relative">
-                        <select className="
-                          w-full px-4 py-3
-                          bg-white border-[2px] border-black
-                          font-body text-sm text-black
-                          appearance-none outline-none
-                          focus:bg-nb-bg
-                        ">
-                          <option value="Units">Units</option>
-                          <option value="Kg">Kg</option>
-                          <option value="Liters">Liters</option>
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" size={16} />
-                      </div>
-                    </div>
-
-                    {/* Delivery Date */}
-                    <div>
-                      <label className="block font-display font-black text-xs uppercase text-black mb-2">
-                        Expected Delivery <span className="text-nb-red">*</span>
-                      </label>
-                      <input type="date" className="
-                        w-full px-4 py-3
-                        bg-white border-[2px] border-black
-                        font-mono text-sm text-black
-                        outline-none focus:bg-nb-bg
-                      " />
-                    </div>
-
-                    {/* Notes */}
-                    <div className="md:col-span-2 lg:col-span-3">
-                      <label className="block font-display font-black text-xs uppercase text-black mb-2">
-                        Technical Notes / Requirements
-                      </label>
-                      <textarea
-                        placeholder="Additional specifications or notes..."
-                        rows={3}
-                        className="
-                          w-full px-4 py-3
-                          bg-white border-[2px] border-black
-                          font-body text-sm text-black
-                          outline-none focus:bg-nb-bg
-                          resize-none
-                        "
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={item.quantity}
+                        onChange={e => handleChange(item.id, "quantity", e.target.value)}
+                        className="w-full px-4 py-2.5 bg-white border-[2px] border-black font-body text-sm text-black shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-100"
                       />
                     </div>
                   </div>
 
-                  {/* Footer Action */}
-                  <div className="mt-8 pt-6 border-t-[2px] border-black border-dashed flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="font-body text-xs text-gray-500">
-                      Attach supporting documents for this item specifications
+                  {/* Row 2: Unit + Delivery Date */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="block font-display font-black text-[10px] uppercase tracking-widest text-black">
+                        Unit
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={item.unit}
+                          onChange={e => handleChange(item.id, "unit", e.target.value)}
+                          className="w-full px-4 py-2.5 appearance-none bg-nb-yellow border-[2px] border-black font-body font-bold text-sm text-black shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-100"
+                        >
+                          <option value="Units">Units</option>
+                          <option value="Kg">Kg</option>
+                          <option value="Liters">Liters</option>
+                          <option value="Meters">Meters</option>
+                          <option value="Boxes">Boxes</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-black pointer-events-none" size={16} strokeWidth={2.5} />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block font-display font-black text-[10px] uppercase tracking-widest text-black">
+                        Expected Delivery <span className="text-nb-red">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={item.deliveryDate}
+                        onChange={e => handleChange(item.id, "deliveryDate", e.target.value)}
+                        className="w-full px-4 py-2.5 bg-white border-[2px] border-black font-body text-sm text-black shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-100"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 3: Notes */}
+                  <div className="space-y-2">
+                    <label className="block font-display font-black text-[10px] uppercase tracking-widest text-black">
+                      Notes
+                    </label>
+                    <textarea
+                      placeholder="Additional specifications or notes..."
+                      rows={3}
+                      value={item.notes}
+                      onChange={e => handleChange(item.id, "notes", e.target.value)}
+                      className="w-full px-4 py-2.5 bg-white border-[2px] border-black font-body text-sm text-black resize-vertical shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px] transition-all duration-100 placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  {/* Attach Document */}
+                  <div className="flex items-center justify-between pt-4 border-t-[2px] border-dashed border-black">
+                    <p className="font-body text-xs font-bold text-gray-600 uppercase tracking-tight">
+                      Supporting documents
                     </p>
-                    <button className="
-                      flex items-center gap-2 px-4 py-2
-                      bg-white text-black font-body font-bold text-xs
-                      border-[2px] border-black shadow-[2px_2px_0px_0px_#000]
-                      nb-interactive
-                    ">
-                      <UploadCloud size={16} />
+                    <button className="flex items-center gap-2 px-4 py-2 bg-white border-[2px] border-black font-body font-bold text-xs uppercase text-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all duration-100">
+                      <UploadCloud size={14} strokeWidth={2.5} />
                       Attach Document
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
 
-            {/* Form Actions */}
-            <div className="p-6 border-t-[2px] border-black bg-nb-bg flex justify-end">
-              <button className="
-                  px-8 py-4
-                  bg-black text-white
-                  font-display font-black text-lg uppercase tracking-tight
-                  border-[2px] border-black
-                  shadow-[6px_6px_0px_0px_#4ADE80]
-                  nb-interactive
-                ">
-                Submit Requirement
-              </button>
-            </div>
-          </Panel>
+          {/* Submit footer */}
+          <div className="flex justify-end items-center gap-4 px-6 py-5 border-t-[3px] border-black bg-nb-bg">
+            <button className="px-5 py-2.5 bg-white text-black font-body font-bold text-sm border-[2px] border-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_#000] transition-all duration-100">
+              Save Draft
+            </button>
+            <button className="px-5 py-2.5 bg-black text-white font-display font-black text-sm uppercase tracking-widest border-[2px] border-black shadow-[4px_4px_0px_0px_#22c55e] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all duration-100">
+              Submit Requirement
+            </button>
+          </div>
         </section>
       </main>
     </>

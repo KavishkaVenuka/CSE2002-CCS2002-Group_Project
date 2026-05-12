@@ -1,290 +1,182 @@
 "use client"
 
 import { useState } from "react"
-import { CheckCircle2, DollarSign, FileWarning, Receipt, Eye, Download, FileText, Printer, X as CloseIcon } from "lucide-react"
-import { T, font } from "@/lib/tokens"
+import { CheckCircle2, DollarSign, FileWarning, Receipt, Eye, Download, FileText, Printer, X } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
 
 const INVOICES = [
   { id: "INV-20240115", orderRef: "ORD-20240115", date: "2024-01-15", amount: "$15,000", status: "paid" },
   { id: "INV-20240114", orderRef: "ORD-20240114", date: "2024-01-14", amount: "$22,000", status: "unpaid" },
-  { id: "INV-20240113", orderRef: "ORD-20240113", date: "2024-01-13", amount: "$8,500", status: "paid" },
+  { id: "INV-20240113", orderRef: "ORD-20240113", date: "2024-01-13", amount: "$8,500",  status: "paid" },
   { id: "INV-20240112", orderRef: "ORD-20240112", date: "2024-01-12", amount: "$18,000", status: "overdue" },
 ]
 
+const STAT_CARDS = [
+  { label: "Paid",    count: 2, icon: CheckCircle2, color: "bg-nb-green"  },
+  { label: "Unpaid",  count: 1, icon: DollarSign,   color: "bg-nb-yellow" },
+  { label: "Overdue", count: 1, icon: FileWarning,   color: "bg-nb-red"   },
+]
+
+const BADGE: Record<string, string> = {
+  paid:    "bg-nb-green",
+  unpaid:  "bg-nb-yellow",
+  overdue: "bg-nb-red",
+}
+
 export default function InvoicesPage() {
-  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<(typeof INVOICES)[0] | null>(null)
 
   return (
     <>
-      <DashboardHeader title="Invoices" dateString="Thursday, 24 April 2026" />
-      <main style={{
-        flex: 1, overflow: "auto",
-        padding: "24px 28px",
-        display: "flex", flexDirection: "column", gap: 24,
-      }}>
-        {/* STATS ROW */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          gap: 16,
-        }}>
-          {/* Card 1: Paid */}
-          <div style={{
-            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-            padding: "20px", display: "flex", flexDirection: "column", gap: 12,
-            boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-          }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: 10,
-              background: T.greenBg, display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <CheckCircle2 size={18} color={T.green} />
-            </div>
-            <div>
-              <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Paid</div>
-              <div style={{ fontSize: 24, color: T.t1, fontWeight: 700, marginTop: 4, fontFamily: font }}>2</div>
-            </div>
-          </div>
+      <DashboardHeader title="Invoices" />
+      <main className="flex-1 overflow-auto p-6 space-y-6 bg-nb-bg">
 
-          {/* Card 2: Unpaid */}
-          <div style={{
-            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-            padding: "20px", display: "flex", flexDirection: "column", gap: 12,
-            boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-          }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: 10,
-              background: T.amberBg, display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <DollarSign size={18} color={T.amber} />
+        {/* ── STAT CARDS ─────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {STAT_CARDS.map(s => (
+            <div key={s.label} className={`${s.color} border-[3px] border-black shadow-[4px_4px_0px_0px_#000] p-5 flex items-center gap-4 nb-interactive`}>
+              <div className="w-12 h-12 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] flex items-center justify-center shrink-0">
+                <s.icon size={22} strokeWidth={2.5} className="text-black" />
+              </div>
+              <div>
+                <p className="font-body font-bold text-xs text-black uppercase tracking-wider">{s.label}</p>
+                <h3 className="font-display font-black text-3xl text-black leading-none">{s.count}</h3>
+              </div>
             </div>
-            <div>
-              <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Unpaid</div>
-              <div style={{ fontSize: 24, color: T.t1, fontWeight: 700, marginTop: 4, fontFamily: font }}>1</div>
-            </div>
-          </div>
-
-          {/* Card 3: Overdue */}
-          <div style={{
-            background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-            padding: "20px", display: "flex", flexDirection: "column", gap: 12,
-            boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-          }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: 10,
-              background: T.redBg, display: "flex", alignItems: "center", justifyContent: "center"
-            }}>
-              <FileWarning size={18} color={T.red} />
-            </div>
-            <div>
-              <div style={{ fontSize: 13, color: T.t2, fontWeight: 500 }}>Overdue</div>
-              <div style={{ fontSize: 24, color: T.t1, fontWeight: 700, marginTop: 4, fontFamily: font }}>1</div>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* ── TABLE PANEL ─────────────────────────────────────────────────── */}
-        <div style={{
-          background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-          boxShadow: "0 2px 8px rgba(26,58,92,0.04)"
-        }}>
-          {/* Header Area */}
-          <div style={{
-            padding: "20px 24px", display: "flex", alignItems: "center", justifyContent: "space-between",
-            borderBottom: `1px solid ${T.borderLight}`
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <Receipt size={20} color={T.ink} />
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: T.t1, margin: 0 }}>All Invoices</h2>
+        {/* ── TABLE PANEL ────────────────────────────────────────── */}
+        <section className="bg-white border-[3px] border-black shadow-[6px_6px_0px_0px_#000] overflow-hidden">
+          <div className="bg-black px-6 py-4 flex items-center gap-3">
+            <Receipt size={18} strokeWidth={2.5} className="text-white" />
+            <h2 className="font-display font-black text-sm text-white uppercase tracking-[0.15em]">All Invoices</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <div className="grid grid-cols-[150px_140px_110px_110px_120px_110px] px-5 py-3 border-b-[2px] border-black bg-nb-bg min-w-[760px]">
+              {["Invoice ID","Order Ref","Date","Amount","Status","Actions"].map(h => (
+                <div key={h} className="font-display font-black text-[10px] uppercase tracking-widest text-black">{h}</div>
+              ))}
+            </div>
+            <div className="min-w-[760px]">
+              {INVOICES.map((inv, i) => (
+                <div key={inv.id} className={`grid grid-cols-[150px_140px_110px_110px_120px_110px] items-center px-5 py-4 hover:bg-nb-yellow/20 transition-colors ${i < INVOICES.length - 1 ? "border-b-[2px] border-black" : ""}`}>
+                  <div className="font-mono text-sm font-bold text-black">{inv.id}</div>
+                  <div className="font-mono text-xs text-black">{inv.orderRef}</div>
+                  <div className="font-mono text-xs text-black">{inv.date}</div>
+                  <div className="font-display font-black text-sm text-black">{inv.amount}</div>
+                  <div>
+                    <span className={`px-2 py-0.5 border-[2px] border-black font-mono font-bold text-[10px] uppercase ${BADGE[inv.status]}`}>
+                      {inv.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedInvoice(inv)}
+                      className="w-8 h-8 flex items-center justify-center bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all"
+                      title="View"
+                    >
+                      <Eye size={14} strokeWidth={2.5} />
+                    </button>
+                    <button
+                      className="w-8 h-8 flex items-center justify-center bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all"
+                      title="Download"
+                    >
+                      <Download size={14} strokeWidth={2.5} />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-
-          {/* Table */}
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontFamily: font }}>
-              <thead>
-                <tr style={{ background: T.surface, borderBottom: `1px solid ${T.border}` }}>
-                  <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 600, color: T.t2 }}>Invoice ID</th>
-                  <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 600, color: T.t2 }}>Order Ref</th>
-                  <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 600, color: T.t2 }}>Date</th>
-                  <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 600, color: T.t2 }}>Amount</th>
-                  <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 600, color: T.t2 }}>Status</th>
-                  <th style={{ padding: "16px 24px", fontSize: 12, fontWeight: 600, color: T.t2 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {INVOICES.map((inv, idx) => {
-                  let badgeBg, badgeColor, badgeBorder, badgeText;
-                  if (inv.status === 'unpaid') { badgeBg = T.amberBg; badgeColor = T.amber; badgeBorder = T.amber; badgeText = "unpaid" }
-                  else if (inv.status === 'paid') { badgeBg = T.greenBg; badgeColor = T.green; badgeBorder = T.green; badgeText = "paid" }
-                  else { badgeBg = T.redBg; badgeColor = T.red; badgeBorder = T.redBg; badgeText = "overdue" }
-
-                  return (
-                    <tr key={inv.id} style={{ borderBottom: idx === INVOICES.length - 1 ? "none" : `1px solid ${T.borderLight}` }}>
-                      <td style={{ padding: "16px 24px", fontSize: 13, color: T.t1 }}>{inv.id}</td>
-                      <td style={{ padding: "16px 24px", fontSize: 13, color: T.t2 }}>{inv.orderRef}</td>
-                      <td style={{ padding: "16px 24px", fontSize: 13, color: T.t2 }}>{inv.date}</td>
-                      <td style={{ padding: "16px 24px", fontSize: 13, color: T.t1 }}>{inv.amount}</td>
-                      <td style={{ padding: "16px 24px" }}>
-                        <span style={{
-                          display: "inline-flex", alignItems: "center",
-                          background: badgeBg, color: badgeColor, border: `1px solid ${badgeBorder}`,
-                          padding: "3px 10px", borderRadius: 16, fontSize: 11, fontWeight: 600,
-                          letterSpacing: "0.02em"
-                        }}>
-                          {badgeText}
-                        </span>
-                      </td>
-                      <td style={{ padding: "16px 24px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                          <button onClick={() => setSelectedInvoice(inv)} style={{
-                            background: "transparent", border: `1px solid ${T.borderLight}`, borderRadius: 8,
-                            width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                            cursor: "pointer", color: T.t3, transition: "background 0.2s"
-                          }} onMouseOver={(e) => e.currentTarget.style.background = T.surface} onMouseOut={(e) => e.currentTarget.style.background = "transparent"} title="View">
-                            <Eye size={14} />
-                          </button>
-                          <button style={{
-                            background: "transparent", border: `1px solid ${T.borderLight}`, borderRadius: 8,
-                            width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                            cursor: "pointer", color: T.t3, transition: "background 0.2s"
-                          }} onMouseOver={(e) => e.currentTarget.style.background = T.surface} onMouseOut={(e) => e.currentTarget.style.background = "transparent"} title="Download">
-                            <Download size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        </section>
       </main>
 
-      {/* Modal Overlay Component */}
+      {/* ── INVOICE MODAL ──────────────────────────────────────── */}
       {selectedInvoice && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(26,58,92,0.6)", backdropFilter: "blur(4px)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 100, padding: 24
-        }} onClick={() => setSelectedInvoice(null)}>
-          <div style={{
-            background: T.surface, borderRadius: 12, width: "100%", maxWidth: 800,
-            boxShadow: "0 10px 40px rgba(26,58,92,0.15)", overflow: "hidden",
-            display: "flex", flexDirection: "column", fontFamily: font, maxHeight: "90vh"
-          }} onClick={e => e.stopPropagation()}>
-            <div style={{ padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", background: T.card, borderBottom: `1px solid ${T.borderLight}` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <FileText size={18} color={T.inkHover} />
-                <h2 style={{ fontSize: 16, fontWeight: 700, color: T.t1, margin: 0 }}>Invoice Preview</h2>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6" onClick={() => setSelectedInvoice(null)}>
+          <div className="bg-white border-[4px] border-black shadow-[10px_10px_0px_0px_#000] w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            {/* Modal header */}
+            <div className="bg-black px-6 py-4 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-3">
+                <FileText size={18} strokeWidth={2.5} className="text-white" />
+                <h2 className="font-display font-black text-sm text-white uppercase tracking-[0.15em]">Invoice Preview</h2>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <button style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  background: "transparent", border: `1px solid ${T.border}`, borderRadius: 6,
-                  padding: "6px 12px", cursor: "pointer", color: T.t2, fontSize: 13, fontWeight: 500
-                }}>
-                  <Printer size={14} /> Print
+              <div className="flex items-center gap-3">
+                <button className="flex items-center gap-2 px-3 py-1.5 bg-white border-[2px] border-white font-body font-bold text-xs text-black hover:bg-nb-yellow transition-colors">
+                  <Printer size={14} strokeWidth={2.5} /> Print
                 </button>
-                <button onClick={() => setSelectedInvoice(null)} style={{
-                  background: "transparent", border: "none",
-                  cursor: "pointer", color: T.t3
-                }}>
-                  <CloseIcon size={20} />
+                <button onClick={() => setSelectedInvoice(null)} className="w-8 h-8 flex items-center justify-center bg-nb-red border-[2px] border-white text-white hover:bg-white hover:text-nb-red transition-colors">
+                  <X size={16} strokeWidth={2.5} />
                 </button>
               </div>
             </div>
 
-            <div style={{ flex: 1, overflowY: "auto", padding: "32px", display: "flex", justifyContent: "center" }}>
-              <div style={{
-                background: T.card, border: `1px solid ${T.borderLight}`, borderRadius: 12,
-                padding: "40px", width: "100%", maxWidth: 700,
-                boxShadow: "0 4px 12px rgba(26,58,92,0.03)"
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 40 }}>
+            {/* Invoice body */}
+            <div className="overflow-y-auto p-8 flex justify-center">
+              <div className="w-full max-w-2xl bg-white border-[2px] border-black p-10 space-y-8">
+                {/* Invoice head */}
+                <div className="flex justify-between items-start">
                   <div>
-                    <h1 style={{ fontSize: 28, fontWeight: 700, color: T.ink, letterSpacing: "0.05em", margin: "0 0 16px 0" }}>INVOICE</h1>
-                    <div style={{ fontSize: 13, color: T.t2, display: "flex", flexDirection: "column", gap: 4 }}>
-                      <div>Invoice #: <span style={{ color: T.t1 }}>{selectedInvoice.id}</span></div>
-                      <div>Date: <span style={{ color: T.t1 }}>{selectedInvoice.date}</span></div>
-                      <div>Order #: <span style={{ color: T.t1 }}>{selectedInvoice.orderRef}</span></div>
+                    <h1 className="font-display font-black text-4xl tracking-widest text-black mb-4">INVOICE</h1>
+                    <div className="space-y-1 font-mono text-sm text-gray-600">
+                      <div>Invoice #: <span className="text-black font-bold">{selectedInvoice.id}</span></div>
+                      <div>Date: <span className="text-black font-bold">{selectedInvoice.date}</span></div>
+                      <div>Order #: <span className="text-black font-bold">{selectedInvoice.orderRef}</span></div>
                     </div>
                   </div>
-                  <div style={{ textAlign: "right", fontSize: 13, color: T.t2, display: "flex", flexDirection: "column", gap: 4 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: T.t1, marginBottom: 4 }}>Supplier Company</div>
+                  <div className="text-right font-body text-sm text-gray-600 space-y-1">
+                    <div className="font-display font-black text-base text-black">Supplier Company</div>
                     <div>456 Supplier Avenue</div>
                     <div>New York, NY 10002</div>
-                    <div>Phone: +1 234 567 8901</div>
+                    <div>+1 234 567 8901</div>
                   </div>
                 </div>
 
-                <div style={{
-                  background: T.surface, border: `1px solid ${T.borderLight}`, borderRadius: 8,
-                  padding: "20px", marginBottom: 32, width: "60%"
-                }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: T.t3, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>BILL TO:</div>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: T.t1, marginBottom: 4 }}>Your Company Name</div>
-                  <div style={{ fontSize: 13, color: T.t2, lineHeight: 1.5 }}>
-                    123 Business Street, Suite 400<br />New York, NY 10001
-                  </div>
+                {/* Bill to */}
+                <div className="border-[2px] border-black p-4 bg-nb-bg w-2/3">
+                  <p className="font-display font-black text-[10px] uppercase tracking-widest mb-2">Bill To:</p>
+                  <p className="font-body font-bold text-sm text-black">Your Company Name</p>
+                  <p className="font-body text-sm text-gray-600">123 Business Street, Suite 400<br/>New York, NY 10001</p>
                 </div>
 
-                <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", marginBottom: 32 }}>
-                  <thead>
-                    <tr style={{ borderBottom: `2px solid ${T.border}` }}>
-                      <th style={{ padding: "12px 16px 12px 0", fontSize: 11, fontWeight: 700, color: T.t2, textTransform: "uppercase", letterSpacing: "0.05em" }}>Item</th>
-                      <th style={{ padding: "12px 16px", fontSize: 11, fontWeight: 700, color: T.t2, textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "center" }}>Qty</th>
-                      <th style={{ padding: "12px 16px", fontSize: 11, fontWeight: 700, color: T.t2, textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "right" }}>Unit Price</th>
-                      <th style={{ padding: "12px 0 12px 16px", fontSize: 11, fontWeight: 700, color: T.t2, textTransform: "uppercase", letterSpacing: "0.05em", textAlign: "right" }}>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr style={{ borderBottom: `1px solid ${T.borderLight}` }}>
-                      <td style={{ padding: "16px 16px 16px 0", fontSize: 13, color: T.t1 }}>Product A - Electronics</td>
-                      <td style={{ padding: "16px", fontSize: 13, color: T.t2, textAlign: "center" }}>500</td>
-                      <td style={{ padding: "16px", fontSize: 13, color: T.t2, textAlign: "right" }}>$250</td>
-                      <td style={{ padding: "16px 0 16px 16px", fontSize: 13, color: T.t1, fontWeight: 500, textAlign: "right" }}>$125,000</td>
-                    </tr>
-                    <tr style={{ borderBottom: `1px solid ${T.borderLight}` }}>
-                      <td style={{ padding: "16px 16px 16px 0", fontSize: 13, color: T.t1 }}>Product B - Furniture</td>
-                      <td style={{ padding: "16px", fontSize: 13, color: T.t2, textAlign: "center" }}>300</td>
-                      <td style={{ padding: "16px", fontSize: 13, color: T.t2, textAlign: "right" }}>$180</td>
-                      <td style={{ padding: "16px 0 16px 16px", fontSize: 13, color: T.t1, fontWeight: 500, textAlign: "right" }}>$54,000</td>
-                    </tr>
-                    <tr style={{ borderBottom: `1px solid ${T.borderLight}` }}>
-                      <td style={{ padding: "16px 16px 16px 0", fontSize: 13, color: T.t1 }}>Product C - Textiles</td>
-                      <td style={{ padding: "16px", fontSize: 13, color: T.t2, textAlign: "center" }}>200</td>
-                      <td style={{ padding: "16px", fontSize: 13, color: T.t2, textAlign: "right" }}>$45</td>
-                      <td style={{ padding: "16px 0 16px 16px", fontSize: 13, color: T.t1, fontWeight: 500, textAlign: "right" }}>$9,000</td>
-                    </tr>
-                  </tbody>
-                </table>
+                {/* Items */}
+                <div className="border-[2px] border-black overflow-hidden">
+                  <div className="grid grid-cols-[1fr_60px_90px_90px] bg-black px-4 py-2">
+                    {["Item","Qty","Unit Price","Total"].map(h => (
+                      <div key={h} className="font-display font-black text-[10px] uppercase tracking-widest text-white">{h}</div>
+                    ))}
+                  </div>
+                  {[["Product A - Electronics","500","$250","$125,000"],["Product B - Furniture","300","$180","$54,000"],["Product C - Textiles","200","$45","$9,000"]].map(([name,qty,price,total],i) => (
+                    <div key={i} className={`grid grid-cols-[1fr_60px_90px_90px] px-4 py-3 ${i < 2 ? "border-b-[2px] border-black" : ""}`}>
+                      <div className="font-body text-sm text-black">{name}</div>
+                      <div className="font-mono text-xs text-black">{qty}</div>
+                      <div className="font-mono text-xs text-black">{price}</div>
+                      <div className="font-display font-black text-sm text-black">{total}</div>
+                    </div>
+                  ))}
+                </div>
 
-                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 32 }}>
-                  <div style={{ width: 260, display: "flex", flexDirection: "column", gap: 12 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 13, color: T.t2 }}>Subtotal:</span>
-                      <span style={{ fontSize: 13, color: T.t1, fontWeight: 500 }}>$134,000</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 13, color: T.t2 }}>Tax (10%):</span>
-                      <span style={{ fontSize: 13, color: T.t1, fontWeight: 500 }}>$13,400</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 14, borderTop: `1px solid ${T.borderLight}` }}>
-                      <span style={{ fontSize: 14, color: T.t2, fontWeight: 700, textTransform: "uppercase" }}>TOTAL:</span>
-                      <span style={{ fontSize: 16, color: T.ink, fontWeight: 700 }}>$147,400</span>
+                {/* Totals */}
+                <div className="flex justify-end">
+                  <div className="w-60 space-y-3">
+                    {[["Subtotal","$134,000"],["Tax (10%)","$13,400"]].map(([l,v]) => (
+                      <div key={l} className="flex justify-between font-body text-sm">
+                        <span className="text-gray-600">{l}</span><span className="font-bold">{v}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center border-t-[3px] border-black pt-3">
+                      <span className="font-display font-black text-sm uppercase">Total</span>
+                      <span className="font-display font-black text-xl">$147,400</span>
                     </div>
                   </div>
                 </div>
 
-                <div style={{ textAlign: "center", paddingTop: 32, borderTop: `1px dashed ${T.borderLight}` }}>
-                  <div style={{ fontSize: 13, color: T.t2, marginBottom: 4 }}>Thank you for your business!</div>
-                  <div style={{ fontSize: 13, color: T.t3 }}>Payment due within 30 days.</div>
+                {/* Footer */}
+                <div className="text-center border-t-[2px] border-dashed border-black pt-6">
+                  <p className="font-body font-bold text-sm text-black">Thank you for your business!</p>
+                  <p className="font-body text-xs text-gray-500 mt-1">Payment due within 30 days.</p>
                 </div>
-
               </div>
             </div>
           </div>

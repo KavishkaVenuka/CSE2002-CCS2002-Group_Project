@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Bell, Plus } from "lucide-react"
+import { Search, Bell, Plus, User } from "lucide-react"
 import Link from "next/link"
 
 interface HeaderProps {
@@ -9,61 +9,51 @@ interface HeaderProps {
 
 export function Header({ title }: HeaderProps) {
   return (
-    <header className="
-      h-16 flex-shrink-0
-      flex items-center justify-between
-      px-6 gap-4
-      bg-white
-      border-b-[3px] border-black
-    ">
-      <h1 className="font-display font-black text-2xl text-black tracking-tight flex-1 min-w-0">
-        {title}
-      </h1>
+    <header className="h-20 bg-white border-b-[3px] border-black flex items-center justify-between px-8 sticky top-0 z-40">
+      <div className="flex items-center gap-4">
+        <h1 className="font-display font-black text-2xl text-black uppercase tracking-tight">{title}</h1>
+      </div>
 
-      <div className="flex items-center gap-3 flex-shrink-0">
-        {/* Search */}
-        <div className="relative">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-black pointer-events-none"
-            size={14}
-            strokeWidth={2.5}
-          />
+      <div className="flex items-center gap-6">
+        {/* Search Bar */}
+        <div className="hidden md:flex items-center relative">
+          <Search className="absolute left-3 text-black" size={16} strokeWidth={2.5} />
           <input
             type="text"
-            placeholder="Search orders, quotations…"
-            className="
-              pl-9 pr-4 py-2 w-52
-              bg-white border-[2px] border-black
-              shadow-[2px_2px_0px_0px_#000]
-              font-body text-sm placeholder:text-gray-500
-              outline-none
-              transition-all duration-100
-              focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-none
-            "
+            placeholder="Search everything..."
+            className="pl-10 pr-4 py-2 bg-nb-bg border-[2px] border-black rounded-none font-body text-sm placeholder:text-gray-500 focus:outline-none focus:shadow-[2px_2px_0px_0px_#000] transition-all"
           />
         </div>
 
-        {/* Bell */}
-        <button className="
-          w-10 h-10 flex items-center justify-center
-          bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000]
-          nb-interactive
-        ">
-          <Bell size={16} strokeWidth={2} />
-        </button>
-
-        {/* CTA */}
-        <Link href="/create-quotations">
-          <button className="
-            flex items-center gap-2 px-4 py-2
-            bg-black text-white font-body font-bold text-sm
-            border-[2px] border-black shadow-[4px_4px_0px_0px_#000]
-            nb-interactive
-          ">
-            <Plus size={14} strokeWidth={2.5} />
+        {/* Actions */}
+        <div className="flex items-center gap-4">
+          <Link
+            href="/create-quotation"
+            className="hidden sm:flex items-center gap-2 bg-nb-green border-[2px] border-black px-4 py-2 font-display font-black text-xs uppercase tracking-widest shadow-[3px_3px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_#000] transition-all"
+          >
+            <Plus size={16} strokeWidth={3} />
             New Quotation
+          </Link>
+
+          <button className="relative w-10 h-10 flex items-center justify-center bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:bg-nb-bg transition-colors">
+            <Bell size={18} strokeWidth={2.5} />
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 border-[2px] border-black rounded-full flex items-center justify-center text-[8px] font-bold text-white">
+              3
+            </span>
           </button>
-        </Link>
+
+          <div className="h-8 w-[2px] bg-black/10 mx-2"></div>
+
+          <button className="flex items-center gap-3 pl-1 pr-3 py-1 bg-white border-[2px] border-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_#000] transition-all">
+            <div className="w-8 h-8 bg-nb-cyan border-[2px] border-black flex items-center justify-center">
+              <User size={16} strokeWidth={2.5} />
+            </div>
+            <div className="hidden lg:block text-left">
+              <p className="font-display font-black text-[10px] uppercase leading-none">Apex Textiles</p>
+              <p className="font-body text-[9px] text-gray-500 font-bold">Premium Supplier</p>
+            </div>
+          </button>
+        </div>
       </div>
     </header>
   )
