@@ -16,7 +16,6 @@ const NAV_ITEMS = [
   { icon: Truck,           label: "Delivery Tracking", href: "/delivery-tracking" },
   { icon: Receipt,         label: "Invoices",          href: "/invoices" },
   { icon: CreditCard,      label: "Payments",          href: "/payments" },
-  { icon: CheckSquare,     label: "Order Confirmation",href: "/order-confirmation" },
 ]
 
 export function Sidebar() {
