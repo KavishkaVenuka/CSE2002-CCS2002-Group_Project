@@ -64,17 +64,17 @@ export default function MyOrdersPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <div className="grid grid-cols-[150px_130px_110px_100px_110px_130px_90px] px-5 py-3 border-b-[2px] border-black bg-nb-bg min-w-[840px]">
+            <div className="grid grid-cols-[1.4fr_1.2fr_1fr_70px_110px_150px_110px] px-6 py-3 border-b-[2px] border-black bg-nb-bg min-w-[900px]">
               {["Order ID","Quotation Ref","Order Date","Items","Amount","Status","Actions"].map(h => (
                 <div key={h} className="font-display font-black text-[10px] uppercase tracking-widest text-black">{h}</div>
               ))}
             </div>
-            <div className="min-w-[840px]">
+            <div className="min-w-[900px]">
               {ORDERS.map((ord, i) => {
                 const cfg = STAT_CONFIG[ord.status]
                 const StatusIcon = cfg.icon
                 return (
-                  <div key={ord.id} className={`grid grid-cols-[150px_130px_110px_100px_110px_130px_90px] items-center px-5 py-4 hover:bg-nb-yellow/20 transition-colors ${i < ORDERS.length - 1 ? "border-b-[2px] border-black" : ""}`}>
+                  <div key={ord.id} className={`grid grid-cols-[1.4fr_1.2fr_1fr_70px_110px_150px_110px] items-center px-6 py-4 hover:bg-nb-yellow/20 transition-colors ${i < ORDERS.length - 1 ? "border-b-[2px] border-black" : ""}`}>
                     <div className="font-mono text-sm font-bold text-black">{ord.id}</div>
                     <div className="font-mono text-xs text-black">{ord.quoteRef}</div>
                     <div className="font-mono text-xs text-black">{ord.date}</div>
