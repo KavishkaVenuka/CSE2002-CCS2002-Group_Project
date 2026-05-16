@@ -1,36 +1,47 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import {
-  FileText, Package, AlertCircle, ShoppingCart, 
-  CheckCircle2, Clock, ArrowUpRight, Search, 
+  FileText, AlertCircle, ShoppingCart, 
+  CheckCircle2, Clock, ArrowUpRight,
   ChevronRight, CreditCard
 } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
 import { Panel } from "@/components/ui/Panel"
 import { ActivityItem } from "@/components/customer/ActivityItem"
 import { GlobalStatCard } from "@/components/common/GlobalStatCard"
-
-// ─── Data ─────────────────────────────────────────────────────────────────────
-const ACTIVITY = [
-  { text: "Order ORD-20240115 delivered successfully", time: "2 hours ago", type: "green" },
-  { text: "New quotation received for REQ-20240110", time: "5 hours ago", type: "blue" },
-  { text: "Payment confirmed for INV-20240113", time: "1 day ago", type: "amber" },
-  { text: "Order ORD-20240114 dispatched", time: "2 days ago", type: "amber" },
-]
-
-const QUOTATIONS = [
-  { id: "QT-20240110", supplier: "Acme Fabrics", items: "Raw Silk, Cotton Thread", amount: "LKR 45,000", status: "pending", date: "2024-02-12" },
-  { id: "QT-20240108", supplier: "Global Threads", items: "Linen Fabric (500m)", amount: "LKR 125,000", status: "reviewed", date: "2024-02-10" },
-]
-
-const PENDING_PAYMENTS = [
-  { id: "INV-2024089", orderRef: "ORD-20240115", amount: "LKR 84,200", dueDate: "2024-03-01", status: "overdue" },
-]
+import { getCustomerDashboardStats, type CustomerDashboardStats } from "@/lib/api"
 
 export default function CustomerDashboard() {
+  const [stats, setStats] = useState<CustomerDashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        setLoading(true)
+        const data = await getCustomerDashboardStats()
+        setStats(data)
+      } catch (err) {
+        console.error('Failed to fetch customer stats:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStats()
+  }, [])
+
+  if (loading || !stats) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-nb-bg font-display font-black text-2xl uppercase tracking-widest text-black">
+        Loading Dashboard...
+      </div>
+    )
+  }
+
   return (
     <>
-      <DashboardHeader title="Customer Portal" dateString="Thursday, 24 April 2026" />
+      <DashboardHeader title="Customer Portal" dateString={new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} />
 
       <main className="flex-1 overflow-auto p-8 space-y-10 bg-[#fdfcfb]">
         
@@ -39,9 +50,9 @@ export default function CustomerDashboard() {
           <GlobalStatCard
             iconSvgOrEmoji={<ShoppingCart className="w-6 h-6 text-black" />}
             introTitle="Active Orders"
-            orderCount={5}
-            monetaryValue="Rs. 12,500"
-            footerText="+2 since yesterday"
+            orderCount={stats.activeOrders}
+            monetaryValue=""
+            footerText="Currently in progress"
             themeClasses={{
               cardBackground:          "bg-nb-cyan",
               iconContainerBackground: "bg-white",
@@ -58,9 +69,9 @@ export default function CustomerDashboard() {
           <GlobalStatCard
             iconSvgOrEmoji={<FileText className="w-6 h-6 text-black" />}
             introTitle="Pending Quotations"
-            orderCount={3}
-            monetaryValue="Rs. 8,400"
-            footerText="+1 new today"
+            orderCount={stats.pendingQuotationsCount}
+            monetaryValue=""
+            footerText="Awaiting your review"
             themeClasses={{
               cardBackground:          "bg-nb-yellow",
               iconContainerBackground: "bg-white",
@@ -77,8 +88,8 @@ export default function CustomerDashboard() {
           <GlobalStatCard
             iconSvgOrEmoji={<CheckCircle2 className="w-6 h-6 text-black" />}
             introTitle="Delivered Items"
-            orderCount={24}
-            monetaryValue="Rs. 150,000"
+            orderCount={stats.deliveredOrders}
+            monetaryValue=""
             footerText="Total fulfillment"
             themeClasses={{
               cardBackground:          "bg-nb-green",
@@ -96,8 +107,8 @@ export default function CustomerDashboard() {
           <GlobalStatCard
             iconSvgOrEmoji={<CreditCard className="w-6 h-6 text-black" />}
             introTitle="Due Payment"
-            orderCount={1}
-            monetaryValue="Rs. 84,200"
+            orderCount={stats.pendingPayments.length}
+            monetaryValue={`Rs. ${stats.duePayment || 0}`}
             footerText="Requires action"
             themeClasses={{
               cardBackground:          "bg-nb-orange",
@@ -132,26 +143,32 @@ export default function CustomerDashboard() {
                   <div>Due Date</div>
                   <div className="text-right">Status</div>
                 </div>
-                {PENDING_PAYMENTS.map((payment, i) => (
-                  <div 
-                    key={payment.id}
-                    className={`
-                      grid grid-cols-[120px_1fr_120px_120px_100px] gap-4 items-center px-6 py-4
-                      ${i < PENDING_PAYMENTS.length - 1 ? "border-b-[2px] border-black" : ""}
-                      bg-white hover:bg-nb-red/5 transition-colors
-                    `}
-                  >
-                    <div className="font-mono text-sm font-black text-black">{payment.id}</div>
-                    <div className="font-body text-sm font-bold text-gray-600">{payment.orderRef}</div>
-                    <div className="font-display font-black text-sm text-black">{payment.amount}</div>
-                    <div className="font-mono text-xs font-bold text-gray-400">{payment.dueDate}</div>
-                    <div className="text-right">
-                      <span className="px-2 py-0.5 bg-nb-red border-[2px] border-black font-mono text-[9px] font-black uppercase text-white shadow-[2px_2px_0px_0px_#000]">
-                        {payment.status}
-                      </span>
-                    </div>
+                {stats.pendingPayments.length === 0 ? (
+                  <div className="px-6 py-8 text-center font-mono text-sm font-bold text-gray-500 bg-white">
+                    No pending payments at the moment.
                   </div>
-                ))}
+                ) : (
+                  stats.pendingPayments.map((payment, i) => (
+                    <div 
+                      key={payment.id}
+                      className={`
+                        grid grid-cols-[120px_1fr_120px_120px_100px] gap-4 items-center px-6 py-4
+                        ${i < stats.pendingPayments.length - 1 ? "border-b-[2px] border-black" : ""}
+                        bg-white hover:bg-nb-red/5 transition-colors
+                      `}
+                    >
+                      <div className="font-mono text-sm font-black text-black">{payment.id}</div>
+                      <div className="font-body text-sm font-bold text-gray-600">{payment.orderRef}</div>
+                      <div className="font-display font-black text-sm text-black">{payment.amount}</div>
+                      <div className="font-mono text-xs font-bold text-gray-400">{payment.dueDate || "N/A"}</div>
+                      <div className="text-right">
+                        <span className="px-2 py-0.5 bg-nb-red border-[2px] border-black font-mono text-[9px] font-black uppercase text-white shadow-[2px_2px_0px_0px_#000]">
+                          {payment.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </Panel>
 
@@ -164,29 +181,35 @@ export default function CustomerDashboard() {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {QUOTATIONS.map((q) => (
-                  <div key={q.id} className="bg-white border-[3px] border-black shadow-nb p-6 nb-interactive">
-                    <div className="flex justify-between items-start mb-6">
-                      <div>
-                        <p className="font-mono text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">{q.id} • {q.date}</p>
-                        <h4 className="font-display font-black text-xl text-black">{q.supplier}</h4>
-                        <p className="font-body text-xs text-gray-500 mt-1">{q.items}</p>
-                      </div>
-                      <span className="px-3 py-1 bg-nb-yellow border-[2px] border-black font-mono text-[10px] font-black uppercase shadow-[3px_3px_0px_0px_#000]">
-                        {q.status}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center pt-5 border-t-[3px] border-black border-dashed">
-                      <div>
-                        <p className="font-display font-black text-[10px] text-gray-400 uppercase tracking-widest mb-1">Total Quote</p>
-                        <span className="font-display font-black text-2xl text-black">{q.amount}</span>
-                      </div>
-                      <button className="bg-black text-white p-3 border-[2px] border-black shadow-[4px_4px_0px_0px_#A5E6DC] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] transition-all">
-                        <ArrowUpRight size={20} strokeWidth={3} />
-                      </button>
-                    </div>
+                {stats.recentQuotations.length === 0 ? (
+                  <div className="col-span-1 md:col-span-2 p-8 border-[3px] border-black bg-white shadow-nb text-center font-mono text-sm font-bold text-gray-500">
+                    No pending quotations.
                   </div>
-                ))}
+                ) : (
+                  stats.recentQuotations.map((q) => (
+                    <div key={q.id} className="bg-white border-[3px] border-black shadow-nb p-6 nb-interactive">
+                      <div className="flex justify-between items-start mb-6">
+                        <div>
+                          <p className="font-mono text-[10px] text-gray-400 uppercase font-black tracking-widest mb-1">{q.id} • {q.date}</p>
+                          <h4 className="font-display font-black text-xl text-black">{q.supplier || "Unknown Supplier"}</h4>
+                          <p className="font-body text-xs text-gray-500 mt-1">{q.items} items</p>
+                        </div>
+                        <span className="px-3 py-1 bg-nb-yellow border-[2px] border-black font-mono text-[10px] font-black uppercase shadow-[3px_3px_0px_0px_#000]">
+                          {q.status}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center pt-5 border-t-[3px] border-black border-dashed">
+                        <div>
+                          <p className="font-display font-black text-[10px] text-gray-400 uppercase tracking-widest mb-1">Total Quote</p>
+                          <span className="font-display font-black text-2xl text-black">{q.amount}</span>
+                        </div>
+                        <button className="bg-black text-white p-3 border-[2px] border-black shadow-[4px_4px_0px_0px_#A5E6DC] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] transition-all">
+                          <ArrowUpRight size={20} strokeWidth={3} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </section>
           </div>
@@ -196,13 +219,19 @@ export default function CustomerDashboard() {
             {/* Recent Activity */}
             <Panel title="Recent Activity" icon={<Clock size={18} className="text-nb-cyan" />}>
               <div className="p-6 space-y-6">
-                {ACTIVITY.map((item, i) => (
-                  <ActivityItem
-                    key={i}
-                    item={item}
-                    isLast={i === ACTIVITY.length - 1}
-                  />
-                ))}
+                {stats.recentActivity.length === 0 ? (
+                  <div className="text-center font-mono text-sm font-bold text-gray-500">
+                    No recent activity.
+                  </div>
+                ) : (
+                  stats.recentActivity.map((item, i) => (
+                    <ActivityItem
+                      key={i}
+                      item={item}
+                      isLast={i === stats.recentActivity.length - 1}
+                    />
+                  ))
+                )}
               </div>
             </Panel>
 
