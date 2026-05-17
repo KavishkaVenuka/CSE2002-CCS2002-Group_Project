@@ -39,7 +39,7 @@ export default function LandingPage() {
             Supply Chain Management System
           </div>
           <h1 className="text-5xl sm:text-7xl font-display font-extrabold uppercase leading-[1.1] tracking-tighter">
-            Master Your <br/>
+            Manage Your <br/>
             <span className="inline-block bg-white border-4 border-black px-4 py-2 mt-2 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] -rotate-1">
               Supply Chain
             </span>
