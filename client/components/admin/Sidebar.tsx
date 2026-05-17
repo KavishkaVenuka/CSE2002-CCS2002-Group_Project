@@ -64,10 +64,10 @@ export function AdminSidebar() {
             href: "/suppliers",
             icon: <Truck size={20} />,
             subItems: [
-                { id: "sup-req", label: "Customer Requirement Requests", href: "/suppliers/requirements", icon: <FileText size={16} /> },
-                { id: "sup-quo", label: "Supplier Quotations", href: "/suppliers/quotations", icon: <Send size={16} /> },
-                { id: "sup-orders", label: "Purchase Orders", href: "/suppliers/orders", icon: <Package size={16} /> },
-                { id: "sup-delivery", label: "Delivery Tracking", href: "/suppliers/delivery", icon: <Truck size={16} /> },
+                { id: "sup-req", label: "Customer Requirement Requests", href: "/suppliers/customer-requirements-requests", icon: <FileText size={16} /> },
+                { id: "sup-quo", label: "Supplier Quotations", href: "/suppliers/supplier-quotations", icon: <Send size={16} /> },
+                { id: "sup-orders", label: "Purchase Orders", href: "/suppliers/purchase-orders", icon: <Package size={16} /> },
+                { id: "sup-delivery", label: "Delivery Tracking", href: "/suppliers/delivery-tracking", icon: <Truck size={16} /> },
                 { id: "sup-inv", label: "Invoices", href: "/suppliers/invoices", icon: <FileText size={16} /> },
                 { id: "sup-pay", label: "Payments", href: "/suppliers/payments", icon: <CreditCard size={16} /> },
             ]
