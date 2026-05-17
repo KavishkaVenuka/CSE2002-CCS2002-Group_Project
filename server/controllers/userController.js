@@ -87,7 +87,8 @@ export async function loginUser(req, res) {
             id: user._id,
             customID: user.customID,
             role: user.role, // මෙය Frontend එකේ Routes filter කිරීමට වැදගත් වේ
-            fullName: user.fullName
+            fullName: user.fullName,
+            email: user.email
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "150h" });
@@ -98,5 +99,14 @@ export async function loginUser(req, res) {
         });
     } catch (err) {
         res.status(500).json({ message: "Login failed", error: err.message });
+    }
+}
+
+export async function getAllCustomers(req, res) {
+    try {
+        const customers = await User.find({ role: "Customer" }).select("fullName customID email");
+        res.status(200).json({ success: true, customers });
+    } catch (err) {
+        res.status(500).json({ success: false, message: err.message });
     }
 }
