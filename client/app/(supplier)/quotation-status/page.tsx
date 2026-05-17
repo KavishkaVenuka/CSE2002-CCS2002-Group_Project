@@ -154,7 +154,7 @@ export default function QuotationStatusPage() {
           }
         >
           <div className="overflow-x-auto">
-            <div className="grid grid-cols-[140px_140px_1fr_140px_120px_100px] gap-4 px-6 py-4 border-b-[3px] border-black bg-gray-50 text-gray-400 font-display font-black text-[10px] uppercase tracking-widest min-w-[900px]">
+            <div className="grid grid-cols-[140px_180px_1fr_140px_120px_100px] gap-4 px-6 py-4 border-b-[3px] border-black bg-gray-50 text-gray-400 font-display font-black text-[10px] uppercase tracking-widest min-w-[900px]">
               <div>Quotation ID</div>
               <div>Requirement Ref</div>
               <div>Total Amount</div>
@@ -174,7 +174,7 @@ export default function QuotationStatusPage() {
                   <div 
                     key={qt._id || qt.id}
                     className={`
-                      grid grid-cols-[140px_140px_1fr_140px_120px_100px] gap-4 items-center px-6 py-5
+                      grid grid-cols-[140px_180px_1fr_140px_120px_100px] gap-4 items-center px-6 py-5
                       ${i < filteredQuotations.length - 1 ? "border-b-[2px] border-black" : ""}
                       bg-white hover:bg-nb-bg transition-colors duration-100 group
                     `}

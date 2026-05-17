@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { 
   Send, Plus, Trash2, ChevronLeft, Calendar, 
   Clock, FileText, CreditCard, Save, Info,
-  PlusCircle, CheckCircle, Loader2, XCircle, AlertCircle
+  PlusCircle, CheckCircle, AlertCircle
 } from "lucide-react"
 import { Header } from "@/components/supplier/Header"
 import { Panel } from "@/components/common/Panel"

@@ -151,7 +151,11 @@ export default function SupplierDashboardPage() {
                       <div>
                         <p className="font-mono font-bold text-xs text-black uppercase tracking-tight">{req.requirementId}</p>
                         <p className="font-body font-semibold text-sm text-gray-500">{req.customerName}</p>
-                        <p className="font-body text-xs text-gray-400">{req.items}</p>
+                        <p className="font-body text-xs text-gray-400">
+                          {typeof req.items === 'object' && req.items !== null 
+                            ? `${(req.items as any).itemName} - ${(req.items as any).quantity} ${(req.items as any).unit}` 
+                            : req.items}
+                        </p>
                       </div>
                     </div>
                     <Link href={`/customer-requirements`} className="w-8 h-8 rounded-full border-2 border-transparent group-hover:border-black flex items-center justify-center group-hover:bg-nb-yellow transition-all">
