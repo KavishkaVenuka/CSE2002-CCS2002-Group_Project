@@ -1,71 +1,132 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { 
   ShoppingCart, Search, ChevronDown, Clock, 
   Truck, CheckCircle, Eye, Download, RefreshCw, 
-  Package, Send, CheckSquare
+  Package, Send, CheckSquare, Loader2, X, AlertCircle
 } from "lucide-react"
 import { Header } from "@/components/supplier/Header"
 import { Panel } from "@/components/common/Panel"
-
-// ─── DATA ──────────────────────────────────────────────────────────────────
-const ORDERS_DATA = [
-  { id: "ORD-20240115", customer: "Acme Corp", items: "3 items", amount: "LKR 147,400", date: "2024-01-15", status: "dispatched" },
-  { id: "ORD-20240114", customer: "XYZ Industries", items: "5 items", amount: "LKR 165,200", date: "2024-01-14", status: "ready" },
-  { id: "ORD-20240113", customer: "Tech Solutions", items: "2 items", amount: "LKR 89,500", date: "2024-01-13", status: "preparing" },
-  { id: "ORD-20240112", customer: "Global Enterprises", items: "4 items", amount: "LKR 201,000", date: "2024-01-12", status: "acknowledged" },
-  { id: "ORD-20240111", customer: "Tech Innovations", items: "3 items", amount: "LKR 125,000", date: "2024-01-11", status: "pending" },
-]
-
-const STAT_CARDS = [
-  { title: "Pending", value: "1", icon: Clock, color: "bg-gray-200" },
-  { title: "Acknowledged", value: "1", icon: Send, color: "bg-nb-yellow" },
-  { title: "Preparing", value: "1", icon: Package, color: "bg-[#c084fc]" },
-  { title: "Ready", value: "1", icon: CheckCircle, color: "bg-nb-cyan" },
-  { title: "Dispatched", value: "1", icon: Truck, color: "bg-nb-green" },
-]
+import { getSupplierOrders, getSupplierOrderStats, acknowledgeOrder, getOrderDetails } from "@/lib/api"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 
 const BADGE_MAP: Record<string, string> = {
   "pending": "bg-gray-200",
   "acknowledged": "bg-nb-yellow",
+  "confirmed": "bg-nb-yellow",
   "preparing": "bg-[#c084fc]",
   "ready": "bg-nb-cyan",
   "dispatched": "bg-nb-green",
+  "delivered": "bg-green-400",
+}
+
+interface Stats {
+  total: number;
+  pending: number;
+  confirmed: number;
+  dispatched: number;
+  delivered: number;
 }
 
 export default function OrdersPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All Status")
 
-  const filteredOrders = useMemo(() => {
-    return ORDERS_DATA.filter((order) => {
-      const matchesSearch = 
-        order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.customer.toLowerCase().includes(searchQuery.toLowerCase())
+  const [orders, setOrders] = useState<any[]>([])
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+
+  const [showAcknowledgeModal, setShowAcknowledgeModal] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true)
+      const statusParam = statusFilter === "All Status" ? undefined : statusFilter.toLowerCase()
       
-      const matchesStatus = 
-        statusFilter === "All Status" || 
-        order.status.toLowerCase() === statusFilter.toLowerCase()
+      const [ordersRes, statsRes] = await Promise.all([
+        getSupplierOrders({ status: statusParam }),
+        getSupplierOrderStats()
+      ])
 
-      return matchesSearch && matchesStatus
-    })
-  }, [searchQuery, statusFilter])
-
-  const renderActionIcon = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <CheckSquare size={14} strokeWidth={3} />
-      case "acknowledged":
-        return <Package size={14} strokeWidth={3} />
-      case "preparing":
-        return <CheckCircle size={14} strokeWidth={3} />
-      case "ready":
-        return <Truck size={14} strokeWidth={3} />
-      default:
-        return null
+      setOrders(ordersRes.orders || [])
+      setStats(statsRes.stats as any)
+    } catch (err: any) {
+      console.error('Failed to load orders:', err)
+      toast.error('Failed to load orders')
+    } finally {
+      setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchData()
+  }, [statusFilter])
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const qId = order.po_id || order.id || order._id || ""
+      const qCust = order.customerName || order.customer || ""
+      const q = searchQuery.toLowerCase()
+      
+      const matchesSearch = 
+        qId.toLowerCase().includes(q) ||
+        qCust.toLowerCase().includes(q)
+
+      return matchesSearch
+    })
+  }, [orders, searchQuery])
+
+  const openDetails = async (order: any) => {
+    setSelectedOrder(order);
+    setShowDetailsModal(true);
+    try {
+      setIsLoadingDetail(true);
+      const res = await getOrderDetails(order._id || order.id);
+      if (res.order) {
+        setSelectedOrder({ ...order, ...res.order });
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to fetch full order details");
+    } finally {
+      setIsLoadingDetail(false);
+    }
+  }
+
+  const handleAcknowledge = async () => {
+    if (!selectedOrder) return;
+    try {
+      setIsProcessing(true);
+      await acknowledgeOrder(selectedOrder._id || selectedOrder.id);
+      toast.success('Order acknowledged successfully');
+      setShowAcknowledgeModal(false);
+      fetchData();
+    } catch (err: any) {
+      toast.error('Failed to acknowledge order');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePrepareDispatch = (orderId: string) => {
+    router.push(`/supplier/delivery?orderId=${orderId}`);
+  };
+
+  const STAT_CARDS = [
+    { title: "Total Orders", value: stats?.total?.toString() || "0", icon: ShoppingCart, color: "bg-gray-200" },
+    { title: "Pending", value: stats?.pending?.toString() || "0", icon: Clock, color: "bg-nb-yellow" },
+    { title: "Confirmed", value: stats?.confirmed?.toString() || "0", icon: CheckCircle, color: "bg-[#c084fc]" },
+    { title: "Dispatched", value: stats?.dispatched?.toString() || "0", icon: Truck, color: "bg-nb-green" },
+    { title: "Delivered", value: stats?.delivered?.toString() || "0", icon: Package, color: "bg-nb-cyan" },
+  ]
 
   return (
     <>
@@ -114,15 +175,14 @@ export default function OrdersPage() {
                 >
                   <option>All Status</option>
                   <option>Pending</option>
-                  <option>Acknowledged</option>
-                  <option>Preparing</option>
-                  <option>Ready</option>
+                  <option>Confirmed</option>
                   <option>Dispatched</option>
+                  <option>Delivered</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" size={14} strokeWidth={3} />
               </div>
-              <button className="p-1.5 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all active:bg-gray-100">
-                <RefreshCw size={14} strokeWidth={3} />
+              <button onClick={fetchData} className="p-1.5 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all active:bg-gray-100">
+                <RefreshCw size={14} strokeWidth={3} className={isLoading ? "animate-spin" : ""} />
               </button>
             </div>
           }
@@ -138,36 +198,61 @@ export default function OrdersPage() {
               <div className="text-right">Actions</div>
             </div>
             
-            <div className="flex flex-col min-w-[1000px]">
-              {filteredOrders.length > 0 ? (
+            <div className="flex flex-col min-w-[1000px] min-h-[200px]">
+              {isLoading ? (
+                <div className="flex-1 flex flex-col items-center justify-center space-y-4 bg-white py-12">
+                  <Loader2 size={32} className="animate-spin text-black" />
+                  <p className="font-display font-black text-xs text-gray-400 uppercase tracking-widest">Loading...</p>
+                </div>
+              ) : filteredOrders.length > 0 ? (
                 filteredOrders.map((order, i) => (
                   <div 
-                    key={order.id}
+                    key={order._id || order.id}
                     className={`
                       grid grid-cols-[140px_1.5fr_1fr_1fr_1fr_140px_100px] gap-4 items-center px-6 py-5
                       ${i < filteredOrders.length - 1 ? "border-b-[2px] border-black" : ""}
                       bg-white hover:bg-nb-bg transition-colors duration-100 group
                     `}
                   >
-                    <div className="font-mono text-sm font-black text-black underline decoration-black/20 group-hover:decoration-black">{order.id}</div>
-                    <div className="font-body text-sm font-bold text-black">{order.customer}</div>
-                    <div className="font-mono text-xs font-bold text-gray-500">{order.items}</div>
-                    <div className="font-display font-black text-sm text-black">{order.amount}</div>
-                    <div className="font-mono text-xs font-bold text-gray-500">{order.date}</div>
+                    <div className="font-mono text-sm font-black text-black underline decoration-black/20 group-hover:decoration-black">{order.po_id || order.id || 'PO-NEW'}</div>
+                    <div className="font-body text-sm font-bold text-black">{order.customerName || order.customer}</div>
+                    <div className="font-mono text-xs font-bold text-gray-500">{order.items?.length ? `${order.items.length} items` : (order.items || '0 items')}</div>
+                    <div className="font-display font-black text-sm text-black">LKR {Number(order.total || order.amount || 0).toLocaleString()}</div>
+                    <div className="font-mono text-xs font-bold text-gray-500">{new Date(order.date).toLocaleDateString()}</div>
                     
                     <div>
-                      <span className={`px-3 py-1 border-[2px] border-black text-black font-display font-black text-[9px] uppercase shadow-[2px_2px_0px_0px_#000] ${BADGE_MAP[order.status]}`}>
+                      <span className={`px-3 py-1 border-[2px] border-black text-black font-display font-black text-[9px] uppercase shadow-[2px_2px_0px_0px_#000] ${BADGE_MAP[order.status?.toLowerCase()] || 'bg-gray-200'}`}>
                         {order.status}
                       </span>
                     </div>
 
                     <div className="flex items-center justify-end gap-2">
-                      <button className="w-8 h-8 flex items-center justify-center bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all" title="View Details">
+                      <button 
+                        onClick={() => openDetails(order)}
+                        className="w-8 h-8 flex items-center justify-center bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all" 
+                        title="View Details"
+                      >
                         <Eye size={14} strokeWidth={3} />
                       </button>
-                      {order.status !== "dispatched" && (
-                        <button className="w-8 h-8 flex items-center justify-center bg-nb-yellow border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all" title="Update Status">
-                          {renderActionIcon(order.status)}
+                      {order.status?.toLowerCase() === "pending" && (
+                        <button 
+                          onClick={() => {
+                            setSelectedOrder(order)
+                            setShowAcknowledgeModal(true)
+                          }}
+                          className="w-8 h-8 flex items-center justify-center bg-nb-yellow border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all" 
+                          title="Acknowledge Order"
+                        >
+                          <CheckSquare size={14} strokeWidth={3} />
+                        </button>
+                      )}
+                      {(order.status?.toLowerCase() === "confirmed" || order.status?.toLowerCase() === "preparing" || order.status?.toLowerCase() === "acknowledged") && (
+                        <button 
+                          onClick={() => handlePrepareDispatch(order._id || order.id)}
+                          className="w-8 h-8 flex items-center justify-center bg-nb-cyan border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all" 
+                          title="Prepare Dispatch"
+                        >
+                          <Truck size={14} strokeWidth={3} />
                         </button>
                       )}
                     </div>
@@ -185,6 +270,146 @@ export default function OrdersPage() {
           </div>
         </Panel>
       </main>
+
+      {/* ── DETAILS MODAL ────────────────────────────────────────────── */}
+      {showDetailsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white border-[3px] border-black shadow-[8px_8px_0px_0px_#000] w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b-[3px] border-black bg-nb-cyan">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white border-[2px] border-black flex items-center justify-center shadow-[2px_2px_0px_0px_#000]">
+                  <ShoppingCart size={20} className="text-black" />
+                </div>
+                <h2 className="font-display font-black text-xl text-black">Order #{selectedOrder?.po_id || selectedOrder?.id}</h2>
+              </div>
+              <button 
+                onClick={() => setShowDetailsModal(false)}
+                className="w-10 h-10 bg-white border-[2px] border-black flex items-center justify-center shadow-[2px_2px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all active:bg-gray-100"
+              >
+                <X size={20} className="text-black" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto bg-[#fdfcfb]">
+              {isLoadingDetail ? (
+                <div className="py-20 flex flex-col items-center justify-center space-y-4">
+                  <Loader2 size={40} className="animate-spin text-black" />
+                  <p className="font-display font-black text-sm uppercase tracking-widest text-gray-500">Loading Details...</p>
+                </div>
+              ) : selectedOrder ? (
+                <div className="space-y-8">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000]">
+                      <p className="font-display font-black text-[10px] text-gray-400 uppercase tracking-widest mb-1">Order Date</p>
+                      <p className="font-mono text-sm font-black text-black">{new Date(selectedOrder.date).toLocaleString()}</p>
+                    </div>
+                    <div className="p-4 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000]">
+                      <p className="font-display font-black text-[10px] text-gray-400 uppercase tracking-widest mb-1">Expected Delivery</p>
+                      <p className="font-mono text-sm font-black text-black">{selectedOrder.expectedDeliveryDate ? new Date(selectedOrder.expectedDeliveryDate).toLocaleDateString() : 'N/A'}</p>
+                    </div>
+                    <div className="p-4 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000]">
+                      <p className="font-display font-black text-[10px] text-gray-400 uppercase tracking-widest mb-1">Total Amount</p>
+                      <p className="font-display font-black text-lg text-black">LKR {Number(selectedOrder.total || selectedOrder.amount || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="p-4 bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000]">
+                      <p className="font-display font-black text-[10px] text-gray-400 uppercase tracking-widest mb-1">Payment Terms</p>
+                      <p className="font-body text-sm font-bold text-black">{selectedOrder.payment_terms || 'Net 30'}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-display font-black text-xs text-black uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <Package size={16} />
+                      Items ({selectedOrder.items?.length || 0})
+                    </h4>
+                    <div className="bg-white border-[3px] border-black shadow-[4px_4px_0px_0px_#000] overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-gray-50 border-b-[3px] border-black">
+                            <tr>
+                              <th className="px-4 py-3 text-left font-display font-black text-[10px] text-gray-500 uppercase tracking-widest">Item</th>
+                              <th className="px-4 py-3 text-center font-display font-black text-[10px] text-gray-500 uppercase tracking-widest">Qty</th>
+                              <th className="px-4 py-3 text-right font-display font-black text-[10px] text-gray-500 uppercase tracking-widest">Price</th>
+                              <th className="px-4 py-3 text-right font-display font-black text-[10px] text-gray-500 uppercase tracking-widest">Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y-[2px] divide-black/10">
+                            {Array.isArray(selectedOrder.items) && selectedOrder.items.map((item: any, idx: number) => (
+                              <tr key={idx} className="hover:bg-nb-bg transition-colors">
+                                <td className="px-4 py-3 font-display font-bold text-sm text-black">{item.name}</td>
+                                <td className="px-4 py-3 text-center font-mono font-bold text-sm text-black">{item.quantity}</td>
+                                <td className="px-4 py-3 text-right font-mono font-bold text-sm text-gray-600">LKR {Number(item.price || 0).toLocaleString()}</td>
+                                <td className="px-4 py-3 text-right font-mono font-black text-sm text-black">LKR {Number((item.price || 0) * (item.quantity || 0)).toLocaleString()}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedOrder.status?.toLowerCase() === 'pending' && (
+                    <div className="flex justify-end pt-4">
+                      <button 
+                        onClick={() => {
+                          setShowDetailsModal(false)
+                          setShowAcknowledgeModal(true)
+                        }}
+                        className="px-6 py-3 bg-nb-yellow border-[3px] border-black shadow-[4px_4px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-display font-black text-sm uppercase flex items-center gap-2"
+                      >
+                        <CheckSquare size={18} strokeWidth={3} />
+                        Acknowledge Order
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── ACKNOWLEDGE MODAL ────────────────────────────────────────────── */}
+      {showAcknowledgeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white border-[3px] border-black shadow-[8px_8px_0px_0px_#000] w-full max-w-md flex flex-col">
+            <div className="p-8 flex flex-col items-center text-center space-y-6">
+              <div className="w-20 h-20 bg-nb-yellow border-[3px] border-black flex items-center justify-center shadow-[4px_4px_0px_0px_#000] rotate-3">
+                <AlertCircle size={40} className="text-black" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h2 className="font-display font-black text-2xl text-black uppercase">Acknowledge Order</h2>
+                <p className="font-body text-sm text-gray-600 mt-2">
+                  Acknowledge order <span className="font-mono font-bold text-black border-b-2 border-black">{selectedOrder?.po_id || selectedOrder?.id}</span> and begin preparation?
+                </p>
+              </div>
+
+              <div className="bg-nb-bg border-[2px] border-black p-4 text-xs font-body font-bold text-black text-left w-full shadow-[2px_2px_0px_0px_#000]">
+                By acknowledging, you confirm receipt of this purchase order and commit to fulfilling the items listed within the expected delivery timeline.
+              </div>
+
+              <div className="flex gap-4 w-full pt-4">
+                <button
+                  onClick={() => setShowAcknowledgeModal(false)}
+                  disabled={isProcessing}
+                  className="flex-1 py-3 bg-white border-[3px] border-black shadow-[4px_4px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-display font-black text-sm uppercase"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAcknowledge}
+                  disabled={isProcessing}
+                  className="flex-1 py-3 bg-nb-cyan border-[3px] border-black shadow-[4px_4px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all font-display font-black text-sm uppercase flex items-center justify-center gap-2"
+                >
+                  {isProcessing ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} strokeWidth={3} />}
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
+

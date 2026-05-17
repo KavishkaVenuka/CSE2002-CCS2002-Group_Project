@@ -1,59 +1,115 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { 
   FileText, Search, Filter, ChevronDown, 
-  ArrowRight, Clock, CheckCircle2, AlertCircle,
-  Calendar, RotateCcw, Package, Send, Eye, Download
+  ArrowRight, Clock, CheckCircle2,
+  RotateCcw, Package, Send, Eye, Download, Loader2, XCircle
 } from "lucide-react"
 import { Header } from "@/components/supplier/Header"
 import { Panel } from "@/components/common/Panel"
-
-// ─── DATA ──────────────────────────────────────────────────────────────────
-const REQUIREMENTS_DATA = [
-  { id: "REQ-20240115", customer: "Acme Corp", items: 3, itemsDetail: "Raw Silk - 200m, Cotton Thread - 50 units", qty: "1000 units", delivery: "2024-02-15", docs: 2, status: "new" },
-  { id: "REQ-20240114", customer: "XYZ Industries", items: 5, itemsDetail: "Linen Fabric - 500m", qty: "1500 units", delivery: "2024-02-10", docs: 1, status: "quoted" },
-  { id: "REQ-20240113", customer: "Tech Solutions", items: 2, itemsDetail: "Synthetic Yarn - 100kg", qty: "500 units", delivery: "2024-02-20", docs: 3, status: "in-progress" },
-  { id: "REQ-20240112", customer: "Global Enterprises", items: 4, itemsDetail: "Organic Cotton - 300m", qty: "2000 units", delivery: "2024-02-25", docs: 2, status: "completed" },
-]
-
-const STAT_CARDS = [
-  { title: "New Requests", count: 1, icon: FileText, color: "bg-nb-cyan" },
-  { title: "Quoted", count: 1, icon: Clock, color: "bg-nb-yellow" },
-  { title: "In Progress", count: 1, icon: Send, color: "bg-[#c084fc]" },
-  { title: "Completed", count: 1, icon: CheckCircle2, color: "bg-nb-green" },
-]
+import { getMyRequirements, getRequirementsStats, getRequirementDetails } from "@/lib/api"
+import { toast } from "sonner"
 
 const BADGE_MAP: Record<string, string> = {
+  "pending": "bg-nb-cyan",
   "new": "bg-nb-cyan",
+  "sent": "bg-nb-cyan",
   "quoted": "bg-nb-yellow",
+  "accepted": "bg-nb-yellow",
   "in-progress": "bg-[#c084fc]",
+  "delivered": "bg-nb-green",
   "completed": "bg-nb-green",
+  "rejected": "bg-red-400 text-white",
 }
 
 export default function CustomerRequirementsPage() {
+  const router = useRouter()
+  const [requirements, setRequirements] = useState<any[]>([])
+  const [stats, setStats] = useState<Record<string, number>>({})
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All Status")
+  
+  const [selectedRequirement, setSelectedRequirement] = useState<any>(null)
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true)
+      const [reqRes, statsRes] = await Promise.all([
+        getMyRequirements(),
+        getRequirementsStats()
+      ])
+
+      const mappedRequirements = (reqRes.requirements || []).map((req: any) => ({
+        id: req.id || req._id,
+        requirementId: req.requirementId || req.id,
+        customer: req.customerName || req.customer || "Unknown Customer",
+        itemsDetail: req.itemSummary || req.itemsDetail || "No details",
+        qty: req.qty || `${Array.isArray(req.items) ? req.items.length : (req.items || 0)} items`,
+        delivery: req.delivery || (req.createdAt ? new Date(req.createdAt).toLocaleDateString() : "N/A"),
+        docs: req.attachedDocument ? 1 : (req.docs || 0),
+        status: (req.status || "new").toLowerCase(),
+      }))
+
+      setRequirements(mappedRequirements)
+      setStats(statsRes.stats || {})
+    } catch (err: any) {
+      console.error("Failed to load requirements:", err)
+      toast.error(err.message || "Failed to load customer requirements")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const handleViewDetails = async (id: string) => {
+    try {
+      setIsLoadingDetail(true)
+      const res = await getRequirementDetails(id)
+      setSelectedRequirement(res.requirement || requirements.find(r => r.id === id))
+    } catch (err: any) {
+      console.error(err)
+      toast.error("Failed to load details")
+      setSelectedRequirement(requirements.find(r => r.id === id))
+    } finally {
+      setIsLoadingDetail(false)
+    }
+  }
+
+  const STAT_CARDS = [
+    { title: "New Requests", count: stats.new || stats.pending || 0, icon: FileText, color: "bg-nb-cyan" },
+    { title: "In Progress", count: stats.in_progress || stats.quoted || 0, icon: Clock, color: "bg-nb-yellow" },
+    { title: "Completed", count: stats.completed || stats.delivered || 0, icon: CheckCircle2, color: "bg-nb-green" },
+    { title: "Rejected", count: stats.rejected || 0, icon: XCircle, color: "bg-red-400" },
+  ]
 
   const filteredRequirements = useMemo(() => {
-    return REQUIREMENTS_DATA.filter((req) => {
+    return requirements.filter((req) => {
+      const q = searchQuery.toLowerCase()
       const matchesSearch = 
-        req.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        req.customer.toLowerCase().includes(searchQuery.toLowerCase())
+        (req.requirementId || "").toLowerCase().includes(q) ||
+        (req.customer || "").toLowerCase().includes(q) ||
+        (req.itemsDetail || "").toLowerCase().includes(q)
       
       const matchesStatus = 
         statusFilter === "All Status" || 
-        req.status.toLowerCase() === statusFilter.toLowerCase()
+        req.status === statusFilter.toLowerCase()
 
       return matchesSearch && matchesStatus
     })
-  }, [searchQuery, statusFilter])
+  }, [searchQuery, statusFilter, requirements])
 
   return (
     <>
       <Header title="Customer Requirements" />
 
-      <main className="flex-1 overflow-auto p-8 space-y-10 bg-[#fdfcfb]">
+      <main className="flex-1 overflow-auto p-8 space-y-10 bg-[#fdfcfb] relative">
         {/* ── STAT CARDS ────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {STAT_CARDS.map((stat, i) => (
@@ -66,7 +122,7 @@ export default function CustomerRequirementsPage() {
               </div>
               <div>
                 <p className="font-display font-black text-[10px] text-gray-500 uppercase tracking-widest">{stat.title}</p>
-                <h3 className="font-display font-black text-3xl text-black leading-none">{stat.count}</h3>
+                <h3 className="font-display font-black text-3xl text-black leading-none">{isLoading ? "-" : stat.count}</h3>
               </div>
             </div>
           ))}
@@ -100,19 +156,25 @@ export default function CustomerRequirementsPage() {
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="w-full appearance-none pl-9 pr-10 py-2 bg-nb-bg border-[2px] border-black shadow-nb-sm font-body font-bold text-sm text-black outline-none transition-all duration-100 focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-none cursor-pointer"
                   >
-                    <option>All Status</option>
-                    <option>New</option>
-                    <option>Quoted</option>
-                    <option>In Progress</option>
-                    <option>Completed</option>
+                    <option value="All Status">All Status</option>
+                    <option value="pending">New / Pending</option>
+                    <option value="quoted">Quoted</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="delivered">Delivered / Completed</option>
+                    <option value="rejected">Rejected</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-black pointer-events-none" size={16} strokeWidth={2.5} />
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <button className="p-2.5 bg-white border-[2px] border-black shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all" title="Refresh">
-                  <RotateCcw size={18} strokeWidth={2.5} />
+                <button 
+                  onClick={fetchData} 
+                  disabled={isLoading}
+                  className="p-2.5 bg-white border-[2px] border-black shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all disabled:opacity-50" 
+                  title="Refresh"
+                >
+                  <RotateCcw size={18} strokeWidth={2.5} className={isLoading ? "animate-spin" : ""} />
                 </button>
               </div>
             </div>
@@ -130,7 +192,12 @@ export default function CustomerRequirementsPage() {
               </div>
               
               <div className="flex flex-col min-w-[1100px]">
-                {filteredRequirements.length > 0 ? (
+                {isLoading ? (
+                  <div className="py-24 text-center bg-white flex flex-col items-center justify-center">
+                    <Loader2 size={32} className="text-black animate-spin mb-4" />
+                    <p className="font-body font-bold text-sm text-gray-500">Loading requirements...</p>
+                  </div>
+                ) : filteredRequirements.length > 0 ? (
                   filteredRequirements.map((req, i) => (
                     <div 
                       key={req.id}
@@ -140,7 +207,7 @@ export default function CustomerRequirementsPage() {
                         bg-white hover:bg-nb-bg transition-colors duration-100
                       `}
                     >
-                      <div className="font-mono text-sm font-black text-black">{req.id}</div>
+                      <div className="font-mono text-sm font-black text-black">{req.requirementId}</div>
                       <div className="font-body font-bold text-sm text-black">
                         {req.customer}
                         <div className="font-body text-[10px] text-gray-400 font-normal truncate max-w-[200px]" title={req.itemsDetail}>
@@ -158,17 +225,29 @@ export default function CustomerRequirementsPage() {
                       </div>
 
                       <div>
-                        <span className={`px-3 py-1 border-[2px] border-black text-black font-mono font-black text-[10px] uppercase shadow-nb-sm ${BADGE_MAP[req.status]}`}>
+                        <span className={`px-3 py-1 border-[2px] border-black text-black font-mono font-black text-[10px] uppercase shadow-nb-sm ${BADGE_MAP[req.status] || "bg-gray-200"}`}>
                           {req.status}
                         </span>
                       </div>
 
                       <div className="flex items-center justify-end gap-3 col-span-2">
-                        <button className="w-9 h-9 flex items-center justify-center bg-white border-[2px] border-black hover:bg-nb-cyan transition-colors shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none" title="View Details">
-                          <Eye size={18} strokeWidth={2.5} />
+                        <button 
+                          className="w-9 h-9 flex items-center justify-center bg-white border-[2px] border-black hover:bg-nb-cyan transition-colors shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none" 
+                          title="View Details"
+                          onClick={() => handleViewDetails(req.id)}
+                        >
+                          {isLoadingDetail && selectedRequirement?.id === req.id ? (
+                            <Loader2 size={18} className="animate-spin" />
+                          ) : (
+                            <Eye size={18} strokeWidth={2.5} />
+                          )}
                         </button>
-                        {req.status === "new" && (
-                          <button className="w-9 h-9 flex items-center justify-center bg-nb-green border-[2px] border-black hover:bg-green-400 transition-colors shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none" title="Send Quotation">
+                        {(req.status === "new" || req.status === "pending" || req.status === "sent") && (
+                          <button 
+                            className="w-9 h-9 flex items-center justify-center bg-nb-green border-[2px] border-black hover:bg-green-400 transition-colors shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none" 
+                            title="Create Quotation"
+                            onClick={() => router.push(`/supplier/create-quotation?reqId=${req.id}`)}
+                          >
                             <ArrowRight size={18} strokeWidth={2.5} />
                           </button>
                         )}
@@ -189,7 +268,82 @@ export default function CustomerRequirementsPage() {
             </div>
           </div>
         </Panel>
+
+        {/* ── MODAL ───────────────────────────────────────────────── */}
+        {selectedRequirement && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-[#fdfcfb] border-[3px] border-black shadow-nb w-full max-w-2xl max-h-[90vh] overflow-auto flex flex-col relative animate-in fade-in zoom-in duration-200">
+              <div className="flex items-center justify-between p-4 border-b-[3px] border-black bg-white sticky top-0 z-10">
+                <div className="flex items-center gap-3">
+                  <FileText size={24} className="text-nb-cyan" />
+                  <h2 className="font-display font-black text-xl text-black uppercase tracking-wide">Requirement Details</h2>
+                </div>
+                <button 
+                  onClick={() => setSelectedRequirement(null)}
+                  className="p-1 hover:bg-red-100 border-[2px] border-transparent hover:border-black transition-all"
+                >
+                  <XCircle size={24} />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white p-4 border-[2px] border-black shadow-nb-sm">
+                    <p className="font-display font-black text-[10px] text-gray-500 uppercase tracking-widest mb-1">Requirement ID</p>
+                    <p className="font-mono text-sm font-bold text-black">{selectedRequirement.requirementId || selectedRequirement.id}</p>
+                  </div>
+                  <div className="bg-white p-4 border-[2px] border-black shadow-nb-sm">
+                    <p className="font-display font-black text-[10px] text-gray-500 uppercase tracking-widest mb-1">Customer</p>
+                    <p className="font-body font-bold text-sm text-black">{selectedRequirement.customer || selectedRequirement.customerName}</p>
+                    <p className="font-body text-[10px] text-gray-500">{selectedRequirement.companyName || "N/A"}</p>
+                  </div>
+                </div>
+
+                <div className="bg-white p-4 border-[2px] border-black shadow-nb-sm">
+                  <h3 className="font-display font-black text-[10px] text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Package size={14} /> Requested Items
+                  </h3>
+                  <div className="space-y-3">
+                    {(selectedRequirement.items && Array.isArray(selectedRequirement.items)) ? selectedRequirement.items.map((item: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center pb-2 border-b-2 border-dashed border-gray-200 last:border-0 last:pb-0">
+                        <div>
+                          <p className="font-body font-bold text-sm text-black">{item.itemName || item.name}</p>
+                          <p className="font-body text-xs text-gray-500 italic">{item.notes}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono text-sm font-black text-black">{item.quantity} {item.unit}</p>
+                        </div>
+                      </div>
+                    )) : (
+                      <p className="font-body text-sm text-black">{selectedRequirement.itemsDetail || selectedRequirement.itemSummary}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 border-t-[3px] border-black bg-white flex justify-end gap-3 mt-auto sticky bottom-0 z-10">
+                <button 
+                  onClick={() => setSelectedRequirement(null)}
+                  className="px-6 py-2 bg-gray-100 border-[2px] border-black font-body font-bold text-sm hover:bg-gray-200 transition-colors shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
+                >
+                  Close
+                </button>
+                {(!selectedRequirement.status || ["new", "pending", "sent"].includes(selectedRequirement.status.toLowerCase())) && (
+                  <button 
+                    onClick={() => {
+                      router.push(`/supplier/create-quotation?reqId=${selectedRequirement.id}`)
+                    }}
+                    className="px-6 py-2 bg-nb-green border-[2px] border-black font-body font-bold text-sm flex items-center gap-2 hover:bg-green-400 transition-colors shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
+                  >
+                    <Send size={16} /> Prepare Quotation
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </>
   )
 }
+

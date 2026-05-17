@@ -1,16 +1,20 @@
 "use client"
 
-import { useState } from "react"
-import { Clock, Package, Send, Truck, CheckCircle2, ShoppingBag, Search, ChevronDown, Eye, X } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Clock, Package, Send, Truck, CheckCircle2, ShoppingBag, Search, ChevronDown, Eye, Loader2, X } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
+import { getCustomerOrders } from "@/lib/api"
 
-const ORDERS = [
-  { id: "ORD-20240115", quoteRef: "QT-20240110", date: "2024-01-15", items: "3 items", amount: "$15,000", status: "delivered" },
-  { id: "ORD-20240114", quoteRef: "QT-20240109", date: "2024-01-14", items: "5 items", amount: "$22,000", status: "in-transit" },
-  { id: "ORD-20240113", quoteRef: "QT-20240108", date: "2024-01-13", items: "2 items", amount: "$8,500",  status: "dispatched" },
-  { id: "ORD-20240112", quoteRef: "QT-20240107", date: "2024-01-12", items: "4 items", amount: "$18,000", status: "processing" },
-  { id: "ORD-20240111", quoteRef: "QT-20240106", date: "2024-01-11", items: "3 items", amount: "$12,500", status: "pending" },
-]
+interface Order {
+  _id: string;
+  orderID: string;
+  quotationRef: string;
+  orderDate: string;
+  totalItems: number;
+  totalAmount: number;
+  status: 'pending' | 'processing' | 'dispatched' | 'in-transit' | 'delivered';
+  customerID: string;
+}
 
 const STAT_CONFIG: Record<string, { color: string; icon: React.ElementType }> = {
   pending:      { color: "bg-gray-200",  icon: Clock },
@@ -21,10 +25,75 @@ const STAT_CONFIG: Record<string, { color: string; icon: React.ElementType }> = 
 }
 
 export default function MyOrdersPage() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedOrderData, setSelectedOrderData] = useState<Order | null>(null);
+
+  const [stats, setStats] = useState({
+    pending: 0,
+    processing: 0,
+    dispatched: 0,
+    "in-transit": 0,
+    delivered: 0
+  });
+
+  useEffect(() => {
+    const fetchOrdersAndStats = async () => {
+      const userDataString = localStorage.getItem("user");
+      const userData = userDataString ? JSON.parse(userDataString) : null;
+      const customID = localStorage.getItem("customID") || userData?.customID || userData?.id || userData?._id;
+      const userEmail = userData?.email || localStorage.getItem("userEmail");
+      const fetchId = customID || userEmail;
+
+      if (!fetchId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const fetchedOrders = await getCustomerOrders(fetchId) as unknown as Order[];
+        setOrders(fetchedOrders);
+
+        // Compute stats locally to avoid multiple API calls
+        const newStats = {
+          pending: 0,
+          processing: 0,
+          dispatched: 0,
+          "in-transit": 0,
+          delivered: 0
+        };
+        
+        fetchedOrders.forEach((order) => {
+          if (newStats[order.status as keyof typeof newStats] !== undefined) {
+            newStats[order.status as keyof typeof newStats]++;
+          }
+        });
+        
+        setStats(newStats);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrdersAndStats();
+  }, []);
+
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch = order.orderID?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "All Status" || order.status.toLowerCase() === statusFilter.toLowerCase();
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <>
       <DashboardHeader title="My Orders" />
-      <main className="flex-1 overflow-auto p-6 space-y-6 bg-nb-bg">
+      <main className="flex-1 overflow-auto p-6 space-y-6 bg-nb-bg relative">
 
         {/* ── STAT CARDS ─────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
@@ -35,72 +104,144 @@ export default function MyOrdersPage() {
               </div>
               <div>
                 <p className="font-body font-bold text-[10px] text-black uppercase tracking-wider capitalize">{key.replace("-"," ")}</p>
-                <h3 className="font-display font-black text-2xl text-black leading-none">1</h3>
+                <h3 className="font-display font-black text-2xl text-black leading-none">{stats[key as keyof typeof stats] || 0}</h3>
               </div>
             </div>
           ))}
         </div>
 
         {/* ── TABLE PANEL ────────────────────────────────────────── */}
-        <section className="bg-white border-[3px] border-black shadow-[6px_6px_0px_0px_#000] overflow-hidden">
-          <div className="bg-black px-6 py-4 flex items-center justify-between">
+        <section className="bg-white border-[3px] border-black shadow-[6px_6px_0px_0px_#000] overflow-hidden relative">
+          <div className="bg-black px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <ShoppingBag size={18} strokeWidth={2.5} className="text-white" />
               <h2 className="font-display font-black text-sm text-white uppercase tracking-[0.15em]">All Orders</h2>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="relative hidden sm:block">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-none">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-black pointer-events-none" size={14} strokeWidth={2.5} />
-                <input type="text" placeholder="Search orders…" className="pl-9 pr-4 py-2 bg-white border-[2px] border-white font-body text-sm focus:outline-none w-48" />
+                <input 
+                  type="text" 
+                  placeholder="Search orders…" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 pr-4 py-2 bg-white border-[2px] border-white font-body text-sm focus:outline-none w-full sm:w-48" 
+                />
               </div>
               <div className="relative">
-                <select className="appearance-none pl-3 pr-8 py-2 bg-nb-yellow border-[2px] border-white font-body font-bold text-sm text-black focus:outline-none cursor-pointer">
-                  <option>All Status</option><option>Pending</option><option>Processing</option>
-                  <option>Dispatched</option><option>In Transit</option><option>Delivered</option>
+                <select 
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="appearance-none pl-3 pr-8 py-2 bg-nb-yellow border-[2px] border-white font-body font-bold text-sm text-black focus:outline-none cursor-pointer"
+                >
+                  <option value="All Status">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="dispatched">Dispatched</option>
+                  <option value="in-transit">In Transit</option>
+                  <option value="delivered">Delivered</option>
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-black" size={14} strokeWidth={2.5} />
               </div>
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <div className="grid grid-cols-[150px_130px_110px_100px_110px_130px_90px] px-5 py-3 border-b-[2px] border-black bg-nb-bg min-w-[840px]">
-              {["Order ID","Quotation Ref","Order Date","Items","Amount","Status","Actions"].map(h => (
-                <div key={h} className="font-display font-black text-[10px] uppercase tracking-widest text-black">{h}</div>
-              ))}
-            </div>
-            <div className="min-w-[840px]">
-              {ORDERS.map((ord, i) => {
-                const cfg = STAT_CONFIG[ord.status]
-                const StatusIcon = cfg.icon
-                return (
-                  <div key={ord.id} className={`grid grid-cols-[150px_130px_110px_100px_110px_130px_90px] items-center px-5 py-4 hover:bg-nb-yellow/20 transition-colors ${i < ORDERS.length - 1 ? "border-b-[2px] border-black" : ""}`}>
-                    <div className="font-mono text-sm font-bold text-black">{ord.id}</div>
-                    <div className="font-mono text-xs text-black">{ord.quoteRef}</div>
-                    <div className="font-mono text-xs text-black">{ord.date}</div>
-                    <div className="font-body text-sm text-black">{ord.items}</div>
-                    <div className="font-display font-black text-sm text-black">{ord.amount}</div>
-                    <div>
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 border-[2px] border-black font-mono font-bold text-[10px] uppercase ${cfg.color}`}>
-                        <StatusIcon size={10} strokeWidth={2.5} /> {ord.status}
-                      </span>
+          <div className="overflow-x-auto min-h-[300px]">
+            {loading ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10 gap-3">
+                 <Loader2 className="w-10 h-10 animate-spin text-black" />
+                 <p className="font-body font-bold text-sm uppercase tracking-wider text-black">Syncing Orders...</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-[1.4fr_1.2fr_1fr_70px_110px_110px_60px] px-6 py-3 border-b-[2px] border-black bg-nb-bg min-w-[900px]">
+                  {["Order ID","Quotation Ref","Order Date","Items","Amount","Status", "Action"].map(h => (
+                    <div key={h} className="font-display font-black text-[10px] uppercase tracking-widest text-black">{h}</div>
+                  ))}
+                </div>
+                <div className="min-w-[900px]">
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.map((ord, i) => {
+                      const cfg = STAT_CONFIG[ord.status] || { color: "bg-gray-200", icon: Clock };
+                      const StatusIcon = cfg.icon;
+                      return (
+                        <div key={ord._id} className={`grid grid-cols-[1.4fr_1.2fr_1fr_70px_110px_110px_60px] items-center px-6 py-4 hover:bg-nb-yellow/20 transition-colors ${i < filteredOrders.length - 1 ? "border-b-[2px] border-black" : ""}`}>
+                          <div className="font-mono text-sm font-bold text-black">{ord.orderID}</div>
+                          <div className="font-mono text-xs text-black">{ord.quotationRef || "N/A"}</div>
+                          <div className="font-mono text-xs text-black">{new Date(ord.orderDate).toLocaleDateString()}</div>
+                          <div className="font-body text-sm text-black">{ord.totalItems}</div>
+                          <div className="font-display font-black text-sm text-black">LKR {ord.totalAmount?.toLocaleString()}</div>
+                          <div>
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 border-[2px] border-black font-mono font-bold text-[10px] uppercase ${cfg.color}`}>
+                              <StatusIcon size={10} strokeWidth={2.5} /> {ord.status}
+                            </span>
+                          </div>
+                          <div>
+                            <button 
+                              onClick={() => {
+                                setSelectedOrderData(ord);
+                                setShowDetailsModal(true);
+                              }}
+                              className="w-8 h-8 flex items-center justify-center bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-y-[2px] hover:shadow-none transition-all"
+                            >
+                              <Eye size={14} strokeWidth={2.5} className="text-black" />
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })
+                  ) : (
+                    <div className="p-10 text-center flex flex-col items-center gap-3">
+                      <ShoppingBag size={40} className="text-black/20" strokeWidth={1} />
+                      <p className="font-body font-bold text-sm text-black/50">No orders found.</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button className="w-8 h-8 flex items-center justify-center bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all" title="View">
-                        <Eye size={14} strokeWidth={2.5} />
-                      </button>
-                      {ord.status === "pending" && (
-                        <button className="w-8 h-8 flex items-center justify-center bg-nb-red border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all" title="Cancel">
-                          <X size={14} strokeWidth={2.5} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </section>
+
+        {/* ── DETAILS MODAL ──────────────────────────────────────── */}
+        {showDetailsModal && selectedOrderData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-white border-[3px] border-black shadow-[8px_8px_0px_0px_#000] w-full max-w-md">
+              <div className="flex items-center justify-between p-4 border-b-[3px] border-black bg-nb-yellow">
+                <h3 className="font-display font-black text-lg uppercase tracking-wider">Order Information</h3>
+                <button 
+                  onClick={() => setShowDetailsModal(false)}
+                  className="w-8 h-8 flex items-center justify-center bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-y-[2px] hover:shadow-none transition-all"
+                >
+                  <X size={16} strokeWidth={3} />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="p-4 bg-nb-bg border-[2px] border-black space-y-3 font-mono text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-black/60 font-bold uppercase text-xs">Order Reference</span>
+                    <span className="font-bold">{selectedOrderData.orderID}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-black/60 font-bold uppercase text-xs">Customer ID</span>
+                    <span>{selectedOrderData.customerID}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-3 border-t-[2px] border-black border-dashed">
+                    <span className="font-bold uppercase text-xs">Total Bill</span>
+                    <span className="text-lg font-black font-display bg-nb-cyan px-2 py-1 border-[2px] border-black shadow-[2px_2px_0px_0px_#000]">
+                      LKR {selectedOrderData.totalAmount?.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowDetailsModal(false)}
+                  className="w-full py-3 bg-black text-white font-display font-black uppercase tracking-widest hover:bg-black/90 transition-colors"
+                >
+                  Close View
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </>
   )

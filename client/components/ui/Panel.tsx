@@ -5,17 +5,19 @@ import { ChevronRight } from "lucide-react"
 
 interface PanelProps {
   title: string
-  badge?: number | string
+  badge?: ReactNode
+  icon?: ReactNode
   children: ReactNode
   noTopPad?: boolean
 }
 
-export function Panel({ title, badge, children, noTopPad }: PanelProps) {
+export function Panel({ title, badge, icon, children, noTopPad }: PanelProps) {
   return (
     <section className="bg-white border-[3px] border-black shadow-[6px_6px_0px_0px_#000] overflow-hidden">
       {/* Panel header — black bar like common/Panel */}
       <div className="bg-black px-6 py-4 flex items-center justify-between border-b-[2px] border-black">
         <div className="flex items-center gap-3">
+          {icon && <span>{icon}</span>}
           <span className="font-display font-black text-sm text-white uppercase tracking-[0.15em]">
             {title}
           </span>
