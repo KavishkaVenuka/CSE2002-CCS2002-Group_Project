@@ -120,7 +120,7 @@ export default function AdminDashboard() {
       <AdminSidebar />
       <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-x-hidden">
         {/* Page Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-nb-white border-2 border-nb-black p-6 shadow-nb">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-nb-white border-2 border-nb-black p-2 shadow-nb">
         <div>
           <h1 className="text-4xl font-display font-black text-nb-black tracking-tight uppercase">Admin Dashboard</h1>
           <p className="text-nb-black font-bold mt-1 uppercase text-sm tracking-widest">Business intelligence and performance overview</p>
