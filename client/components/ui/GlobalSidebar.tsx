@@ -56,13 +56,13 @@ export function GlobalSidebar({
         <div className="shrink-0 flex items-center justify-center">
           {platformIcon}
         </div>
-        <span className={`font-display font-black text-base tracking-tight truncate ${themeClasses.platformText}`}>
+        <span className={`font-display font-black text-base tracking-tight truncate min-w-0 ${themeClasses.platformText}`}>
           {platformName}
         </span>
       </div>
 
       {/* Spot 2: Navigation Links */}
-      <nav className="flex flex-col gap-1 flex-1 overflow-y-auto">
+      <nav className="flex flex-col gap-1 flex-1 overflow-y-auto overflow-x-hidden">
         {navItems.map((item) => {
           // Check for active state: exact match, or if it's a root path, handle appropriately
           const isActive = currentPath === item.href || (item.href !== '/' && currentPath.startsWith(`${item.href}/`));
@@ -83,7 +83,7 @@ export function GlobalSidebar({
               <div className="shrink-0 flex items-center justify-center">
                 {item.icon}
               </div>
-              <span className={`font-body font-semibold text-sm truncate ${textClass}`}>
+              <span className={`font-body font-semibold text-sm truncate min-w-0 ${textClass}`}>
                 {item.label}
               </span>
             </Link>
@@ -100,7 +100,7 @@ export function GlobalSidebar({
           <div className="shrink-0 flex items-center justify-center">
             {settingsIcon}
           </div>
-          <span className={`font-body font-bold text-sm truncate ${themeClasses.settingsText}`}>
+          <span className={`font-body font-bold text-sm truncate min-w-0 ${themeClasses.settingsText}`}>
             {settingsLabel}
           </span>
         </Link>
