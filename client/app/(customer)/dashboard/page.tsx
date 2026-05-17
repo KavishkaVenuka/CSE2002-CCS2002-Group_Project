@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import {
   FileText, AlertCircle, ShoppingCart, 
   CheckCircle2, Clock, ArrowUpRight,
-  ChevronRight, CreditCard
+  ChevronRight, CreditCard, Banknote, Package
 } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
 import { Panel } from "@/components/ui/Panel"
@@ -218,19 +218,42 @@ export default function CustomerDashboard() {
           <div className="space-y-8">
             {/* Recent Activity */}
             <Panel title="Recent Activity" icon={<Clock size={18} className="text-nb-cyan" />}>
-              <div className="p-6 space-y-6">
-                {stats.recentActivity.length === 0 ? (
-                  <div className="text-center font-mono text-sm font-bold text-gray-500">
+              <div className="p-6 flex flex-col gap-4">
+                {(!stats.recentActivity || stats.recentActivity.length === 0) ? (
+                  <div className="text-center font-mono text-sm font-bold text-gray-500 bg-white p-4 border-[2px] border-black">
                     No recent activity.
                   </div>
                 ) : (
-                  stats.recentActivity.map((item, i) => (
-                    <ActivityItem
-                      key={i}
-                      item={item}
-                      isLast={i === stats.recentActivity.length - 1}
-                    />
-                  ))
+                  stats.recentActivity.map((activity: any, i: number) => {
+                    const Icon = activity.icon === 'Banknote' ? Banknote : 
+                                 activity.icon === 'Package' ? Package : 
+                                 activity.icon === 'FileText' ? FileText : Clock;
+                    
+                    const colorMap: Record<string, string> = {
+                      blue: 'bg-nb-cyan',
+                      green: 'bg-nb-green',
+                      red: 'bg-nb-red',
+                      yellow: 'bg-nb-yellow',
+                      purple: 'bg-nb-pink',
+                    };
+                    
+                    const bgColor = colorMap[activity.color?.toLowerCase()] || 'bg-white';
+                    
+                    return (
+                      <div 
+                        key={i} 
+                        className="flex items-start gap-4 p-4 border-[2px] border-black bg-white hover:-translate-y-1 hover:shadow-[4px_4px_0px_0px_#000] transition-all nb-interactive"
+                      >
+                        <div className={`w-10 h-10 border-[2px] border-black flex items-center justify-center ${bgColor} shadow-[2px_2px_0px_0px_#000]`}>
+                          <Icon size={20} className="text-black" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-display font-black text-sm text-black">{activity.message}</p>
+                          <p className="font-mono text-[10px] font-bold text-gray-500 uppercase mt-1">{activity.time}</p>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </Panel>
