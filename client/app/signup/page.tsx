@@ -124,44 +124,44 @@ export default function SignupPage() {
     <div className="min-h-screen bg-nb-bg font-body flex flex-col lg:flex-row">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <aside
-        className="lg:w-[45%] bg-black border-b-[4px] lg:border-b-0 lg:border-r-[4px] border-black p-8 lg:p-12 flex flex-col justify-between relative overflow-hidden"
+        className="lg:w-[35%] bg-nb-cyan border-b-[4px] lg:border-b-0 lg:border-r-[4px] border-black p-8 lg:p-12 flex flex-col justify-between relative overflow-hidden"
         style={{ boxShadow: `8px 8px 0px 0px ${accentShadow}` }}
       >
-        <div className="absolute top-8 right-8 w-24 h-24 border-[3px] border-white/20 hidden lg:block" />
+        <div className="absolute top-8 right-8 w-24 h-24 border-[4px] border-black opacity-30 hidden lg:block" />
         <div
-          className="absolute bottom-24 right-16 w-16 h-16 hidden lg:block"
-          style={{ backgroundColor: accentShadow, border: "3px solid #000" }}
+          className="absolute bottom-24 right-16 w-20 h-20 hidden lg:block shadow-nb-lg"
+          style={{ backgroundColor: accentShadow, border: "4px solid #000" }}
         />
 
-        <div>
-          <span className="inline-block px-3 py-1 border border-white/30 font-mono text-[10px] text-white/70 uppercase tracking-widest mb-6">
+        <div className="relative z-10">
+          <span className="inline-block px-4 py-2 border-[3px] border-black bg-white font-mono text-[10px] font-bold text-black uppercase tracking-widest mb-6 shadow-nb-sm">
             Procurement Platform
           </span>
-          <h1 className="font-display font-black text-4xl lg:text-5xl text-white leading-tight">
-            Stock<span style={{ color: accentShadow }}>Flow</span>
+          <h1 className="font-display font-black text-5xl lg:text-6xl text-black leading-[1.1] uppercase tracking-tighter">
+            Stock<span style={{ color: accentShadow, textShadow: '-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000' }}>Flow</span>
           </h1>
-          <p className="font-body text-sm text-gray-400 mt-4 max-w-md">
+          <p className="font-body text-lg text-black mt-6 max-w-sm font-medium border-l-[4px] border-black pl-4 py-1">
             Join as a customer to procure materials or as a supplier to fulfill requirements across the supply chain.
           </p>
         </div>
 
-        <ul className="space-y-4 mt-10 lg:mt-0">
+        <ul className="space-y-4 mt-10 lg:mt-0 relative z-10">
           {HERO_PROPS.map((item) => (
             <li key={item.text} className="flex items-start gap-3">
-              <span className={`w-3 h-3 mt-1.5 shrink-0 border-[2px] border-black ${item.accent}`} />
-              <span className="font-body text-sm text-gray-300">{item.text}</span>
+              <span className={`w-4 h-4 mt-1 shrink-0 border-[3px] border-black shadow-nb-sm ${item.accent}`} />
+              <span className="font-body text-sm font-bold text-black">{item.text}</span>
             </li>
           ))}
         </ul>
 
-        <p className="font-mono text-[10px] text-gray-600 uppercase tracking-widest mt-8 hidden lg:block">
+        <p className="font-mono text-[10px] font-bold text-black/60 uppercase tracking-widest mt-8 hidden lg:block relative z-10">
           Neo Brutalism UI · StockFlow v1
         </p>
       </aside>
 
       {/* ── Form panel ───────────────────────────────────────────────────── */}
       <main className="flex-1 flex items-center justify-center p-6 lg:p-10 overflow-y-auto">
-        <div className="w-full max-w-xl">
+        <div className="w-full max-w-3xl">
           {submitted ? (
             <div className="bg-nb-green border-[4px] border-black shadow-nb-xl p-10 text-center space-y-6">
               <div className="w-16 h-16 mx-auto bg-white border-[3px] border-black flex items-center justify-center shadow-nb">
@@ -210,24 +210,25 @@ export default function SignupPage() {
                   </div>
                 )}
 
-                <SignupField
-                  label="Full name *"
-                  name="fullName"
-                  value={form.fullName}
-                  onChange={(v) => update("fullName", v)}
-                  error={errors.fullName}
-                  placeholder="Jane Doe"
-                />
-
-                <SignupField
-                  label="Email *"
-                  name="email"
-                  type="email"
-                  value={form.email}
-                  onChange={(v) => update("email", v)}
-                  error={errors.email}
-                  placeholder="you@company.com"
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <SignupField
+                    label="Full name *"
+                    name="fullName"
+                    value={form.fullName}
+                    onChange={(v) => update("fullName", v)}
+                    error={errors.fullName}
+                    placeholder="Jane Doe"
+                  />
+                  <SignupField
+                    label="Email *"
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={(v) => update("email", v)}
+                    error={errors.email}
+                    placeholder="you@company.com"
+                  />
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <SignupField
@@ -250,30 +251,31 @@ export default function SignupPage() {
                   />
                 </div>
 
-                <SignupField
-                  label="Contact number *"
-                  name="contactNumber"
-                  type="tel"
-                  value={form.contactNumber}
-                  onChange={(v) => update("contactNumber", v)}
-                  error={errors.contactNumber}
-                  placeholder="+94 77 123 4567"
-                />
-
-                <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <SignupField
-                    label="Company name *"
-                    name="companyName"
-                    value={form.companyName}
-                    onChange={(v) => update("companyName", v)}
-                    error={errors.companyName}
-                    placeholder="Acme Industries Ltd."
+                    label="Contact number *"
+                    name="contactNumber"
+                    type="tel"
+                    value={form.contactNumber}
+                    onChange={(v) => update("contactNumber", v)}
+                    error={errors.contactNumber}
+                    placeholder="+94 77 123 4567"
                   />
-                  {!isCustomer && (
-                    <p className="font-mono text-[10px] text-[#444] mt-1 uppercase tracking-wide">
-                      Registered business name
-                    </p>
-                  )}
+                  <div>
+                    <SignupField
+                      label="Company name *"
+                      name="companyName"
+                      value={form.companyName}
+                      onChange={(v) => update("companyName", v)}
+                      error={errors.companyName}
+                      placeholder="Acme Industries Ltd."
+                    />
+                    {!isCustomer && (
+                      <p className="font-mono text-[10px] text-[#444] mt-1 uppercase tracking-wide">
+                        Registered business name
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {isCustomer && (
