@@ -1,255 +1,207 @@
 import Requirement from "../models/Requirement.js";
-import Supplier from "../models/Supplier.js";
-import Quotation from "../models/Quotation.js";
+import mongoose from "mongoose";
 
-exports.createRequirement = async (req, res) => {
+// ==========================================
+// 1. GET ALL REQUIREMENTS
+//    GET /api/requirements?customerId=&status=&search=
+//    Admin → all records | Customer → own records only
+// =========================================
+
+// ==========================================
+// 2. GET STATS
+//    GET /api/requirements/stats?customerId=
+//    Frontend stats boxes සඳහා — total, pending, quoted/accepted/delivered
+// ==========================================
+export const getRequirementStats = async (req, res) => {
     try {
-        const { requirements } = req.body;
+        const { customerId } = req.query;
+        const matchStage = customerId
+            ? { customerId: new mongoose.Types.ObjectId(customerId) }
+            : {};
 
-        const newRequirement = new Requirement({ 
-            requirements,
-            attachedDocument: req.file ? req.file.path : null 
+        const stats = await Requirement.aggregate([
+            { $match: matchStage },
+            { $group: { _id: "$status", count: { $sum: 1 } } },
+        ]);
+
+        const result = { total: 0, new: 0, completed: 0, in_progress: 0, rejected: 0 };
+
+        stats.forEach(({ _id, count }) => {
+            result.total += count;
+            if (_id === "pending")                      result.new         += count;
+            if (_id === "quoted" || _id === "accepted") result.in_progress += count;
+            if (_id === "delivered")                    result.completed   += count;
+            if (_id === "rejected")                     result.rejected    += count;
         });
 
-        const savedRequirement = await newRequirement.save();
-
-        res.status(201).json({
-            success: true, 
-            message: "Requirement created successfully", 
-            data: savedRequirement 
-        });
-
+        return res.status(200).json({ success: true, stats: result });
     } catch (error) {
-        res.status(400).json({ 
-            success: false,
-            message: error.message 
-        });
-    }
-}
-
-// ================================
-//   GET ALL REQUIREMENTS WITH FILTERS
-// ================================
-export const getAllRequirements = async (req, res) => {
-    try {
-        const supplierId = req.user.id;
-        const { status, search } = req.query;
-
-        const filter = {};
-        if (search) {
-            filter._id = search;
-        }
-
-        const requirements = await Requirement.find(filter)
-            .sort({ createdAt: -1 });
-
-        const supplierQuotations = await Quotation.find({
-            supplierId,
-            quotationType: "supplier",
-            requirementId: { $ne: null },
-        }).select("requirementId status");
-
-        const quotationMap = {};
-        supplierQuotations.forEach((q) => {
-            quotationMap[q.requirementId.toString()] = q.status;
-        });
-
-        const formatted = requirements.map((r) => {
-            const reqId = r._id.toString();
-            const quotationStatus = quotationMap[reqId];
-
-            let derivedStatus = "new";
-            if (quotationStatus === "pending")   derivedStatus = "quoted";
-            if (quotationStatus === "accepted")  derivedStatus = "in_progress";
-            if (quotationStatus === "completed") derivedStatus = "completed";
-
-            // Total quantity across all items in this requirement
-            const totalQty = r.requirements?.reduce(
-                (sum, item) => sum + (item.quantity || 0), 0
-            ) || 0;
-
-            // Earliest expected delivery date across all items
-            const deliveryDates = r.requirements
-                ?.map((item) => item.expectedDeliveryDate)
-                .filter(Boolean)
-                .sort();
-            const expectedDelivery = deliveryDates?.[0] || null;
-
-            return {
-                id:               r._id,
-                requirementId:    `REQ-${r._id.toString().slice(-5).toUpperCase()}`,
-                createdAt:        r.createdAt,
-                itemCount:        r.requirements?.length || 0,
-                totalQty,
-                expectedDelivery,
-                hasDocument:      !!r.attachedDocument,
-                attachedDocument: r.attachedDocument || null,
-                status:           derivedStatus,
-                items: r.requirements?.map((item) => ({
-                    itemName:             item.itemName,
-                    quantity:             item.quantity,
-                    unit:                 item.unit,
-                    expectedDeliveryDate: item.expectedDeliveryDate,
-                    notes:                item.notes || "",
-                })),
-            };
-        });
-
-        const filtered = status
-            ? formatted.filter((r) => r.status === status)
-            : formatted;
-
-        return res.status(200).json({
-            success: true,
-            count: filtered.length,
-            requirements: filtered,
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// ================================
-//   GET SINGLE REQUIREMENT DETAIL
-// ================================
+// ==========================================
+// 3. GET SINGLE REQUIREMENT BY ID
+//    GET /api/requirements/:id?customerId=
+// ==========================================
 export const getRequirementById = async (req, res) => {
     try {
-        const supplierId = req.user.id;
+        const { customerId } = req.query;
 
-        const requirement = await Requirement.findById(req.params.id);
+        const requirement = await Requirement.findById(req.params.id)
+            .populate("customerId", "fullName email contactNumber companyName address");
 
         if (!requirement) {
-            return res.status(404).json({
-                success: false,
-                message: "Requirement not found",
-            });
+            return res.status(404).json({ success: false, message: "Requirement not found" });
         }
 
-        // Check if this supplier already submitted a quotation
-        const existingQuotation = await Quotation.findOne({
-            supplierId,
-            quotationType: "supplier",
-            requirementId: requirement._id,
-        }).select("sq_id status total_estimate createdAt");
-
-        // Derive status same logic as getAllRequirements
-        let derivedStatus = "new";
-        if (existingQuotation) {
-            if (existingQuotation.status === "pending")   derivedStatus = "quoted";
-            if (existingQuotation.status === "accepted")  derivedStatus = "in_progress";
-            if (existingQuotation.status === "completed") derivedStatus = "completed";
+        // Security: Admin හට ඕනෑම record බැලිය හැක; Customer ට ස්වකීය record පමණි
+        const isAdmin = req.user && req.user.role === "Admin";
+        if (!isAdmin && customerId && requirement.customerId._id.toString() !== customerId) {
+            return res.status(403).json({ success: false, message: "Access Denied" });
         }
-
-        // Earliest expected delivery across all items
-        const deliveryDates = requirement.requirements
-            ?.map((item) => item.expectedDeliveryDate)
-            .filter(Boolean)
-            .sort();
-        const expectedDelivery = deliveryDates?.[0] || null;
 
         return res.status(200).json({
             success: true,
             requirement: {
-                id:            requirement._id,
-                requirementId: `REQ-${requirement._id.toString().slice(-5).toUpperCase()}`,
-                createdAt:     requirement.createdAt,
-                expectedDelivery,
-                status:        derivedStatus,
-                items: requirement.requirements?.map((item) => ({
-                    itemName:             item.itemName,
-                    quantity:             item.quantity,
-                    unit:                 item.unit,
-                    expectedDeliveryDate: item.expectedDeliveryDate,
-                    notes:                item.notes || "",
-                })),
-                attachedDocument:  requirement.attachedDocument || null,
-                existingQuotation: existingQuotation
-                    ? {
-                        id:             existingQuotation._id,
-                        sq_id:          existingQuotation.sq_id,
-                        status:         existingQuotation.status,
-                        total_estimate: existingQuotation.total_estimate,
-                        createdAt:      existingQuotation.createdAt,
-                    }
-                    : null,
-                // Tells the frontend whether to show
-                // "Prepare Quotation" or disable the button
-                canQuote: !existingQuotation || 
-                          existingQuotation.status === "rejected" || 
-                          existingQuotation.status === "expired",
+                id:               requirement._id,
+                requirementId:    `REQ-${requirement._id.toString().slice(-5).toUpperCase()}`,
+                customer:         requirement.customerId,
+                status:           requirement.status,
+                createdAt:        requirement.createdAt,
+                items:            requirement.requirements,
+                attachedDocument: requirement.attachedDocument || null,
             },
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
-// ================================
-//   GET REQUIREMENT PAGE STAT CARDS
-// ================================
-export const getRequirementStats = async (req, res) => {
+// ==========================================
+// 4. CREATE REQUIREMENT
+//    POST /api/requirements   (multipart/form-data)
+//    Body: requirements (JSON string), customerId
+//    File: attachedDocument (optional)
+// ==========================================
+export const createRequirement = async (req, res) => {
     try {
-        const supplierId = req.user.id;
+        const { requirements, customerId } = req.body;
 
-        // Get all requirements
-        const allRequirements = await Requirement.find()
-            .select("_id");
+        if (!customerId) {
+            return res.status(400).json({ success: false, message: "Customer ID is required" });
+        }
 
-        // Get all quotations by this supplier
-        const supplierQuotations = await Quotation.find({
-            supplierId,
-            quotationType: "supplier",
-            requirementId: { $ne: null },
-        }).select("requirementId status");
+        if (!requirements) {
+            return res.status(400).json({ success: false, message: "At least one requirement item is required" });
+        }
 
-        // Build lookup map
-        const quotationMap = {};
-        supplierQuotations.forEach((q) => {
-            quotationMap[q.requirementId.toString()] = q.status;
+        const parsedItems = JSON.parse(requirements);
+
+        const newRequirement = new Requirement({
+            customerId,
+            requirements: parsedItems,
+            attachedDocument: req.file ? req.file.path : null,
+            status: "pending",
         });
 
-        // Count each status bucket using same derivation logic
-        let newCount        = 0;
-        let quotedCount     = 0;
-        let inProgressCount = 0;
-        let completedCount  = 0;
+        const saved = await newRequirement.save();
 
-        allRequirements.forEach((r) => {
-            const quotationStatus = quotationMap[r._id.toString()];
+        return res.status(201).json({
+            success: true,
+            message: "Requirement submitted successfully",
+            data: saved,
+        });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
 
-            if (!quotationStatus || 
-                quotationStatus === "rejected" || 
-                quotationStatus === "expired") {
-                newCount++;
-            } else if (quotationStatus === "pending") {
-                quotedCount++;
-            } else if (quotationStatus === "accepted") {
-                inProgressCount++;
-            } else if (quotationStatus === "completed") {
-                completedCount++;
+
+// ==========================================
+// 5. UPDATE STATUS  (Admin Only)
+//    PATCH /api/requirements/:id/status
+//    Body: { status }
+// ==========================================
+export const updateRequirementStatus = async (req, res) => {
+    try {
+        const { status, rejectReason } = req.body;
+        const { id } = req.params;
+
+        const validStatuses = ["pending", "quoted", "accepted", "delivered", "rejected"];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ success: false, message: `Invalid status. Must be one of: ${validStatuses.join(", ")}` });
+        }
+
+        // Build update payload
+        const updatePayload = { status };
+
+        if (status === 'rejected') {
+            if (!rejectReason || !rejectReason.trim()) {
+                return res.status(400).json({ success: false, message: 'Rejection reason is required when rejecting a requirement.' });
             }
+            updatePayload.rejectReason = rejectReason.trim();
+        } else {
+            // Clear reject reason if status is changed away from rejected
+            updatePayload.rejectReason = null;
+        }
+
+        const updated = await Requirement.findByIdAndUpdate(
+            id,
+            updatePayload,
+            { new: true }
+        );
+
+        if (!updated) {
+            return res.status(404).json({ success: false, message: "Requirement not found" });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Status updated to "${status}"`,
+            data: updated,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getAllRequirements = async (req, res) => {
+    try {
+        const { status, search, customerId } = req.query;
+        const filter = {};
+
+        if (customerId) filter.customerId = customerId;
+        if (status && status !== "all") filter.status = status.toLowerCase();
+
+        if (search && mongoose.Types.ObjectId.isValid(search)) {
+            filter._id = search;
+        }
+
+        const requirements = await Requirement.find(filter)
+            .populate("customerId", "fullName companyName email")
+            .sort({ createdAt: -1 });
+
+        const formatted = requirements.map((r) => {
+            return {
+                id: r._id,
+                requirementId: `REQ-${r._id.toString().slice(-5).toUpperCase()}`,
+                customerName: r.customerId?.fullName || "Unknown Customer",
+                companyName:  r.customerId?.companyName || "N/A",
+                items: r.requirements,
+                itemSummary: r.requirements?.map(i => i.itemName).join(", "),
+                createdAt: r.createdAt,
+                status: r.status,
+                rejectReason: r.rejectReason || null,
+                attachedDocument: r.attachedDocument || null,
+            };
         });
 
         return res.status(200).json({
             success: true,
-            stats: {
-                new:         newCount,
-                quoted:      quotedCount,
-                in_progress: inProgressCount,
-                completed:   completedCount,
-                total:       allRequirements.length,
-            },
+            requirements: formatted,
         });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-        });
+        res.status(500).json({ success: false, message: error.message });
     }
 };

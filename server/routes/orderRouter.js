@@ -1,22 +1,24 @@
 import express from "express";
-import { uploadDeliveryProof } from "../middleware/uploadMiddleware.js";
-import { uploadDeliveryProof, createOrder, getOrders, updateOrder, getActiveOrderCount, getRecentOrders, getPendingOrderCountByCustomer, getProcessingOrderCountByCustomer, getDispatchedOrderCountByCustomer, getInTransitOrderCountByCustomer, getDeliveredOrderCountByCustomer, getPendingOrdersByCustomer, getProcessingOrdersByCustomer, getDispatchedOrdersByCustomer, getInTransitOrdersByCustomer, getDeliveredOrdersByCustomer } from "../controllers/orderController.js";
+import { 
+    getOrdersByCustomerId,
+    getPendingOrderCountByCustomer,
+    getProcessingOrderCountByCustomer,
+    getDispatchedOrderCountByCustomer,
+    getInTransitOrderCountByCustomer,
+    getDeliveredOrderCountByCustomer
+} from "../controllers/orderController.js";
 
 const orderRouter = express.Router();
 
-orderRouter.post("/", createOrder);
-orderRouter.get("/", getOrders);
-orderRouter.get("/active-count", getActiveOrderCount);
-orderRouter.put("/:orderID", updateOrder);
-orderRouter.get("/recent", getRecentOrders);
-orderRouter.get("/pending-count/:email", getPendingOrderCountByCustomer);
-orderRouter.get("/processing-count/:email", getProcessingOrderCountByCustomer);
-orderRouter.get("/dispatched-count/:email", getDispatchedOrderCountByCustomer);
-orderRouter.get("/in-transit-count/:email", getInTransitOrderCountByCustomer);
-orderRouter.get("/delivered-count/:email", getDeliveredOrderCountByCustomer);
-orderRouter.get("/pending/:email", getPendingOrdersByCustomer);
-orderRouter.get("/processing/:email", getProcessingOrdersByCustomer);
-orderRouter.get("/dispatched/:email", getDispatchedOrdersByCustomer);
-orderRouter.get("/in-transit/:email", getInTransitOrderByCustomer);
+// 1. Table eka load karanna adala orders tika ganna route eka
+// Frontend eke axios.get(`.../api/orders/customer/${customID}`) widiyata call karanna
+orderRouter.get("/customer/:customerId", getOrdersByCustomerId);
+
+// 2. Stats cards tika sandaha routes
+orderRouter.get("/pending-count/:customerId", getPendingOrderCountByCustomer);
+orderRouter.get("/processing-count/:customerId", getProcessingOrderCountByCustomer);
+orderRouter.get("/dispatched-count/:customerId", getDispatchedOrderCountByCustomer);
+orderRouter.get("/in-transit-count/:customerId", getInTransitOrderCountByCustomer);
+orderRouter.get("/delivered-count/:customerId", getDeliveredOrderCountByCustomer);
 
 export default orderRouter;

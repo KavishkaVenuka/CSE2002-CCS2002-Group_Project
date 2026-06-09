@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Space+Mono:wght@400;700&display=swap');
+@import "tailwindcss";
+
+/* ─── Neo Brutalism Design Tokens (Tailwind v4) ────────────────────────── */
+@theme {
+  /* Core Colors */
+  --color-nb-black:   #000000;
+  --color-nb-white:   #FFFFFF;
+  --color-nb-bg:      #F5F0E8;
+  
+  /* Accent Colors */
+  --color-nb-yellow:  #FACC15;
+  --color-nb-green:   #4ADE80;
+  --color-nb-cyan:    #A5E6DC; /* Signature Supplier Teal */
+  --color-nb-red:     #EF4444;
+  --color-nb-orange:  #FB923C;
+
+  /* Hard offset shadows — no blur, solid black */
+  --shadow-nb:    4px 4px 0px 0px #000000;
+  --shadow-nb-sm: 2px 2px 0px 0px #000000;
+  --shadow-nb-lg: 6px 6px 0px 0px #000000;
+  --shadow-nb-xl: 8px 8px 0px 0px #000000;
+
+  /* Typography */
+  --font-display: "Space Grotesk", sans-serif;
+  --font-body:    "DM Sans", sans-serif;
+  --font-mono:    "Space Mono", monospace;
+
+  /* Border widths */
+  --border-width-3: 3px;
+}
+
+/* ─── Global Base Reset ───────────────────────────────────────────────────── */
+@layer base {
+  /* Nuclear sharp-corner reset — Neo Brutalism uses 0 radius everywhere */
+  *,
+  *::before,
+  *::after {
+    border-radius: 0 !important;
+    box-sizing: border-box;
+  }
+
+  /* Opt-out escape hatch */
+  .allow-rounded {
+    border-radius: revert !important;
+  }
+
+  html {
+    height: 100%;
+  }
+
+  body {
+    font-family: "DM Sans", system-ui, sans-serif;
+    background-color: #F5F0E8;
+    color: #000000;
+    height: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Space Grotesk", sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #000000;
+  }
+}
+
+/* ─── Neo Brutalism Component Classes ─────────────────────────────────────── */
+@layer components {
+  /* The signature "press" interaction — shrinks shadow + translates on hover */
+  .nb-interactive {
+    transition: transform 100ms ease, box-shadow 100ms ease;
+    cursor: pointer;
+  }
+  .nb-interactive:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px 0px #000000;
+  }
+  .nb-interactive:active {
+    transform: translate(4px, 4px);
+    box-shadow: none;
+  }
+
+  .nb-card {
+    background: #FFFFFF;
+    border: 2px solid #000000;
+    box-shadow: 4px 4px 0px 0px #000000;
+  }
+
+  .nb-divider {
+    border-top: 2px solid #000000;
+    margin: 24px 0;
+  }
+
+  /* Status badge base */
+  .nb-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    font-family: "Space Mono", monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border: 2px solid #000000;
+    box-shadow: 2px 2px 0px 0px #000000;
+  }
+}
