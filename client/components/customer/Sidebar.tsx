@@ -1,6 +1,6 @@
 "use client"
 
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { GlobalSidebar } from "@/components/common/GlobalSidebar"
 import {
   LayoutDashboard, Send, FileText, ShoppingBag,
@@ -20,6 +20,13 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleLogout = () => {
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    router.push("/login")
+  }
 
   const platformIcon = (
     <div className="w-10 h-10 bg-black flex items-center justify-center border-[2px] border-black shadow-[2px_2px_0px_0px_#fff]">
@@ -43,6 +50,8 @@ export function Sidebar() {
       settingsIcon={<Settings size={18} strokeWidth={2.5} />}
       settingsHref="/dashboard/settings"
       currentPath={pathname || "/dashboard"}
+      onLogout={handleLogout}
+      logoutLabel="Logout"
       themeClasses={{
         sidebarBackground: "bg-[#defa08]",
         platformContainer: "bg-black",
@@ -53,7 +62,10 @@ export function Sidebar() {
         navItemTextActive: "text-white font-black",
         settingsContainer: "bg-black text-[#defa08] hover:bg-[#56600c] hover:text-white shadow-[3px_3px_0px_0px_#56600c]",
         settingsText: "text-[#defa08] font-black",
+        logoutContainer: "bg-nb-red hover:bg-black hover:text-nb-red transition-colors",
+        logoutText: "text-inherit font-black",
       }}
     />
   )
 }
+

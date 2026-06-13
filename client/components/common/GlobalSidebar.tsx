@@ -2,7 +2,7 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, LogOut } from 'lucide-react';
 
 // Structure for individual navigation items
 export interface SubNavItem {
@@ -30,6 +30,11 @@ export interface GlobalSidebarProps {
   settingsHref: string;
   currentPath: string;
 
+  // Logout
+  onLogout?: () => void;
+  logoutLabel?: string;
+  logoutIcon?: ReactNode;
+
   // Theming
   themeClasses: {
     sidebarBackground: string;       // e.g. 'bg-nb-green'
@@ -44,6 +49,10 @@ export interface GlobalSidebarProps {
 
     settingsContainer: string;
     settingsText: string;
+
+    // Logout Theme
+    logoutContainer?: string;
+    logoutText?: string;
   };
 }
 
@@ -55,6 +64,9 @@ export function GlobalSidebar({
   settingsIcon,
   settingsHref,
   currentPath,
+  onLogout,
+  logoutLabel = "Logout",
+  logoutIcon,
   themeClasses,
 }: GlobalSidebarProps) {
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
@@ -227,7 +239,7 @@ export function GlobalSidebar({
       </nav>
 
       {/* ── Settings Footer ─────────────────────────────────────────── */}
-      <div className="p-3 border-t-[3px] border-black">
+      <div className="p-3 border-t-[3px] border-black flex flex-col gap-2">
         <Link
           href={settingsHref}
           className={`
@@ -245,6 +257,27 @@ export function GlobalSidebar({
             {settingsLabel}
           </span>
         </Link>
+
+        {/* Logout Button */}
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className={`
+              w-full flex items-center gap-3 px-4 py-3
+              font-body font-bold text-sm
+              border-[2px] border-black
+              nb-interactive cursor-pointer
+              ${themeClasses.logoutContainer || 'bg-nb-red hover:bg-red-600 text-white'}
+            `}
+          >
+            <div className="shrink-0 flex items-center justify-center">
+              {logoutIcon || <LogOut size={18} strokeWidth={2.5} />}
+            </div>
+            <span className={`truncate ${themeClasses.logoutText || 'text-inherit font-black'}`}>
+              {logoutLabel}
+            </span>
+          </button>
+        )}
       </div>
     </aside>
   );

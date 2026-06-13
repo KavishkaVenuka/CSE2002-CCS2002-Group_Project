@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
+import { LogOut } from 'lucide-react';
 
 // Structure for individual navigation items
 export interface NavItem {
@@ -18,6 +19,11 @@ export interface GlobalSidebarProps {
   settingsIcon: ReactNode;      // Spot 3
   settingsHref: string;
   currentPath: string;          // To determine active link state
+
+  // Logout
+  onLogout?: () => void;
+  logoutLabel?: string;
+  logoutIcon?: ReactNode;
   
   // Theming & Colors (Adapting to the 3 Dashboards)
   themeClasses: {
@@ -36,6 +42,10 @@ export interface GlobalSidebarProps {
     // Spot 3 Theme
     settingsContainer: string; // Must stand out
     settingsText: string;
+
+    // Logout Theme
+    logoutContainer?: string;
+    logoutText?: string;
   };
 }
 
@@ -47,6 +57,9 @@ export function GlobalSidebar({
   settingsIcon,
   settingsHref,
   currentPath,
+  onLogout,
+  logoutLabel = "Logout",
+  logoutIcon,
   themeClasses,
 }: GlobalSidebarProps) {
   return (
@@ -92,7 +105,7 @@ export function GlobalSidebar({
       </nav>
 
       {/* Spot 3: Settings / Footer Bar */}
-      <div className="mt-auto pt-4 border-t-[2px] border-black">
+      <div className="mt-auto pt-4 border-t-[2px] border-black flex flex-col gap-2">
         <Link 
           href={settingsHref}
           className={`flex items-center px-4 py-3 gap-4 border-[2px] border-black transition-all duration-100 nb-interactive ${themeClasses.settingsContainer}`}
@@ -104,6 +117,25 @@ export function GlobalSidebar({
             {settingsLabel}
           </span>
         </Link>
+
+        {/* Logout Button */}
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className={`flex items-center px-4 py-3 gap-4 border-[2px] border-black transition-all duration-100 nb-interactive cursor-pointer ${
+              themeClasses.logoutContainer || 'bg-nb-red hover:bg-red-600 text-white'
+            }`}
+          >
+            <div className="shrink-0 flex items-center justify-center">
+              {logoutIcon || <LogOut size={18} strokeWidth={2.5} />}
+            </div>
+            <span className={`font-body font-bold text-sm truncate min-w-0 ${
+              themeClasses.logoutText || 'text-inherit font-black'
+            }`}>
+              {logoutLabel}
+            </span>
+          </button>
+        )}
       </div>
     </aside>
   );
