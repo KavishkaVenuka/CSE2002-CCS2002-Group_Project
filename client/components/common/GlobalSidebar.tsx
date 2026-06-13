@@ -116,15 +116,15 @@ export function GlobalSidebar({
             currentPath === item.href ||
             (item.href !== '/' && currentPath.startsWith(`${item.href}/`))
           ) : false;
-          
+
           const hasSubItems = item.subItems && item.subItems.length > 0;
-          
-          const hasActiveSubItem = item.subItems?.some(subItem => 
+
+          const hasActiveSubItem = item.subItems?.some(subItem =>
             currentPath === subItem.href || currentPath.startsWith(`${subItem.href}/`)
           );
-          
-          const isExpanded = expandedItems[item.id] !== undefined 
-            ? expandedItems[item.id] 
+
+          const isExpanded = expandedItems[item.id] !== undefined
+            ? expandedItems[item.id]
             : hasActiveSubItem;
 
           return (
