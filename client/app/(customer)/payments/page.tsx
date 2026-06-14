@@ -323,7 +323,7 @@ export default function PaymentsPage() {
               <button 
                 onClick={() => {
                   setShowSuccessModal(false)
-                  router.push('/customer/invoices')
+                  router.push('/invoices')
                 }}
                 className="w-full px-4 py-3 bg-black text-white font-display font-black text-sm uppercase tracking-widest border-[2px] border-black shadow-[4px_4px_0px_0px_#4ade80] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
               >

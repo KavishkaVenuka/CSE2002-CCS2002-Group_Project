@@ -258,7 +258,7 @@ export default function InvoicesPage() {
                       </button>
                       {inv.status.toLowerCase() === 'unpaid' && (
                         <button
-                          onClick={() => router.push(`/customer/payments?invoiceId=${inv.invoiceID}`)}
+                          onClick={() => router.push(`/payments?invoiceId=${inv.invoiceID}`)}
                           className="px-3 h-8 flex items-center justify-center gap-1 bg-nb-green border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all font-body font-bold text-[10px] uppercase"
                           title="Pay Now"
                         >
