@@ -8,7 +8,6 @@ import {
 } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
 import { Panel } from "@/components/ui/Panel"
-import { ActivityItem } from "@/components/customer/ActivityItem"
 import { GlobalStatCard } from "@/components/common/GlobalStatCard"
 import { getCustomerDashboardStats, type CustomerDashboardStats } from "@/lib/api"
 
