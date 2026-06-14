@@ -246,8 +246,8 @@ export default function SendRequirements() {
                         <option value="" disabled>Loading stocks...</option>
                       ) : (
                         availableStocks.map((stock: any) => (
-                          <option key={stock.id || stock._id || stock.itemName} value={stock.itemName}>
-                            {stock.itemName}
+                          <option key={stock.id || stock._id || stock.item_name} value={stock.item_name}>
+                            {stock.item_name}
                           </option>
                         ))
                       )}
