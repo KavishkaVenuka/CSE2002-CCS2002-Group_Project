@@ -2,18 +2,58 @@ import mongoose from "mongoose";
 import Order from "../models/Order.js";
 import StockItem from "../models/Stock.js";
 import Quotation from "../models/Quotation.js";
+import User from "../models/User.js";
+
+// Helper to resolve all query conditions for a given customer identifier
+const resolveCustomerConditions = async (customerId) => {
+    let user = null;
+    if (mongoose.Types.ObjectId.isValid(customerId)) {
+        user = await User.findById(customerId);
+    }
+    if (!user) {
+        user = await User.findOne({
+            $or: [
+                { customID: customerId },
+                { email: customerId }
+            ]
+        });
+    }
+
+    let queryConditions = [];
+    
+    if (user) {
+        const userObjectId = user._id;
+        const userStringId = user._id.toString();
+        const userCustomId = user.customID;
+        const userEmail = user.email;
+
+        queryConditions.push({ customerId: userObjectId });
+        queryConditions.push({ customerId: userStringId });
+        if (userCustomId) {
+            queryConditions.push({ customerId: userCustomId });
+        }
+        if (userEmail) {
+            queryConditions.push({ email: userEmail });
+        }
+    } else {
+        // Fallback if no user is found in the database
+        if (mongoose.Types.ObjectId.isValid(customerId)) {
+            queryConditions.push({ customerId: customerId });
+            queryConditions.push({ customerId: new mongoose.Types.ObjectId(customerId) });
+        } else {
+            queryConditions.push({ customerId: customerId });
+            queryConditions.push({ email: customerId });
+        }
+    }
+    return queryConditions;
+};
 
 // 1. GET: Customer kenekta adala orders tika pamanak ganna (Table eka sandaha)
 export const getOrdersByCustomerId = async (req, res) => {
     try {
         const { customerId } = req.params;
-        // Search by customerId OR email (some orders might have only email or business ID)
-        const orders = await Order.find({
-            $or: [
-                { customerId: customerId },
-                { email: customerId } 
-            ]
-        }).sort({ date: -1 });
+        const queryConditions = await resolveCustomerConditions(customerId);
+        const orders = await Order.collection.find({ $or: queryConditions }).sort({ date: -1 }).toArray();
 
         // Frontend eke interface ekata galapena widiyata map kirima
         const mappedOrders = orders.map(o => ({
@@ -41,7 +81,11 @@ export const getOrdersByCustomerId = async (req, res) => {
 export const getPendingOrderCountByCustomer = async (req, res) => {
     try {
         const { customerId } = req.params;
-        const count = await Order.countDocuments({ customerId, status: { $regex: /^pending$/i } });
+        const queryConditions = await resolveCustomerConditions(customerId);
+        const count = await Order.collection.countDocuments({
+            $or: queryConditions,
+            status: { $regex: /^pending$/i }
+        });
         res.status(200).json({ count });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -52,7 +96,11 @@ export const getPendingOrderCountByCustomer = async (req, res) => {
 export const getProcessingOrderCountByCustomer = async (req, res) => {
     try {
         const { customerId } = req.params;
-        const count = await Order.countDocuments({ customerId, status: { $regex: /^processing$/i } });
+        const queryConditions = await resolveCustomerConditions(customerId);
+        const count = await Order.collection.countDocuments({
+            $or: queryConditions,
+            status: { $regex: /^processing$/i }
+        });
         res.status(200).json({ count });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -63,7 +111,11 @@ export const getProcessingOrderCountByCustomer = async (req, res) => {
 export const getDispatchedOrderCountByCustomer = async (req, res) => {
     try {
         const { customerId } = req.params;
-        const count = await Order.countDocuments({ customerId, status: { $regex: /^dispatched$/i } });
+        const queryConditions = await resolveCustomerConditions(customerId);
+        const count = await Order.collection.countDocuments({
+            $or: queryConditions,
+            status: { $regex: /^dispatched$/i }
+        });
         res.status(200).json({ count });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -74,7 +126,11 @@ export const getDispatchedOrderCountByCustomer = async (req, res) => {
 export const getInTransitOrderCountByCustomer = async (req, res) => {
     try {
         const { customerId } = req.params;
-        const count = await Order.countDocuments({ customerId, status: { $regex: /^in-transit$/i } });
+        const queryConditions = await resolveCustomerConditions(customerId);
+        const count = await Order.collection.countDocuments({
+            $or: queryConditions,
+            status: { $regex: /^in-transit$/i }
+        });
         res.status(200).json({ count });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -85,7 +141,11 @@ export const getInTransitOrderCountByCustomer = async (req, res) => {
 export const getDeliveredOrderCountByCustomer = async (req, res) => {
     try {
         const { customerId } = req.params;
-        const count = await Order.countDocuments({ customerId, status: { $regex: /^delivered$/i } });
+        const queryConditions = await resolveCustomerConditions(customerId);
+        const count = await Order.collection.countDocuments({
+            $or: queryConditions,
+            status: { $regex: /^delivered$/i }
+        });
         res.status(200).json({ count });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -172,7 +232,7 @@ export const issueOrderItems = async (req, res) => {
             order.status = "partially-issued";
         }
 
-        await order.save();
+        await order.save({ validateBeforeSave: false });
         res.status(200).json(order);
     } catch (error) {
         res.status(500).json({ message: "Error issuing items", error: error.message });
@@ -200,7 +260,7 @@ export const confirmOrderDelivery = async (req, res) => {
 
         order.status = "delivered";
         order.statusDates.deliveredDate = new Date();
-        await order.save();
+        await order.save({ validateBeforeSave: false });
         res.status(200).json(order);
     } catch (error) {
         res.status(500).json({ message: "Error confirming delivery", error: error.message });
@@ -248,7 +308,7 @@ export const restockRejectedItems = async (req, res) => {
         }
 
         item.restocked = true;
-        await order.save();
+        await order.save({ validateBeforeSave: false });
 
         res.status(200).json({ message: "Item restocked successfully", order });
     } catch (error) {
