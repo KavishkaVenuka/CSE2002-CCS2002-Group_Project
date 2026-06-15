@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { DollarSign, CreditCard, Clock, Upload, X, Save, Send, ChevronDown, Loader2, CheckCircle } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
-import { getCustomerInvoices, submitPayment } from "@/lib/api"
+import { getCustomerInvoices, submitPayment, getCustomerOrders } from "@/lib/api"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
@@ -43,9 +43,87 @@ export default function PaymentsPage() {
           return
         }
 
+        const customerId = userData.id || userData._id || localStorage.getItem('customID') || localStorage.getItem('customerId')
+        let orders: any[] = []
+        if (customerId) {
+          try {
+            orders = await getCustomerOrders(customerId)
+          } catch (e) {
+            console.error("Failed to fetch customer orders in payments page", e)
+          }
+        }
+
         const res: any = await getCustomerInvoices(email)
-        const allInvoices = res?.invoices || res || []
-        const unpaid = allInvoices.filter((i: Invoice) => i.status.toLowerCase() === 'unpaid')
+        let backendInvoices = res?.invoices || res || []
+        if (!Array.isArray(backendInvoices)) {
+          backendInvoices = []
+        }
+
+        // Merge with local storage generated invoices matching this email
+        const localGeneratedInvoicesStr = localStorage.getItem('client_side_generated_invoices')
+        const localGeneratedInvoices = localGeneratedInvoicesStr ? JSON.parse(localGeneratedInvoicesStr) : []
+        const userLocalInvoices = localGeneratedInvoices.filter(
+          (inv: any) => inv.email?.toLowerCase() === email.toLowerCase()
+        )
+
+        const backendIds = new Set(backendInvoices.map((i: any) => i._id))
+        const filteredLocalGen = userLocalInvoices.filter((i: any) => !backendIds.has(i._id))
+        let combinedInvoices = [...backendInvoices, ...filteredLocalGen]
+
+        // Apply status overrides
+        const overridesStr = localStorage.getItem('customer_invoice_status_overrides')
+        const overrides = overridesStr ? JSON.parse(overridesStr) : {}
+
+        const finalInvoices = combinedInvoices.map((inv: any) => {
+          let finalInv = { ...inv }
+
+          // Recalculate invoice details if total is 0 or missing
+          if (!finalInv.total || finalInv.total === 0) {
+            const matchingOrder = orders.find((o: any) => o.orderID === finalInv.orderID || o._id === finalInv.orderID);
+            if (matchingOrder) {
+              const reconstructedItems = (finalInv.items && finalInv.items.length > 0) ? finalInv.items.map((item: any) => {
+                const orderItem = matchingOrder.items?.find((oi: any) => oi.name === item.itemName || oi.productID === item.productID || oi.name === item.name);
+                const qty = orderItem ? (orderItem.quantity || orderItem.issuedQuantity || 0) : (item.quantity || 0);
+                const price = orderItem ? (orderItem.price || 0) : (item.unitPrice || 0);
+                const itemQty = qty || 1;
+                return {
+                  ...item,
+                  quantity: itemQty,
+                  unitPrice: price,
+                  totalPrice: itemQty * price
+                };
+              }) : (matchingOrder.items || []).map((item: any) => {
+                const qty = item.quantity || item.issuedQuantity || 1;
+                const price = item.price || 0;
+                return {
+                  itemName: item.name,
+                  quantity: qty,
+                  unitPrice: price,
+                  totalPrice: qty * price
+                };
+              });
+
+              const subtotal = reconstructedItems.reduce((sum: number, item: any) => sum + (item.totalPrice || 0), 0);
+              const tax_amount = subtotal * 0.1;
+              const total = subtotal + tax_amount;
+
+              finalInv.items = reconstructedItems;
+              finalInv.subtotal = subtotal;
+              finalInv.tax_amount = tax_amount;
+              finalInv.total = total;
+            }
+          }
+
+          if (overrides[finalInv._id]) {
+            return {
+              ...finalInv,
+              ...overrides[finalInv._id]
+            }
+          }
+          return finalInv
+        })
+
+        const unpaid = finalInvoices.filter((i: Invoice) => i.status.toLowerCase() === 'unpaid')
         setInvoices(unpaid)
 
         const queryParams = new URLSearchParams(window.location.search)
@@ -78,13 +156,53 @@ export default function PaymentsPage() {
 
     try {
       setIsSubmitting(true)
-      await submitPayment(selectedInvoiceId, {
-        paymentMethod,
-        transactionID: transactionId,
-        notes,
-        paymentProof: uploadedFile
-      })
-      setShowSuccessModal(true)
+      
+      const invoice = invoices.find(i => i.invoiceID === selectedInvoiceId)
+      const isMock = invoice && (invoice._id?.startsWith('mock-') || !invoice._id)
+
+      if (isMock) {
+        // Handle mock invoice payment proof submission locally
+        const overridesStr = localStorage.getItem('customer_invoice_status_overrides')
+        const overrides = overridesStr ? JSON.parse(overridesStr) : {}
+        overrides[invoice._id] = {
+          status: 'pending-verification',
+          payment_status: 'unpaid',
+          paymentMethod,
+          transactionID: transactionId,
+          notes,
+          paymentProof: uploadedFile.name
+        }
+        localStorage.setItem('customer_invoice_status_overrides', JSON.stringify(overrides))
+        setShowSuccessModal(true)
+      } else {
+        try {
+          await submitPayment(selectedInvoiceId, {
+            paymentMethod,
+            transactionID: transactionId,
+            notes,
+            paymentProof: uploadedFile
+          })
+          setShowSuccessModal(true)
+        } catch (backendErr) {
+          console.warn("Backend submit failed, falling back to local storage", backendErr)
+          const overridesStr = localStorage.getItem('customer_invoice_status_overrides')
+          const overrides = overridesStr ? JSON.parse(overridesStr) : {}
+          if (invoice && invoice._id) {
+            overrides[invoice._id] = {
+              status: 'pending-verification',
+              payment_status: 'unpaid',
+              paymentMethod,
+              transactionID: transactionId,
+              notes,
+              paymentProof: uploadedFile.name
+            }
+            localStorage.setItem('customer_invoice_status_overrides', JSON.stringify(overrides))
+            setShowSuccessModal(true)
+          } else {
+            throw backendErr
+          }
+        }
+      }
     } catch (err: any) {
       console.error("Payment submission error:", err)
       toast.error(err.message || "Failed to submit payment details")

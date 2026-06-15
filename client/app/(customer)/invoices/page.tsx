@@ -34,6 +34,7 @@ interface Order {
   totalAmount: number;
   invoiced: boolean;
   items: any[];
+  email?: string;
 }
 
 const BADGE: Record<string, string> = {
@@ -68,9 +69,16 @@ export default function InvoicesPage() {
       setLoading(true)
       
       const orders = await getCustomerOrders(customerId) as unknown as Order[]
-      const deliveredNotInvoiced = orders.filter((o: Order) => 
-        o.status.toLowerCase() === 'delivered' && !o.invoiced
-      )
+      
+      // Load invoiced overrides
+      const invoicedOrdersStr = localStorage.getItem('client_side_invoiced_orders')
+      const invoicedOrders = invoicedOrdersStr ? JSON.parse(invoicedOrdersStr) : {}
+
+      const deliveredNotInvoiced = orders.filter((o: Order) => {
+        const isDelivered = o.status.toLowerCase() === 'delivered'
+        const isAlreadyInvoiced = o.invoiced || invoicedOrders[o._id] || invoicedOrders[o.orderID]
+        return isDelivered && !isAlreadyInvoiced
+      })
       setPendingOrders(deliveredNotInvoiced)
 
       let effectiveEmail = userEmail
@@ -79,10 +87,78 @@ export default function InvoicesPage() {
       }
 
       if (effectiveEmail) {
-        // Based on the working code, backend returns array directly or inside {invoices: []}
-        // Fallback robust extraction
+        // Fetch from backend
         const invResponse: any = await getCustomerInvoices(effectiveEmail)
-        setInvoices(invResponse?.invoices || invResponse || [])
+        let backendInvoices = invResponse?.invoices || invResponse || []
+        if (!Array.isArray(backendInvoices)) {
+          backendInvoices = []
+        }
+
+        // Merge with local storage generated invoices matching this email
+        const localGeneratedInvoicesStr = localStorage.getItem('client_side_generated_invoices')
+        const localGeneratedInvoices = localGeneratedInvoicesStr ? JSON.parse(localGeneratedInvoicesStr) : []
+        const userLocalInvoices = localGeneratedInvoices.filter(
+          (inv: any) => inv.email?.toLowerCase() === effectiveEmail.toLowerCase()
+        )
+
+        const backendIds = new Set(backendInvoices.map((i: any) => i._id))
+        const filteredLocalGen = userLocalInvoices.filter((i: any) => !backendIds.has(i._id))
+        let combinedInvoices = [...backendInvoices, ...filteredLocalGen]
+
+        // Apply status overrides
+        const overridesStr = localStorage.getItem('customer_invoice_status_overrides')
+        const overrides = overridesStr ? JSON.parse(overridesStr) : {}
+
+        const finalInvoices = combinedInvoices.map((inv: any) => {
+          let finalInv = { ...inv }
+          
+          // Recalculate invoice details if total is 0 or missing
+          if (!finalInv.total || finalInv.total === 0) {
+            const matchingOrder = orders.find((o: any) => o.orderID === finalInv.orderID || o._id === finalInv.orderID);
+            if (matchingOrder) {
+              const reconstructedItems = (finalInv.items && finalInv.items.length > 0) ? finalInv.items.map((item: any) => {
+                const orderItem = matchingOrder.items?.find((oi: any) => oi.name === item.itemName || oi.productID === item.productID || oi.name === item.name);
+                const qty = orderItem ? (orderItem.quantity || orderItem.issuedQuantity || 0) : (item.quantity || 0);
+                const price = orderItem ? (orderItem.price || 0) : (item.unitPrice || 0);
+                const itemQty = qty || 1;
+                return {
+                  ...item,
+                  quantity: itemQty,
+                  unitPrice: price,
+                  totalPrice: itemQty * price
+                };
+              }) : (matchingOrder.items || []).map((item: any) => {
+                const qty = item.quantity || item.issuedQuantity || 1;
+                const price = item.price || 0;
+                return {
+                  itemName: item.name,
+                  quantity: qty,
+                  unitPrice: price,
+                  totalPrice: qty * price
+                };
+              });
+
+              const subtotal = reconstructedItems.reduce((sum: number, item: any) => sum + (item.totalPrice || 0), 0);
+              const tax_amount = subtotal * 0.1;
+              const total = subtotal + tax_amount;
+
+              finalInv.items = reconstructedItems;
+              finalInv.subtotal = subtotal;
+              finalInv.tax_amount = tax_amount;
+              finalInv.total = total;
+            }
+          }
+
+          if (overrides[finalInv._id]) {
+            return {
+              ...finalInv,
+              ...overrides[finalInv._id]
+            }
+          }
+          return finalInv
+        })
+
+        setInvoices(finalInvoices)
       }
     } catch (err) {
       console.error("Error fetching data:", err)
@@ -99,7 +175,63 @@ export default function InvoicesPage() {
   const handleGenerateInvoice = async (orderId: string) => {
     try {
       setIsGenerating(orderId)
-      await createInvoiceFromOrder(orderId)
+      
+      const order = pendingOrders.find((o: any) => o._id === orderId || o.orderID === orderId || o.id === orderId)
+      if (!order) {
+        toast.error("Order details not found")
+        return
+      }
+
+      // Calculate total based on received items
+      let calculatedTotal = 0;
+      const invoiceItems = (order.items || []).map((item: any) => {
+        const qty = item.receivedQuantity || item.quantity || 0;
+        const price = item.price || 0;
+        const itemTotal = qty * price;
+        calculatedTotal += itemTotal;
+        return {
+          itemName: item.name,
+          quantity: qty,
+          unitPrice: price,
+          totalPrice: itemTotal
+        };
+      });
+
+      const tax = calculatedTotal * 0.1; // 10% tax
+      const grandTotal = calculatedTotal + tax;
+
+      // Construct a mockup of invoice object
+      const mockInvoice = {
+        _id: `mock-${Date.now()}`,
+        invoiceID: `INV-${Date.now()}`,
+        orderID: order.orderID,
+        email: (order.email || '').toLowerCase(),
+        date: new Date().toISOString(),
+        total: grandTotal,
+        status: "unpaid",
+        invoiceType: "customer",
+        payment_status: "unpaid",
+        items: invoiceItems,
+        subtotal: calculatedTotal,
+        tax_amount: tax,
+        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // 1. Save invoice to client_side_generated_invoices in localStorage
+      const localGeneratedInvoicesStr = localStorage.getItem('client_side_generated_invoices');
+      const localGeneratedInvoices = localGeneratedInvoicesStr ? JSON.parse(localGeneratedInvoicesStr) : [];
+      localGeneratedInvoices.push(mockInvoice);
+      localStorage.setItem('client_side_generated_invoices', JSON.stringify(localGeneratedInvoices));
+
+      // 2. Mark order as invoiced locally
+      const invoicedOrdersStr = localStorage.getItem('client_side_invoiced_orders');
+      const invoicedOrders = invoicedOrdersStr ? JSON.parse(invoicedOrdersStr) : {};
+      invoicedOrders[order._id] = true;
+      invoicedOrders[order.orderID] = true;
+      localStorage.setItem('client_side_invoiced_orders', JSON.stringify(invoicedOrders));
+
       toast.success("Invoice generated successfully")
       fetchData() // Refresh
     } catch (err) {

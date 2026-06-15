@@ -147,6 +147,17 @@ export default function QuotationsPage() {
         const user = JSON.parse(localStorage.getItem('user') || '{}');
         const customID = localStorage.getItem('customID');
         
+        // Calculate the raw subtotal from item-level prices
+        const itemsSubtotal = selectedQuotation.items?.reduce((sum, item) => {
+          const price = item.unitPrice || item.price || 0;
+          return sum + (price * (item.quantity || 1));
+        }, 0) || 0;
+
+        // The quotation total includes tax; compute the multiplier so
+        // the backend's sum(price*qty) arrives at the tax-inclusive total
+        const quotationTotal = selectedQuotation.total || selectedQuotation.total_estimate || itemsSubtotal;
+        const taxMultiplier = itemsSubtotal > 0 ? quotationTotal / itemsSubtotal : 1;
+
         const orderPayload = {
           name: user.fullName || user.name || "Customer",
           customerId: customID || user.id || user._id,
@@ -156,7 +167,7 @@ export default function QuotationsPage() {
           items: selectedQuotation.items?.map(item => ({
             productID: item.productID || item.name || "CUSTOM",
             name: item.name || item.productID || "Quotation Item",
-            price: item.unitPrice || item.price || 0,
+            price: Math.round(((item.unitPrice || item.price || 0) * taxMultiplier) * 100) / 100,
             quantity: item.quantity || 1,
             image: item.image || "https://images.unsplash.com/photo-1542385151-efd9000785a0?w=500&auto=format&fit=crop&q=60"
           })) || [],

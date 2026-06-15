@@ -48,7 +48,7 @@ export function Sidebar() {
       navItems={navItems}
       settingsLabel="Settings"
       settingsIcon={<Settings size={18} strokeWidth={2.5} />}
-      settingsHref="/dashboard/settings"
+      settingsHref="/customer-settings"
       currentPath={pathname || "/dashboard"}
       onLogout={handleLogout}
       logoutLabel="Logout"
