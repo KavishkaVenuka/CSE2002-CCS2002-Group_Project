@@ -4,8 +4,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { GlobalSidebar } from "@/components/common/GlobalSidebar"
 import {
   LayoutDashboard, Send, FileText, ShoppingBag,
-  Truck, Receipt, CreditCard, CheckSquare, Boxes,
-  Settings,
+  Truck, Receipt, CreditCard, Boxes,
 } from "lucide-react"
 
 const NAV_ITEMS = [
@@ -46,9 +45,6 @@ export function Sidebar() {
       platformName="StockFlow"
       platformIcon={platformIcon}
       navItems={navItems}
-      settingsLabel="Settings"
-      settingsIcon={<Settings size={18} strokeWidth={2.5} />}
-      settingsHref="/customer-settings"
       currentPath={pathname || "/dashboard"}
       onLogout={handleLogout}
       logoutLabel="Logout"
@@ -60,8 +56,6 @@ export function Sidebar() {
         navItemContainerActive: "bg-black text-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] translate-x-[2px] translate-y-[2px]",
         navItemTextDefault: "text-black font-bold",
         navItemTextActive: "text-white font-black",
-        settingsContainer: "bg-black text-[#defa08] hover:bg-[#56600c] hover:text-white shadow-[3px_3px_0px_0px_#56600c]",
-        settingsText: "text-[#defa08] font-black",
         logoutContainer: "bg-nb-red hover:bg-black hover:text-nb-red transition-colors",
         logoutText: "text-inherit font-black",
       }}

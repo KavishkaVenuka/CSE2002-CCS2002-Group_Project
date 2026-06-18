@@ -168,12 +168,12 @@ export interface CreateQuotationPayload {
 
 export interface CreateInvoicePayload {
   purchaseOrderRef: string;
-  items: Array<{ productID?: string; name: string; quantity: number; unitPrice: number; totalPrice: number }>;
+  items: Array<{ productID?: string; itemName: string; quantity: number; unitPrice: number; totalPrice: number }>;
   subtotal: number;
-  tax: number;
-  grandTotal: number;
+  tax_amount: number;
+  total: number;
   notes: string;
-  dueDate: string;
+  due_date: string;
 }
 
 export interface SubmitPaymentPayload {
@@ -269,7 +269,7 @@ export async function getCustomerQuotations(customerId: string): Promise<{ quota
   return request(`/api/quotations/customer/${customerId}`);
 }
 
-export async function createOrderFromQuotation(payload: { name: string; customerId: string; address: string; phonenumber: string; notes: string; items: Array<{ productID: string; name: string; price: number; quantity: number; image?: string }>; quotationId: string; }): Promise<{ success: boolean }> {
+export async function createOrderFromQuotation(payload: { name: string; customerId: string; address: string; phonenumber: string; notes: string; items: Array<{ productID: string; name: string; price: number; quantity: number; image?: string }>; quotationId: string; email?: string; }): Promise<{ success: boolean }> {
   return request(`/api/orders`, {
     method: "POST",
     body: JSON.stringify(payload),

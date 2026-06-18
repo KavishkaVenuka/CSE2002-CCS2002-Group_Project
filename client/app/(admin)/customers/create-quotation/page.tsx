@@ -61,7 +61,7 @@ function CreateQuotationContent() {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        const reqs = res.data.data;
+        const reqs = res.data.requirements || res.data.data || [];
         const found = reqs.find((r: any) => r.id === reqId || r._id === reqId || r.requirementId === reqId);
         
         if (found) {

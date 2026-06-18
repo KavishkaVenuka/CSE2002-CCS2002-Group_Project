@@ -15,9 +15,9 @@ export interface GlobalSidebarProps {
   platformName: string;
   platformIcon: ReactNode;      // Spot 1
   navItems: NavItem[];          // Spot 2
-  settingsLabel: string;
-  settingsIcon: ReactNode;      // Spot 3
-  settingsHref: string;
+  settingsLabel?: string;
+  settingsIcon?: ReactNode;      // Spot 3
+  settingsHref?: string;
   currentPath: string;          // To determine active link state
 
   // Logout
@@ -40,8 +40,8 @@ export interface GlobalSidebarProps {
     navItemTextActive: string;
     
     // Spot 3 Theme
-    settingsContainer: string; // Must stand out
-    settingsText: string;
+    settingsContainer?: string; // Must stand out
+    settingsText?: string;
 
     // Logout Theme
     logoutContainer?: string;
@@ -106,17 +106,19 @@ export function GlobalSidebar({
 
       {/* Spot 3: Settings / Footer Bar */}
       <div className="mt-auto pt-4 border-t-[2px] border-black flex flex-col gap-2">
-        <Link 
-          href={settingsHref}
-          className={`flex items-center px-4 py-3 gap-4 border-[2px] border-black transition-all duration-100 nb-interactive ${themeClasses.settingsContainer}`}
-        >
-          <div className="shrink-0 flex items-center justify-center">
-            {settingsIcon}
-          </div>
-          <span className={`font-body font-bold text-sm truncate min-w-0 ${themeClasses.settingsText}`}>
-            {settingsLabel}
-          </span>
-        </Link>
+        {settingsHref && settingsLabel && settingsIcon && (
+          <Link 
+            href={settingsHref}
+            className={`flex items-center px-4 py-3 gap-4 border-[2px] border-black transition-all duration-100 nb-interactive ${themeClasses.settingsContainer}`}
+          >
+            <div className="shrink-0 flex items-center justify-center">
+              {settingsIcon}
+            </div>
+            <span className={`font-body font-bold text-sm truncate min-w-0 ${themeClasses.settingsText}`}>
+              {settingsLabel}
+            </span>
+          </Link>
+        )}
 
         {/* Logout Button */}
         {onLogout && (

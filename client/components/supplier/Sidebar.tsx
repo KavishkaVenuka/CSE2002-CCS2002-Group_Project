@@ -5,7 +5,7 @@ import { GlobalSidebar } from "@/components/ui/GlobalSidebar"
 import {
   LayoutDashboard, FileText, ShoppingBag,
   Truck, Receipt, ClipboardList, PlusCircle,
-  Settings, Boxes
+  Boxes
 } from "lucide-react"
 
 const NAV_ITEMS = [
@@ -48,9 +48,6 @@ export function Sidebar() {
       platformName="Supplier Hub"
       platformIcon={platformIcon}
       navItems={navItems}
-      settingsLabel="Settings"
-      settingsIcon={<Settings size={18} strokeWidth={2.5} />}
-      settingsHref="/supplier-dashboard/settings"
       currentPath={pathname || "/supplier-dashboard"}
       onLogout={handleLogout}
       logoutLabel="Logout"
@@ -62,8 +59,6 @@ export function Sidebar() {
         navItemContainerActive:   "bg-black text-white border-[2px] border-black shadow-[3px_3px_0px_0px_#000] translate-x-[2px] translate-y-[2px]",
         navItemTextDefault:       "text-black font-bold",
         navItemTextActive:        "text-white font-black",
-        settingsContainer:        "bg-black text-[#A5E6DC] hover:bg-nb-black hover:text-white shadow-[3px_3px_0px_0px_#000]",
-        settingsText:             "text-[#A5E6DC] font-black",
         logoutContainer:          "bg-nb-red hover:bg-black hover:text-nb-red transition-colors",
         logoutText:               "text-inherit font-black",
       }}

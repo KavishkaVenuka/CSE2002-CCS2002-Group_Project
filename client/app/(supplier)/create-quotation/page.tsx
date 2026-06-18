@@ -22,9 +22,12 @@ export default function CreateQuotationPage() {
     { id: Date.now(), itemName: "", quantity: 1, unit: "Units", unitPrice: "", totalPrice: 0 },
   ])
 
-  const [availableRequirements, setAvailableRequirements] = useState<any[]>([])
+  const [availableRequirements, setAvailableRequirements] = useState<any[]>(
+    reqIdParam ? [{ id: reqIdParam, requirementId: reqIdParam, customer: "Loading..." }] : []
+  )
   const [selectedRequirementId, setSelectedRequirementId] = useState(reqIdParam || "")
   const [requirementRef, setRequirementRef] = useState("")
+  const [reqDetails, setReqDetails] = useState<any>(null)
 
   const [deliveryTimeline, setDeliveryTimeline] = useState("")
   const [paymentTerms, setPaymentTerms] = useState("Net 30 Days")
@@ -35,44 +38,89 @@ export default function CreateQuotationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
 
+  // Fetch pending requirements to select from
+  useEffect(() => {
+    const fetchReqs = async () => {
+      try {
+        setIsLoadingReqs(true)
+        const res = await getMyRequirements({ status: "pending" })
+        setAvailableRequirements(res.requirements || [])
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setIsLoadingReqs(false)
+      }
+    }
+    fetchReqs()
+  }, [])
+
   // Fetch requirement details if reqIdParam is provided
   useEffect(() => {
     if (reqIdParam) {
-      const fetchReq = async () => {
+      setSelectedRequirementId(reqIdParam)
+      
+      const loadReq = async () => {
+        // First try to load from state memory (sessionStorage)
+        let cachedReq = null;
+        try {
+          const stored = sessionStorage.getItem('quotationReqData');
+          if (stored) {
+            cachedReq = JSON.parse(stored);
+          }
+        } catch (e) {}
+
+        const applyRequirementData = (reqData: any) => {
+          setReqDetails(reqData)
+          setRequirementRef(reqData.requirementId || reqData.id)
+          if (reqData.items && Array.isArray(reqData.items)) {
+            setItems(reqData.items.map((it: any, idx: number) => ({
+              id: Date.now() + idx,
+              itemName: it.itemName || it.name || "",
+              quantity: it.quantity || 1,
+              unit: it.unit || "Units",
+              unitPrice: "",
+              totalPrice: 0
+            })))
+            
+            const allNotes = reqData.items
+              .filter((it: any) => it.notes)
+              .map((it: any) => `${it.itemName || it.name}: ${it.notes}`)
+              .join('\n');
+            if (allNotes) setNotes(allNotes);
+
+            const deliveryItem = reqData.items.find((it: any) => it.deliveryDate);
+            const deliveryStr = deliveryItem?.deliveryDate || reqData.delivery;
+            if (deliveryStr && deliveryStr !== "N/A") {
+              const d = new Date(deliveryStr);
+              if (!isNaN(d.getTime())) {
+                setDeliveryTimeline(d.toISOString().split('T')[0]);
+              }
+            }
+          } else if (reqData.itemsDetail) {
+            setNotes(reqData.itemsDetail);
+          }
+        }
+
+        // Apply immediately if available and matches the ID
+        if (cachedReq && (cachedReq.id === reqIdParam || cachedReq._id === reqIdParam)) {
+          applyRequirementData(cachedReq);
+        }
+
         try {
           const res = await getRequirementDetails(reqIdParam)
           if (res.requirement) {
-            setRequirementRef(res.requirement.requirementId || res.requirement.id)
-            if (res.requirement.items && Array.isArray(res.requirement.items)) {
-              setItems(res.requirement.items.map((it: any, idx: number) => ({
-                id: Date.now() + idx,
-                itemName: it.itemName || it.name || "",
-                quantity: it.quantity || 1,
-                unit: it.unit || "Units",
-                unitPrice: "",
-                totalPrice: 0
-              })))
-            }
+            applyRequirementData(res.requirement);
           }
         } catch (err) {
           console.error("Failed to load requirement details", err)
         }
       }
-      fetchReq()
+      
+      loadReq()
     } else {
-      // Fetch pending requirements to select from
-      const fetchReqs = async () => {
-        try {
-          setIsLoadingReqs(true)
-          const res = await getMyRequirements({ status: "pending" })
-          setAvailableRequirements(res.requirements || [])
-        } catch (err) {
-          console.error(err)
-        } finally {
-          setIsLoadingReqs(false)
-        }
-      }
-      fetchReqs()
+      setSelectedRequirementId("")
+      setRequirementRef("")
+      setReqDetails(null)
     }
   }, [reqIdParam])
 
@@ -81,23 +129,45 @@ export default function CreateQuotationPage() {
     setSelectedRequirementId(id)
     if (!id) {
       setRequirementRef("")
+      router.replace("/create-quotation")
       return
     }
 
     const selected = availableRequirements.find(r => (r.id || r._id) === id)
     if (selected) {
       setRequirementRef(selected.requirementId || id)
+      router.replace(`/create-quotation?reqId=${id}`)
       try {
         const res = await getRequirementDetails(id)
-        if (res.requirement && Array.isArray(res.requirement.items)) {
-          setItems(res.requirement.items.map((it: any, idx: number) => ({
-            id: Date.now() + idx,
-            itemName: it.itemName || it.name || "",
-            quantity: it.quantity || 1,
-            unit: it.unit || "Units",
-            unitPrice: "",
-            totalPrice: 0
-          })))
+        if (res.requirement) {
+          setReqDetails(res.requirement)
+          if (Array.isArray(res.requirement.items)) {
+            setItems(res.requirement.items.map((it: any, idx: number) => ({
+              id: Date.now() + idx,
+              itemName: it.itemName || it.name || "",
+              quantity: it.quantity || 1,
+              unit: it.unit || "Units",
+              unitPrice: "",
+              totalPrice: 0
+            })))
+            
+            const allNotes = res.requirement.items
+              .filter((it: any) => it.notes)
+              .map((it: any) => `${it.itemName || it.name}: ${it.notes}`)
+              .join('\n');
+            if (allNotes) setNotes(allNotes);
+
+            const deliveryItem = res.requirement.items.find((it: any) => it.deliveryDate);
+            const deliveryStr = deliveryItem?.deliveryDate || res.requirement.delivery;
+            if (deliveryStr && deliveryStr !== "N/A") {
+              const d = new Date(deliveryStr);
+              if (!isNaN(d.getTime())) {
+                setDeliveryTimeline(d.toISOString().split('T')[0]);
+              }
+            }
+          } else if (res.requirement.itemsDetail) {
+            setNotes(res.requirement.itemsDetail);
+          }
         }
       } catch (err) {
         console.error(err)
@@ -147,8 +217,9 @@ export default function CreateQuotationPage() {
           totalPrice: Number(i.totalPrice)
         })),
         subtotal,
-        tax,
+        tax_amount: tax,
         grandTotal,
+        total_estimate: grandTotal,
         deliveryTimeline,
         paymentTerms,
         validUntil,
@@ -162,7 +233,7 @@ export default function CreateQuotationPage() {
         setShowSuccessModal(true)
       } else {
         toast.success("Draft saved successfully")
-        router.push("/supplier/quotation-status")
+        router.push("/quotation-status")
       }
     } catch (err: any) {
       console.error(err)
@@ -195,24 +266,35 @@ export default function CreateQuotationPage() {
               </Link>
               <div className="hidden sm:block h-8 w-[2px] bg-black/20"></div>
 
-              {reqIdParam ? (
-                <p className="font-body text-sm font-bold text-gray-500 italic">Quoting for {requirementRef || reqIdParam}</p>
-              ) : (
-                <div className="flex-1 max-w-sm relative">
-                  <select
-                    value={selectedRequirementId}
-                    onChange={handleSelectRequirement}
-                    disabled={isLoadingReqs}
-                    className="w-full px-4 py-2 bg-white border-[2px] border-black font-body font-bold text-sm outline-none shadow-[2px_2px_0px_0px_#000] appearance-none cursor-pointer disabled:opacity-50"
-                  >
-                    <option value="">Select a Pending Requirement</option>
-                    {availableRequirements.map(r => (
-                      <option key={r.id || r._id} value={r.id || r._id}>{r.requirementId || r.id} - {r.customer || r.customerName}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              
             </div>
+
+            {/* Requirement Details Summary */}
+            {reqDetails && (
+              <div className="mb-8 p-6 bg-white border-[3px] border-black shadow-[2px_2px_0px_0px_#000]">
+                <h3 className="font-display font-black text-sm uppercase tracking-widest text-black mb-4 flex items-center gap-2">
+                  <FileText size={16} className="text-nb-cyan" /> Requirement Summary
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="font-display font-black text-[10px] text-gray-500 uppercase tracking-widest">Requirement ID</p>
+                    <p className="font-mono text-sm font-bold text-black">{reqDetails.requirementId || reqDetails.id}</p>
+                  </div>
+                  <div>
+                    <p className="font-display font-black text-[10px] text-gray-500 uppercase tracking-widest">Customer</p>
+                    <p className="font-body text-sm font-bold text-black">{reqDetails.customer || reqDetails.customerName || "Unknown"}</p>
+                  </div>
+                  <div>
+                    <p className="font-display font-black text-[10px] text-gray-500 uppercase tracking-widest">Requested Delivery</p>
+                    <p className="font-mono text-sm font-bold text-black">{reqDetails.delivery || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="font-display font-black text-[10px] text-gray-500 uppercase tracking-widest">Docs</p>
+                    <p className="font-body text-sm font-bold text-black">{reqDetails.docs || 0} Attached</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
@@ -453,7 +535,7 @@ export default function CreateQuotationPage() {
                 </div>
 
                 <button
-                  onClick={() => router.push('/supplier/quotation-status')}
+                  onClick={() => router.push('/quotation-status')}
                   className="w-full py-4 bg-black text-white border-[3px] border-black font-display font-black uppercase text-sm tracking-widest shadow-[4px_4px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all"
                 >
                   Go to Quotations

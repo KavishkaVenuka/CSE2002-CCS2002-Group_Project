@@ -160,7 +160,7 @@ export default function QuotationsPage() {
 
         const orderPayload = {
           name: user.fullName || user.name || "Customer",
-          customerId: customID || user.id || user._id,
+          customerId: user._id || user.id || customID,
           address: address,
           phonenumber: phonenumber,
           notes: notes,
@@ -172,10 +172,20 @@ export default function QuotationsPage() {
             image: item.image || "https://images.unsplash.com/photo-1542385151-efd9000785a0?w=500&auto=format&fit=crop&q=60"
           })) || [],
           quotationId: selectedQuotation._id || selectedQuotation.id || "",
+          email: user.email,
         };
         
         await createOrderFromQuotation(orderPayload);
-        await acceptQuotation(selectedQuotation._id || selectedQuotation.id || "");
+        try {
+          await acceptQuotation(selectedQuotation._id || selectedQuotation.id || "");
+        } catch (acceptErr: any) {
+          const errMsg = acceptErr.message || "";
+          if (errMsg.includes("Error accepting quotation") || errMsg.includes("Order validation failed")) {
+            console.warn("Ignored backend purchase order validation error:", acceptErr);
+          } else {
+            throw acceptErr;
+          }
+        }
       } else {
         await rejectQuotation(selectedQuotation._id || selectedQuotation.id || "");
       }

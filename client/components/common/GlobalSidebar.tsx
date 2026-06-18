@@ -25,9 +25,9 @@ export interface GlobalSidebarProps {
   platformName: string;
   platformIcon: ReactNode;
   navItems: NavItem[];
-  settingsLabel: string;
-  settingsIcon: ReactNode;
-  settingsHref: string;
+  settingsLabel?: string;
+  settingsIcon?: ReactNode;
+  settingsHref?: string;
   currentPath: string;
 
   // Logout
@@ -47,8 +47,8 @@ export interface GlobalSidebarProps {
     navItemTextDefault: string;
     navItemTextActive: string;
 
-    settingsContainer: string;
-    settingsText: string;
+    settingsContainer?: string;
+    settingsText?: string;
 
     // Logout Theme
     logoutContainer?: string;
@@ -238,25 +238,28 @@ export function GlobalSidebar({
         })}
       </nav>
 
-      {/* ── Settings Footer ─────────────────────────────────────────── */}
+      {/* ──  Footer ─────────────────────────────────────────── */}
       <div className="p-3 border-t-[3px] border-black flex flex-col gap-2">
-        <Link
-          href={settingsHref}
-          className={`
-            w-full flex items-center gap-3 px-4 py-3
-            font-body font-bold text-sm
-            border-[2px] border-black
-            nb-interactive
-            ${themeClasses.settingsContainer}
-          `}
-        >
-          <div className="shrink-0 flex items-center justify-center">
-            {settingsIcon}
-          </div>
-          <span className={`truncate ${themeClasses.settingsText}`}>
-            {settingsLabel}
-          </span>
-        </Link>
+        {/* Settings Button */}
+        {settingsHref && settingsLabel && settingsIcon && (
+          <Link
+            href={settingsHref}
+            className={`
+              w-full flex items-center gap-3 px-4 py-3
+              font-body font-bold text-sm
+              border-[2px] border-black
+              nb-interactive cursor-pointer
+              ${themeClasses.settingsContainer || ''}
+            `}
+          >
+            <div className="shrink-0 flex items-center justify-center">
+              {settingsIcon}
+            </div>
+            <span className={`truncate ${themeClasses.settingsText || ''}`}>
+              {settingsLabel}
+            </span>
+          </Link>
+        )}
 
         {/* Logout Button */}
         {onLogout && (

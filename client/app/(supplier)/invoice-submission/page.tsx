@@ -11,7 +11,7 @@ import { Header } from "@/components/supplier/Header"
 import { Panel } from "@/components/common/Panel"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
-import { getInvoiceableOrders, getMyInvoices, getOrderDetails, createInvoice } from "@/lib/api"
+import { getInvoiceableOrders, getMyInvoices, getOrderDetails, createInvoice, CreateInvoicePayload } from "@/lib/api"
 
 export default function InvoiceSubmissionPage() {
   const router = useRouter()
@@ -118,19 +118,19 @@ export default function InvoiceSubmissionPage() {
 
     try {
       setIsSubmitting(true)
-      const payload = {
+      const payload: CreateInvoicePayload = {
         purchaseOrderRef: selectedOrder,
         items: computedItems.map((i: any) => ({
           productID: i.productID,
-          name: i.name,
+          itemName: i.name,
           quantity: i.qty,
           unitPrice: i.price,
           totalPrice: i.total,
         })),
         subtotal,
-        tax,
-        grandTotal,
-        dueDate,
+        tax_amount: tax,
+        total: grandTotal,
+        due_date: dueDate,
         notes,
       }
 

@@ -85,11 +85,58 @@ export default function CustomerOrders() {
     fetchOrders();
   }, []);
 
+  useEffect(() => {
+    if (selectedOrderData?.items) {
+      setItems(
+        selectedOrderData.items.map((item, idx) => ({
+          id: idx + 1,
+          name: item.name,
+          orderedQty: item.quantity || 0,
+          receivedQty: item.quantity || 0,
+          damagedQty: 0,
+          unitPrice: Math.round(item.price / 1.1),
+          warehouse: '',
+          confirmed: false,
+        }))
+      );
+    } else {
+      setItems([]);
+    }
+  }, [selectedOrderData]);
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
       const response = await axios.get('http://localhost:5900/api/orders');
-      setOrders(response.data);
+      
+      const trackingStr = localStorage.getItem('client_side_delivery_tracking_v1');
+      const tracking = trackingStr ? JSON.parse(trackingStr) : {};
+      
+      const updatedOrders = response.data.map((d: any) => {
+        let orderWithTracking = { ...d };
+        
+        // Merge tracking info
+        const orderId = d.id || d._id;
+        const savedOrder = tracking[orderId] || tracking[d._id];
+        if (savedOrder && savedOrder.items) {
+          orderWithTracking.items = d.items.map((item: any) => {
+            const savedItem = savedOrder.items[item.productID];
+            if (savedItem) {
+              return {
+                ...item,
+                issuedQuantity: typeof savedItem.issuedQuantity === 'number' ? savedItem.issuedQuantity : item.issuedQuantity,
+                receivedQuantity: typeof savedItem.receivedQuantity === 'number' ? savedItem.receivedQuantity : item.receivedQuantity,
+                rejectedQuantity: typeof savedItem.rejectedQuantity === 'number' ? savedItem.rejectedQuantity : item.rejectedQuantity,
+                restocked: typeof savedItem.restocked === 'boolean' ? savedItem.restocked : item.restocked,
+              };
+            }
+            return item;
+          });
+        }
+        return orderWithTracking;
+      });
+
+      setOrders(updatedOrders);
     } catch (error) {
       console.error("Error fetching orders:", error);
     } finally {
@@ -385,14 +432,17 @@ export default function CustomerOrders() {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedOrderData?.items?.map((item, idx) => (
-                        <tr key={idx} className="border-b-2 border-nb-black last:border-0 hover:bg-nb-bg">
-                          <td className="p-4 font-bold text-lg border-r-2 border-nb-black">{item.name}</td>
-                          <td className="p-4 font-black text-xl text-center border-r-2 border-nb-black">{item.quantity} units</td>
-                          <td className="p-4 font-bold text-lg text-right border-r-2 border-nb-black">LKR {item.price.toLocaleString()}</td>
-                          <td className="p-4 font-black text-xl text-right">LKR {(item.quantity * item.price).toLocaleString()}</td>
-                        </tr>
-                      ))}
+                      {selectedOrderData?.items?.map((item, idx) => {
+                        const preTaxPrice = Math.round(item.price / 1.1);
+                        return (
+                          <tr key={idx} className="border-b-2 border-nb-black last:border-0 hover:bg-nb-bg">
+                            <td className="p-4 font-bold text-lg border-r-2 border-nb-black">{item.name}</td>
+                            <td className="p-4 font-black text-xl text-center border-r-2 border-nb-black">{item.quantity} units</td>
+                            <td className="p-4 font-bold text-lg text-right border-r-2 border-nb-black">LKR {preTaxPrice.toLocaleString()}</td>
+                            <td className="p-4 font-black text-xl text-right">LKR {(item.quantity * preTaxPrice).toLocaleString()}</td>
+                          </tr>
+                        );
+                      })}
                       {(!selectedOrderData?.items || selectedOrderData.items.length === 0) && (
                         <tr>
                           <td colSpan={4} className="text-center py-12 font-black uppercase tracking-widest text-gray-500">No items in this order</td>
@@ -404,23 +454,30 @@ export default function CustomerOrders() {
 
                 {/* Invoice Summary */}
                 <div className="mt-8 flex justify-end">
-                  <div className="border-4 border-nb-black bg-white shadow-nb p-6 w-full md:w-96">
-                    <div className="space-y-4 uppercase font-bold text-lg">
-                      <div className="flex justify-between">
-                        <span>Subtotal</span>
-                        <span>LKR {selectedOrderData?.totalAmount.toLocaleString() || '0'}</span>
+                  {(() => {
+                    const subtotal = selectedOrderData?.items?.reduce((sum, item) => sum + ((item.quantity || 0) * Math.round(item.price / 1.1)), 0) || 0;
+                    const tax = Math.round(subtotal * 0.1);
+                    const total = subtotal + tax;
+                    return (
+                      <div className="border-4 border-nb-black bg-white shadow-nb p-6 w-full md:w-96">
+                        <div className="space-y-4 uppercase font-bold text-lg">
+                          <div className="flex justify-between">
+                            <span>Subtotal</span>
+                            <span>LKR {subtotal.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Tax (10%)</span>
+                            <span>LKR {tax.toLocaleString()}</span>
+                          </div>
+                          <div className="h-1 bg-nb-black" />
+                          <div className="flex justify-between text-2xl font-black">
+                            <span>Total</span>
+                            <span className="bg-nb-green px-2 border-2 border-nb-black shadow-nb-sm">LKR {total.toLocaleString()}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span>Tax (0%)</span>
-                        <span>LKR 0</span>
-                      </div>
-                      <div className="h-1 bg-nb-black" />
-                      <div className="flex justify-between text-2xl font-black">
-                        <span>Total</span>
-                        <span className="bg-nb-green px-2 border-2 border-nb-black shadow-nb-sm">LKR {selectedOrderData?.totalAmount.toLocaleString() || '0'}</span>
-                      </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -600,17 +657,17 @@ export default function CustomerOrders() {
                   <div>
                     <h2 className="text-5xl font-black font-display uppercase tracking-tighter mb-4">INVOICE</h2>
                     <div className="font-bold uppercase space-y-1">
-                      <p>Invoice #: INV-20240114</p>
-                      <p>Date: Jan 14, 2024</p>
-                      <p>Order #: ORD-20240114</p>
+                      <p>Invoice #: INV-{selectedOrderData?.id?.replace('ORD-', '') || '---'}</p>
+                      <p>Date: {selectedOrderData ? new Date(selectedOrderData.orderDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '---'}</p>
+                      <p>Order #: {selectedOrderData?.id || '---'}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <h3 className="text-2xl font-black uppercase mb-4">StockFlow Neo</h3>
                     <div className="font-bold uppercase space-y-1">
-                      <p>123 Business Avenue</p>
-                      <p>New York, NY 10001</p>
-                      <p>+1 234 567 8900</p>
+                      <p>456 Enterprise Way</p>
+                      <p>Colombo 07, Sri Lanka</p>
+                      <p>+94 11 234 5678</p>
                       <p>info@stockflow.com</p>
                     </div>
                   </div>
@@ -619,10 +676,10 @@ export default function CustomerOrders() {
                 <div className="mb-12 border-4 border-nb-black p-6 bg-nb-cyan inline-block min-w-[300px]">
                   <h4 className="font-black uppercase tracking-widest text-xl mb-4 border-b-4 border-nb-black pb-2 inline-block">BILL TO:</h4>
                   <div className="font-bold uppercase space-y-1 text-lg">
-                    <p className="text-2xl font-black">XYZ Industries</p>
-                    <p>123 Business Street, Suite 400</p>
-                    <p>New York, NY 10001</p>
-                    <p>+1 234 567 8902</p>
+                    <p className="text-2xl font-black">{selectedOrderData?.customer || '---'}</p>
+                    <p>{selectedOrderData?.address || 'ADDRESS NOT PROVIDED'}</p>
+                    <p>{selectedOrderData?.phonenumber || 'PHONE NOT PROVIDED'}</p>
+                    <p>{selectedOrderData?.email || 'EMAIL NOT PROVIDED'}</p>
                   </div>
                 </div>
 
@@ -648,24 +705,27 @@ export default function CustomerOrders() {
                 </table>
 
                 <div className="flex justify-end mb-12">
-                  <div className="w-80 space-y-4 font-bold uppercase text-xl">
-                    <div className="flex justify-between">
-                      <span>Subtotal</span>
-                      <span>LKR 134,000.00</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Tax (10%)</span>
-                      <span>LKR 13,400.00</span>
-                    </div>
-                    <div className="flex justify-between text-nb-red">
-                      <span>Discount</span>
-                      <span>-LKR 5,400.00</span>
-                    </div>
-                    <div className="border-t-4 border-nb-black pt-4 flex justify-between font-black text-3xl">
-                      <span>TOTAL</span>
-                      <span className="bg-nb-green px-2 border-2 border-nb-black shadow-nb-sm">LKR 142,000.00</span>
-                    </div>
-                  </div>
+                  {(() => {
+                    const modalSubtotal = items.reduce((sum, item) => sum + (item.orderedQty * item.unitPrice), 0);
+                    const modalTax = Math.round(modalSubtotal * 0.1);
+                    const modalTotal = modalSubtotal + modalTax;
+                    return (
+                      <div className="w-80 space-y-4 font-bold uppercase text-xl">
+                        <div className="flex justify-between">
+                          <span>Subtotal</span>
+                          <span>LKR {modalSubtotal.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Tax (10%)</span>
+                          <span>LKR {modalTax.toLocaleString()}</span>
+                        </div>
+                        <div className="border-t-4 border-nb-black pt-4 flex justify-between font-black text-3xl">
+                          <span>TOTAL</span>
+                          <span className="bg-nb-green px-2 border-2 border-nb-black shadow-nb-sm">LKR {modalTotal.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="border-t-4 border-nb-black pt-6 font-bold uppercase text-center">
@@ -689,7 +749,7 @@ export default function CustomerOrders() {
             </div>
             <div className="p-8 font-bold uppercase">
               <p className="text-xl mb-6">
-                You are about to confirm delivery for Order <span className="bg-nb-cyan px-2 border-2 border-nb-black inline-block">ORD-20240114</span>.
+                You are about to confirm delivery for Order <span className="bg-nb-cyan px-2 border-2 border-nb-black inline-block">{selectedOrderData?.id || 'ORD-20240114'}</span>.
               </p>
               <div className="bg-nb-bg border-4 border-nb-black p-6 mb-6">
                 <h4 className="font-black text-xl mb-4 border-b-4 border-nb-black pb-2 inline-block">WHAT WILL HAPPEN:</h4>
@@ -729,15 +789,15 @@ export default function CustomerOrders() {
             <div className="w-full bg-nb-bg border-4 border-nb-black p-6 mb-8 text-left font-bold uppercase text-lg space-y-3">
               <div className="flex justify-between border-b-2 border-gray-300 pb-2">
                 <span>Order #</span>
-                <span className="font-black">ORD-20240114</span>
+                <span className="font-black">{selectedOrderData?.id || 'ORD-20240114'}</span>
               </div>
               <div className="flex justify-between border-b-2 border-gray-300 pb-2">
                 <span>Items Delivered</span>
-                <span className="font-black">3 ITEMS</span>
+                <span className="font-black">{selectedOrderData?.items?.length || 0} ITEMS</span>
               </div>
               <div className="flex justify-between border-b-2 border-gray-300 pb-2">
                 <span>Total Quantity</span>
-                <span className="font-black">1,000 UNITS</span>
+                <span className="font-black">{selectedOrderData?.items?.reduce((sum, item) => sum + (item.quantity || 0), 0)?.toLocaleString() || 0} UNITS</span>
               </div>
               <div className="flex justify-between items-center pt-2">
                 <span>Status</span>

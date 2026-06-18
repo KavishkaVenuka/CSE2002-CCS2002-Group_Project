@@ -33,6 +33,8 @@ interface Quotation {
   supplierEmail?: string;
   companyName?: string;
   status: string;
+  total?: number;
+  total_estimate?: number;
   totalAmount?: number;
   subtotal?: number;
   tax_amount?: number;
@@ -218,7 +220,7 @@ export default function SupplierQuotationsAdmin() {
                         </span>
                       </td>
                       <td className="p-5 font-black text-lg border-r-4 border-black">
-                        LKR {(q.totalAmount || q.subtotal || 0).toLocaleString()}
+                        LKR {(q.total || q.total_estimate || q.totalAmount || q.subtotal || 0).toLocaleString()}
                       </td>
                       <td className="p-5 text-center border-r-4 border-black">
                         <span className={`inline-block ${getStatusColor(q.status)} border-2 border-black font-mono text-[10px] font-bold px-3 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] uppercase tracking-widest`}>
@@ -351,7 +353,7 @@ export default function SupplierQuotationsAdmin() {
                   <div className="bg-nb-bg border-4 border-black p-6 min-w-[320px] space-y-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
                     <div className="flex justify-between font-bold uppercase text-sm">
                       <span>Subtotal</span>
-                      <span className="font-mono">LKR {(selected.subtotal || selected.totalAmount || 0).toLocaleString()}</span>
+                      <span className="font-mono">LKR {(selected.subtotal || 0).toLocaleString()}</span>
                     </div>
                     {selected.tax_amount !== undefined && (
                       <div className="flex justify-between font-bold uppercase text-sm">
@@ -361,7 +363,7 @@ export default function SupplierQuotationsAdmin() {
                     )}
                     <div className="flex justify-between font-black uppercase text-2xl border-t-4 border-black pt-4">
                       <span>Total</span>
-                      <span className="text-nb-green drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">LKR {(selected.totalAmount || selected.subtotal || 0).toLocaleString()}</span>
+                      <span className="text-nb-green drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">LKR {(selected.total || selected.total_estimate || selected.totalAmount || selected.subtotal || 0).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>

@@ -24,6 +24,7 @@ interface Delivery {
   id: string; // This is the orderID (e.g., ORD-001)
   _id: string; // MongoDB ID
   customer: string;
+  email?: string;
   status: string;
   orderDate: string;
   totalAmount: number;
@@ -47,7 +48,41 @@ export default function CustomerDeliveryTracking() {
     try {
       setIsLoading(true);
       const response = await axios.get('http://localhost:5900/api/orders');
-      setDeliveries(response.data);
+      
+      const invoicedOrdersStr = localStorage.getItem('client_side_invoiced_orders');
+      const invoicedOrders = invoicedOrdersStr ? JSON.parse(invoicedOrdersStr) : {};
+      
+      const trackingStr = localStorage.getItem('client_side_delivery_tracking_v1');
+      const tracking = trackingStr ? JSON.parse(trackingStr) : {};
+      
+      const updatedDeliveries = response.data.map((d: any) => {
+        let orderWithTracking = { ...d };
+        if (invoicedOrders[d._id] || invoicedOrders[d.id]) {
+          orderWithTracking.invoiced = true;
+        }
+        
+        // Merge tracking info
+        const orderId = d.id || d._id;
+        const savedOrder = tracking[orderId] || tracking[d._id];
+        if (savedOrder && savedOrder.items) {
+          orderWithTracking.items = d.items.map((item: any) => {
+            const savedItem = savedOrder.items[item.productID];
+            if (savedItem) {
+              return {
+                ...item,
+                issuedQuantity: typeof savedItem.issuedQuantity === 'number' ? savedItem.issuedQuantity : item.issuedQuantity,
+                receivedQuantity: typeof savedItem.receivedQuantity === 'number' ? savedItem.receivedQuantity : item.receivedQuantity,
+                rejectedQuantity: typeof savedItem.rejectedQuantity === 'number' ? savedItem.rejectedQuantity : item.rejectedQuantity,
+                restocked: typeof savedItem.restocked === 'boolean' ? savedItem.restocked : item.restocked,
+              };
+            }
+            return item;
+          });
+        }
+        return orderWithTracking;
+      });
+      
+      setDeliveries(updatedDeliveries);
       setError(null);
     } catch (err) {
       console.error("Error fetching deliveries:", err);
@@ -100,6 +135,35 @@ export default function CustomerDeliveryTracking() {
         issuedItems
       });
 
+      // Save to localStorage
+      const trackingStr = localStorage.getItem('client_side_delivery_tracking_v1');
+      const tracking = trackingStr ? JSON.parse(trackingStr) : {};
+      const orderId = selectedOrder.id || selectedOrder._id;
+      if (!tracking[orderId]) {
+        tracking[orderId] = { items: {} };
+      }
+      if (!tracking[selectedOrder._id]) {
+        tracking[selectedOrder._id] = { items: {} };
+      }
+
+      selectedOrder.items.forEach((item) => {
+        const quantityToIssue = issuingData[item.productID] || 0;
+        const currentIssued = item.issuedQuantity || 0;
+        const newIssued = currentIssued + quantityToIssue;
+        
+        const itemTracking = {
+          issuedQuantity: newIssued,
+          receivedQuantity: item.receivedQuantity || 0,
+          rejectedQuantity: item.rejectedQuantity || 0,
+          restocked: item.restocked || false,
+        };
+
+        tracking[orderId].items[item.productID] = itemTracking;
+        tracking[selectedOrder._id].items[item.productID] = itemTracking;
+      });
+
+      localStorage.setItem('client_side_delivery_tracking_v1', JSON.stringify(tracking));
+
       toast.success("Stock issued successfully");
       setIssueModalOpen(false);
       fetchDeliveries(); // Refresh data
@@ -121,6 +185,24 @@ export default function CustomerDeliveryTracking() {
       });
       
       if (response.data) {
+        // Update localStorage
+        const trackingStr = localStorage.getItem('client_side_delivery_tracking_v1');
+        if (trackingStr) {
+          const tracking = JSON.parse(trackingStr);
+          const deliveryObj = deliveries.find(d => d._id === orderId || d.id === orderId);
+          const ids = [orderId];
+          if (deliveryObj) {
+            ids.push(deliveryObj.id);
+            ids.push(deliveryObj._id);
+          }
+          ids.forEach(id => {
+            if (tracking[id] && tracking[id].items && tracking[id].items[productID]) {
+              tracking[id].items[productID].restocked = true;
+            }
+          });
+          localStorage.setItem('client_side_delivery_tracking_v1', JSON.stringify(tracking));
+        }
+
         toast.success("Item restocked and added back to inventory");
         fetchDeliveries();
       }
@@ -136,14 +218,63 @@ export default function CustomerDeliveryTracking() {
   const handleCreateInvoice = async (order: Delivery) => {
     try {
       setIsSubmitting(true);
-      await axios.post(`http://localhost:5900/api/invoices/create-from-order/${order._id}`);
+      
+      // Calculate total based on received items
+      let calculatedTotal = 0;
+      const invoiceItems = order.items.map(item => {
+        const qty = item.receivedQuantity || item.quantity || 0;
+        const price = item.price || 0;
+        const itemTotal = qty * price;
+        calculatedTotal += itemTotal;
+        return {
+          itemName: item.name,
+          quantity: qty,
+          unitPrice: price,
+          totalPrice: itemTotal
+        };
+      });
+
+      const tax = calculatedTotal * 0.1; // 10% tax
+      const grandTotal = calculatedTotal + tax;
+
+      // Construct a mockup of invoice object
+      const mockInvoice = {
+        _id: `mock-${Date.now()}`,
+        invoiceID: `INV-${Date.now()}`,
+        orderID: order.id,
+        email: (order.email || order.customer || '').toLowerCase(),
+        date: new Date().toISOString(),
+        total: grandTotal,
+        status: "unpaid",
+        invoiceType: "customer",
+        payment_status: "unpaid",
+        items: invoiceItems,
+        subtotal: calculatedTotal,
+        tax_amount: tax,
+        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // 1. Save invoice to client_side_generated_invoices in localStorage
+      const localGeneratedInvoicesStr = localStorage.getItem('client_side_generated_invoices');
+      const localGeneratedInvoices = localGeneratedInvoicesStr ? JSON.parse(localGeneratedInvoicesStr) : [];
+      localGeneratedInvoices.push(mockInvoice);
+      localStorage.setItem('client_side_generated_invoices', JSON.stringify(localGeneratedInvoices));
+
+      // 2. Mark order as invoiced locally
+      const invoicedOrdersStr = localStorage.getItem('client_side_invoiced_orders');
+      const invoicedOrders = invoicedOrdersStr ? JSON.parse(invoicedOrdersStr) : {};
+      invoicedOrders[order._id] = true;
+      invoicedOrders[order.id] = true;
+      localStorage.setItem('client_side_invoiced_orders', JSON.stringify(invoicedOrders));
+
       toast.success(`Invoice created successfully for ${order.id}`);
       fetchDeliveries(); // Refresh status
       router.push('/customers/invoices');
     } catch (err: any) {
       console.error("Error creating invoice:", err);
-      const errorMsg = err.response?.data?.message || "Failed to create invoice";
-      toast.error(errorMsg);
+      toast.error("Failed to create invoice");
     } finally {
       setIsSubmitting(false);
     }
@@ -381,7 +512,7 @@ export default function CustomerDeliveryTracking() {
                             )
                           ) : (
                             <button 
-                              disabled={delivery.status === 'dispatched'}
+                              disabled={delivery.status.toLowerCase() === 'dispatched'}
                               onClick={() => handleOpenIssueModal(delivery)}
                               className="px-4 py-2 border-2 border-nb-black bg-white text-nb-black font-black uppercase shadow-nb-sm nb-interactive flex items-center gap-2 disabled:opacity-50"
                             >

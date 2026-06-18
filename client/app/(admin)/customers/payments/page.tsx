@@ -43,9 +43,97 @@ export default function CustomerPaymentsAdmin() {
   const fetchPayments = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get('http://localhost:5900/api/invoices');
-      const paymentRecords = response.data.filter((i: any) => 
-        i.invoiceType === 'customer' && (i.status === 'paid' || i.status === 'pending-verification' || i.transactionID)
+      // 1. Fetch all customers
+      const customersRes = await axios.get('http://localhost:5900/api/users/all-customers');
+      const customers = customersRes.data.customers || [];
+      
+      // 2. Fetch invoices for each customer email
+      const invoicePromises = customers.map(async (cust: any) => {
+        if (!cust.email) return [];
+        try {
+          const res = await axios.get(`http://localhost:5900/api/invoices/customer/${encodeURIComponent(cust.email)}`);
+          return res.data.invoices || res.data || [];
+        } catch (e) {
+          console.error(`Failed to fetch invoices for ${cust.email}`, e);
+          return [];
+        }
+      });
+      
+      const allInvoicesNested = await Promise.all(invoicePromises);
+      let aggregatedInvoices = allInvoicesNested.flat();
+      
+      // 3. Merge with local storage generated invoices
+      const localGeneratedInvoicesStr = localStorage.getItem('client_side_generated_invoices');
+      const localGeneratedInvoices: Invoice[] = localGeneratedInvoicesStr ? JSON.parse(localGeneratedInvoicesStr) : [];
+      
+      const backendIds = new Set(aggregatedInvoices.map((i: any) => i._id));
+      const filteredLocalGen = localGeneratedInvoices.filter((i: any) => !backendIds.has(i._id));
+      aggregatedInvoices = [...aggregatedInvoices, ...filteredLocalGen];
+      
+      // Fetch all orders to map pricing/quantities for zero-total invoices
+      let orders: any[] = [];
+      try {
+        const ordersRes = await axios.get('http://localhost:5900/api/orders');
+        orders = ordersRes.data || [];
+      } catch (e) {
+        console.error("Failed to fetch orders for invoice verification", e);
+      }
+
+      // 4. Apply status overrides from localStorage and recalculate 0-total invoices
+      const overridesStr = localStorage.getItem('customer_invoice_status_overrides');
+      const overrides = overridesStr ? JSON.parse(overridesStr) : {};
+      
+      const finalInvoices = aggregatedInvoices.map((inv: any) => {
+        let finalInv = { ...inv };
+
+        // Recalculate invoice details if total is 0 or missing
+        if (!finalInv.total || finalInv.total === 0) {
+          const matchingOrder = orders.find((o: any) => o.orderID === finalInv.orderID || o._id === finalInv.orderID);
+          if (matchingOrder) {
+            const reconstructedItems = (finalInv.items && finalInv.items.length > 0) ? finalInv.items.map((item: any) => {
+              const orderItem = matchingOrder.items?.find((oi: any) => oi.name === item.itemName || oi.productID === item.productID || oi.name === item.name);
+              const qty = orderItem ? (orderItem.quantity || orderItem.issuedQuantity || 0) : (item.quantity || 0);
+              const price = orderItem ? (orderItem.price || 0) : (item.unitPrice || 0);
+              const itemQty = qty || 1;
+              return {
+                ...item,
+                quantity: itemQty,
+                unitPrice: price,
+                totalPrice: itemQty * price
+              };
+            }) : (matchingOrder.items || []).map((item: any) => {
+              const qty = item.quantity || item.issuedQuantity || 1;
+              const price = item.price || 0;
+              return {
+                itemName: item.name,
+                quantity: qty,
+                unitPrice: price,
+                totalPrice: qty * price
+              };
+            });
+
+            const subtotal = reconstructedItems.reduce((sum: number, item: any) => sum + (item.totalPrice || 0), 0);
+            const tax_amount = subtotal * 0.1;
+            const total = subtotal + tax_amount;
+
+            finalInv.items = reconstructedItems;
+            finalInv.subtotal = subtotal;
+            finalInv.tax_amount = tax_amount;
+            finalInv.total = total;
+          }
+        }
+
+        if (overrides[finalInv._id]) {
+          return {
+            ...finalInv,
+            ...overrides[finalInv._id]
+          };
+        }
+        return finalInv;
+      });
+
+      const paymentRecords = finalInvoices.filter((i: any) => 
+        (i.invoiceType === 'customer' || !i.invoiceType) && (i.status === 'paid' || i.status === 'pending-verification' || i.transactionID)
       );
       setPayments(paymentRecords);
     } catch (err) {
@@ -83,11 +171,18 @@ export default function CustomerPaymentsAdmin() {
 
     try {
       const selectedBank = bankAccounts.find(b => b._id === selectedBankAccountId);
-      await axios.put(`http://localhost:5900/api/invoices/accept-payment/${id}`, {
+      
+      const overridesStr = localStorage.getItem('customer_invoice_status_overrides');
+      const overrides = overridesStr ? JSON.parse(overridesStr) : {};
+      overrides[id] = {
+        status: 'paid',
+        payment_status: 'paid',
         paymentMethod: selectedInvoice?.paymentMethod,
         bankAccountId: isCash ? null : selectedBankAccountId,
         bankAccountName: isCash ? '' : `${selectedBank?.bank_name} - ${selectedBank?.account_number}`
-      });
+      };
+      localStorage.setItem('customer_invoice_status_overrides', JSON.stringify(overrides));
+
       toast.success("Payment accepted successfully");
       fetchPayments();
       setShowModal(false);
@@ -98,7 +193,14 @@ export default function CustomerPaymentsAdmin() {
 
   const handleRejectPayment = async (id: string) => {
     try {
-      await axios.put(`http://localhost:5900/api/invoices/reject-payment/${id}`);
+      const overridesStr = localStorage.getItem('customer_invoice_status_overrides');
+      const overrides = overridesStr ? JSON.parse(overridesStr) : {};
+      overrides[id] = {
+        status: 'unpaid',
+        payment_status: 'unpaid'
+      };
+      localStorage.setItem('customer_invoice_status_overrides', JSON.stringify(overrides));
+
       toast.error("Payment rejected");
       fetchPayments();
       setShowModal(false);
