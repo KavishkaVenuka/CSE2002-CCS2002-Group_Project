@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Clock, CheckCircle2, XCircle, AlertCircle, FileText, Search, Eye, Check, X, ChevronDown, Loader2 } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
 import { getCustomerQuotations, createOrderFromQuotation, acceptQuotation, rejectQuotation } from "@/lib/api"
+import QuotationsLoading from "./loading"
 
 interface QuotationItem {
   name: string;
@@ -208,6 +209,10 @@ export default function QuotationsPage() {
     return `LKR ${num.toLocaleString()}`;
   }
 
+  if (loading) {
+    return <QuotationsLoading />;
+  }
+
   return (
     <>
       <DashboardHeader title="Quotations" />
@@ -236,9 +241,7 @@ export default function QuotationsPage() {
             <div className="flex items-center gap-3">
               <FileText size={18} strokeWidth={2.5} className="text-white" />
               <h2 className="font-display font-black text-sm text-white uppercase tracking-[0.15em]">All Quotations</h2>
-              {!loading && (
-                  <span className="font-mono text-sm text-white/70">({filteredQuotations.length})</span>
-              )}
+              <span className="font-mono text-sm text-white/70">({filteredQuotations.length})</span>
             </div>
             <div className="flex items-center gap-3">
               {/* Search */}
@@ -278,12 +281,7 @@ export default function QuotationsPage() {
             </div>
 
             <div className="min-w-[900px]">
-              {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <Loader2 className="w-8 h-8 animate-spin text-black" />
-                  <span className="ml-3 font-body font-bold text-black uppercase">Loading quotations...</span>
-                </div>
-              ) : filteredQuotations.length === 0 ? (
+              {filteredQuotations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-black">
                   <FileText className="w-12 h-12 mb-3 opacity-40" />
                   <p className="font-body font-bold uppercase">No quotations found</p>

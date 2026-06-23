@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { CheckCircle2, DollarSign, Package, Receipt, Eye, Download, FileText, Printer, X, Loader2, PlusCircle, CreditCard } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
 import { getCustomerOrders, getCustomerInvoices, createInvoiceFromOrder } from "@/lib/api"
+import InvoicesLoading from "./loading"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
@@ -257,17 +258,14 @@ export default function InvoicesPage() {
   const unpaidCount = invoices.filter(i => i.status.toLowerCase() === 'unpaid').length
   const pendingCount = pendingOrders.length
 
+  if (loading) {
+    return <InvoicesLoading />;
+  }
+
   return (
     <>
       <DashboardHeader title="Invoices" />
       <main className="flex-1 overflow-auto p-6 space-y-6 bg-nb-bg relative">
-        
-        {loading && invoices.length === 0 && pendingOrders.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10 gap-3">
-             <Loader2 className="w-10 h-10 animate-spin text-black" />
-             <p className="font-body font-bold text-sm uppercase tracking-wider text-black">Syncing Bills...</p>
-          </div>
-        )}
 
         {/* ── STAT CARDS ─────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
