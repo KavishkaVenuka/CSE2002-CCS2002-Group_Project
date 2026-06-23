@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { Search, Bell, Plus, User } from "lucide-react"
 import Link from "next/link"
 
@@ -8,6 +9,26 @@ interface HeaderProps {
 }
 
 export function Header({ title }: HeaderProps) {
+  const [userName, setUserName] = useState("Apex Textiles")
+  const [userRole, setUserRole] = useState("Premium Supplier")
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("user")
+      if (stored) {
+        const user = JSON.parse(stored)
+        if (user.companyName || user.fullName) {
+          setUserName(user.companyName || user.fullName)
+        }
+        if (user.role) {
+          setUserRole(user.role === "Supplier" ? "Premium Supplier" : user.role)
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse user from localStorage", e)
+    }
+  }, [])
+
   return (
     <header className="h-20 bg-white border-b-[3px] border-black flex items-center justify-between px-8 sticky top-0 z-40">
       <div className="flex items-center gap-4">
@@ -49,8 +70,8 @@ export function Header({ title }: HeaderProps) {
               <User size={16} strokeWidth={2.5} />
             </div>
             <div className="hidden lg:block text-left">
-              <p className="font-display font-black text-[10px] uppercase leading-none">Apex Textiles</p>
-              <p className="font-body text-[9px] text-gray-500 font-bold">Premium Supplier</p>
+              <p className="font-display font-black text-[10px] uppercase leading-none">{userName}</p>
+              <p className="font-body text-[9px] text-gray-500 font-bold">{userRole}</p>
             </div>
           </button>
         </div>

@@ -3,6 +3,10 @@ const SERVER_BASE = API_BASE || process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, 
 
 function getToken(): string {
   if (typeof window === "undefined") return "";
+  try {
+    const user = JSON.parse(window.localStorage.getItem("user") || "{}");
+    if (user.token) return user.token;
+  } catch (e) {}
   return (
     window.localStorage.getItem("token") ||
     window.localStorage.getItem("supplierToken") ||
@@ -35,7 +39,7 @@ async function request<T>(path: string, options: RequestInit = {}, auth = true):
   const init: RequestInit = {
     ...options,
     headers: {
-      ...buildHeaders(options.body, auth),
+      ...buildHeaders(options.body ?? undefined, auth),
       ...(options.headers ?? {}),
     },
   };
@@ -164,12 +168,12 @@ export interface CreateQuotationPayload {
 
 export interface CreateInvoicePayload {
   purchaseOrderRef: string;
-  items: Array<{ productID?: string; name: string; quantity: number; unitPrice: number; totalPrice: number }>;
+  items: Array<{ productID?: string; itemName: string; quantity: number; unitPrice: number; totalPrice: number }>;
   subtotal: number;
-  tax: number;
-  grandTotal: number;
+  tax_amount: number;
+  total: number;
   notes: string;
-  dueDate: string;
+  due_date: string;
 }
 
 export interface SubmitPaymentPayload {
@@ -236,7 +240,7 @@ export async function getCustomerRequirementsStats(customerId: string): Promise<
   return request(`/api/requirements/stats?customerId=${encodeURIComponent(customerId)}`);
 }
 
-export async function getAvailableStocks(): Promise<Array<{ id: string; itemName: string; quantity: number; price: number }>> {
+export async function getAvailableStocks(): Promise<Array<{ _id: string; item_name: string; quantity: number; buying_price: number; selling_price: number }>> {
   return request(`/api/stocks/getItems`);
 }
 
@@ -254,7 +258,10 @@ export async function createRequirement(payload: RequirementPayload): Promise<{ 
 
   return request(`/api/requirements`, {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      ...payload,
+      requirements: JSON.stringify(payload.requirements),
+    } as any),
   });
 }
 
@@ -262,7 +269,7 @@ export async function getCustomerQuotations(customerId: string): Promise<{ quota
   return request(`/api/quotations/customer/${customerId}`);
 }
 
-export async function createOrderFromQuotation(payload: { name: string; customerId: string; address: string; phonenumber: string; notes: string; items: Array<{ productID: string; name: string; price: number; quantity: number; image?: string }>; quotationId: string; }): Promise<{ success: boolean }> {
+export async function createOrderFromQuotation(payload: { name: string; customerId: string; address: string; phonenumber: string; notes: string; items: Array<{ productID: string; name: string; price: number; quantity: number; image?: string }>; quotationId: string; email?: string; }): Promise<{ success: boolean }> {
   return request(`/api/orders`, {
     method: "POST",
     body: JSON.stringify(payload),
@@ -376,6 +383,13 @@ export async function getMyRequirements(params: { status?: string; search?: stri
 export async function getRequirementsStats(): Promise<{ stats: Record<string, number> }> {
   return request(`/api/suppliers/requirements/stats`);
 }
+
+export const updateRequirementStatus = async (id: string, status: string): Promise<{ success: boolean }> => {
+  return request(`/api/suppliers/requirements/${id}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+};
 
 export async function getRequirementDetails(id: string): Promise<{ requirement: SupplierRequirement }> {
   return request(`/api/suppliers/requirements/${id}`);

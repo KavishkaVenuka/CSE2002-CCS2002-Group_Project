@@ -117,7 +117,7 @@ export default function OrdersPage() {
   };
 
   const handlePrepareDispatch = (orderId: string) => {
-    router.push(`/supplier/delivery?orderId=${orderId}`);
+    router.push(`/delivery&dispatch?orderId=${orderId}`);
   };
 
   const STAT_CARDS = [

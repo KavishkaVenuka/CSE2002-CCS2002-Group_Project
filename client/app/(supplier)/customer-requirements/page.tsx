@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { 
-  FileText, Search, Filter, ChevronDown, 
+import {
+  FileText, Search, Filter, ChevronDown,
   ArrowRight, Clock, CheckCircle2,
   RotateCcw, Package, Send, Eye, Download, Loader2, XCircle
 } from "lucide-react"
 import { Header } from "@/components/supplier/Header"
 import { Panel } from "@/components/common/Panel"
-import { getMyRequirements, getRequirementsStats, getRequirementDetails } from "@/lib/api"
+import { getMyRequirements, getRequirementsStats, getRequirementDetails, updateRequirementStatus } from "@/lib/api"
 import { toast } from "sonner"
 
 const BADGE_MAP: Record<string, string> = {
@@ -31,7 +31,7 @@ export default function CustomerRequirementsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("All Status")
-  
+
   const [selectedRequirement, setSelectedRequirement] = useState<any>(null)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
 
@@ -52,7 +52,7 @@ export default function CustomerRequirementsPage() {
         delivery: req.delivery || (req.createdAt ? new Date(req.createdAt).toLocaleDateString() : "N/A"),
         docs: req.attachedDocument ? 1 : (req.docs || 0),
         status: (req.status || "new").toLowerCase(),
-      }))
+      })).filter((req: any) => req.status !== "pending")
 
       setRequirements(mappedRequirements)
       setStats(statsRes.stats || {})
@@ -92,13 +92,13 @@ export default function CustomerRequirementsPage() {
   const filteredRequirements = useMemo(() => {
     return requirements.filter((req) => {
       const q = searchQuery.toLowerCase()
-      const matchesSearch = 
+      const matchesSearch =
         (req.requirementId || "").toLowerCase().includes(q) ||
         (req.customer || "").toLowerCase().includes(q) ||
         (req.itemsDetail || "").toLowerCase().includes(q)
-      
-      const matchesStatus = 
-        statusFilter === "All Status" || 
+
+      const matchesStatus =
+        statusFilter === "All Status" ||
         req.status === statusFilter.toLowerCase()
 
       return matchesSearch && matchesStatus
@@ -113,8 +113,8 @@ export default function CustomerRequirementsPage() {
         {/* ── STAT CARDS ────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {STAT_CARDS.map((stat, i) => (
-            <div 
-              key={i} 
+            <div
+              key={i}
               className="bg-white border-[3px] border-black shadow-nb p-6 flex items-center gap-4 relative group hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-nb-sm transition-all"
             >
               <div className={`w-12 h-12 border-[2px] border-black flex items-center justify-center shadow-nb-sm ${stat.color}`}>
@@ -129,10 +129,10 @@ export default function CustomerRequirementsPage() {
         </div>
 
         {/* ── MAIN TABLE ────────────────────────────────────────────── */}
-        <Panel 
-          title="Open Procurement Requirements" 
+        <Panel
+          title="Open Procurement Requirements"
           icon={<FileText size={20} className="text-nb-cyan" />}
-          noTopPad 
+          noTopPad
           badge={filteredRequirements.length}
         >
           <div className="flex flex-col">
@@ -141,9 +141,9 @@ export default function CustomerRequirementsPage() {
               <div className="flex items-center gap-4 flex-1">
                 <div className="relative w-full sm:w-80">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-black pointer-events-none" size={14} strokeWidth={2.5} />
-                  <input 
-                    type="text" 
-                    placeholder="Search requirements..." 
+                  <input
+                    type="text"
+                    placeholder="Search requirements..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 bg-[#fdfcfb] border-[2px] border-black shadow-nb-sm font-body text-sm placeholder:text-gray-500 outline-none transition-all duration-100 focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-none"
@@ -151,27 +151,24 @@ export default function CustomerRequirementsPage() {
                 </div>
                 <div className="relative w-full sm:w-48">
                   <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-black pointer-events-none" size={14} strokeWidth={2.5} />
-                  <select 
+                  <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="w-full appearance-none pl-9 pr-10 py-2 bg-nb-bg border-[2px] border-black shadow-nb-sm font-body font-bold text-sm text-black outline-none transition-all duration-100 focus:translate-x-[1px] focus:translate-y-[1px] focus:shadow-none cursor-pointer"
                   >
                     <option value="All Status">All Status</option>
-                    <option value="pending">New / Pending</option>
                     <option value="quoted">Quoted</option>
-                    <option value="accepted">Accepted</option>
-                    <option value="delivered">Delivered / Completed</option>
-                    <option value="rejected">Rejected</option>
+                    <option value="sent">Sent</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-black pointer-events-none" size={16} strokeWidth={2.5} />
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <button 
-                  onClick={fetchData} 
+                <button
+                  onClick={fetchData}
                   disabled={isLoading}
-                  className="p-2.5 bg-white border-[2px] border-black shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all disabled:opacity-50" 
+                  className="p-2.5 bg-white border-[2px] border-black shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none transition-all disabled:opacity-50"
                   title="Refresh"
                 >
                   <RotateCcw size={18} strokeWidth={2.5} className={isLoading ? "animate-spin" : ""} />
@@ -190,7 +187,7 @@ export default function CustomerRequirementsPage() {
                 <div>Status</div>
                 <div className="text-right">Actions</div>
               </div>
-              
+
               <div className="flex flex-col min-w-[1100px]">
                 {isLoading ? (
                   <div className="py-24 text-center bg-white flex flex-col items-center justify-center">
@@ -199,7 +196,7 @@ export default function CustomerRequirementsPage() {
                   </div>
                 ) : filteredRequirements.length > 0 ? (
                   filteredRequirements.map((req, i) => (
-                    <div 
+                    <div
                       key={req.id}
                       className={`
                         grid grid-cols-[140px_1.5fr_1fr_1fr_1fr_120px_100px_100px] gap-4 items-center px-6 py-5
@@ -216,7 +213,7 @@ export default function CustomerRequirementsPage() {
                       </div>
                       <div className="font-mono text-xs font-bold text-black">{req.qty}</div>
                       <div className="font-mono text-xs font-bold text-black">{req.delivery}</div>
-                      
+
                       <div>
                         <button className="flex items-center gap-2 px-2 py-1 bg-gray-100 border-[2px] border-black text-black font-mono font-bold text-[10px] hover:bg-white transition-all">
                           <Download size={12} strokeWidth={3} />
@@ -231,8 +228,8 @@ export default function CustomerRequirementsPage() {
                       </div>
 
                       <div className="flex items-center justify-end gap-3 col-span-2">
-                        <button 
-                          className="w-9 h-9 flex items-center justify-center bg-white border-[2px] border-black hover:bg-nb-cyan transition-colors shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none" 
+                        <button
+                          className="w-9 h-9 flex items-center justify-center bg-white border-[2px] border-black hover:bg-nb-cyan transition-colors shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
                           title="View Details"
                           onClick={() => handleViewDetails(req.id)}
                         >
@@ -243,10 +240,17 @@ export default function CustomerRequirementsPage() {
                           )}
                         </button>
                         {(req.status === "new" || req.status === "pending" || req.status === "sent") && (
-                          <button 
-                            className="w-9 h-9 flex items-center justify-center bg-nb-green border-[2px] border-black hover:bg-green-400 transition-colors shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none" 
+                          <button
+                            className="w-9 h-9 flex items-center justify-center bg-nb-green border-[2px] border-black hover:bg-green-400 transition-colors shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
                             title="Create Quotation"
-                            onClick={() => router.push(`/supplier/create-quotation?reqId=${req.id}`)}
+                            onClick={() => {
+                              try {
+                                sessionStorage.setItem('quotationReqData', JSON.stringify(req));
+                                router.push(`/create-quotation?reqId=${req.id}`)
+                              } catch (err: any) {
+                                console.error(err)
+                              }
+                            }}
                           >
                             <ArrowRight size={18} strokeWidth={2.5} />
                           </button>
@@ -278,14 +282,14 @@ export default function CustomerRequirementsPage() {
                   <FileText size={24} className="text-nb-cyan" />
                   <h2 className="font-display font-black text-xl text-black uppercase tracking-wide">Requirement Details</h2>
                 </div>
-                <button 
+                <button
                   onClick={() => setSelectedRequirement(null)}
                   className="p-1 hover:bg-red-100 border-[2px] border-transparent hover:border-black transition-all"
                 >
                   <XCircle size={24} />
                 </button>
               </div>
-              
+
               <div className="p-6 space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white p-4 border-[2px] border-black shadow-nb-sm">
@@ -322,16 +326,22 @@ export default function CustomerRequirementsPage() {
               </div>
 
               <div className="p-4 border-t-[3px] border-black bg-white flex justify-end gap-3 mt-auto sticky bottom-0 z-10">
-                <button 
+                <button
                   onClick={() => setSelectedRequirement(null)}
                   className="px-6 py-2 bg-gray-100 border-[2px] border-black font-body font-bold text-sm hover:bg-gray-200 transition-colors shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
                 >
                   Close
                 </button>
                 {(!selectedRequirement.status || ["new", "pending", "sent"].includes(selectedRequirement.status.toLowerCase())) && (
-                  <button 
+                  <button
                     onClick={() => {
-                      router.push(`/supplier/create-quotation?reqId=${selectedRequirement.id}`)
+                      try {
+                        const targetId = selectedRequirement.id || selectedRequirement._id;
+                        sessionStorage.setItem('quotationReqData', JSON.stringify(selectedRequirement));
+                        router.push(`/create-quotation?reqId=${targetId}`)
+                      } catch (err: any) {
+                        console.error(err)
+                      }
                     }}
                     className="px-6 py-2 bg-nb-green border-[2px] border-black font-body font-bold text-sm flex items-center gap-2 hover:bg-green-400 transition-colors shadow-nb-sm hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
                   >

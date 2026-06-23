@@ -2,7 +2,7 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, LogOut } from 'lucide-react';
 
 // Structure for individual navigation items
 export interface SubNavItem {
@@ -25,10 +25,15 @@ export interface GlobalSidebarProps {
   platformName: string;
   platformIcon: ReactNode;
   navItems: NavItem[];
-  settingsLabel: string;
-  settingsIcon: ReactNode;
-  settingsHref: string;
+  settingsLabel?: string;
+  settingsIcon?: ReactNode;
+  settingsHref?: string;
   currentPath: string;
+
+  // Logout
+  onLogout?: () => void;
+  logoutLabel?: string;
+  logoutIcon?: ReactNode;
 
   // Theming
   themeClasses: {
@@ -42,8 +47,12 @@ export interface GlobalSidebarProps {
     navItemTextDefault: string;
     navItemTextActive: string;
 
-    settingsContainer: string;
-    settingsText: string;
+    settingsContainer?: string;
+    settingsText?: string;
+
+    // Logout Theme
+    logoutContainer?: string;
+    logoutText?: string;
   };
 }
 
@@ -55,6 +64,9 @@ export function GlobalSidebar({
   settingsIcon,
   settingsHref,
   currentPath,
+  onLogout,
+  logoutLabel = "Logout",
+  logoutIcon,
   themeClasses,
 }: GlobalSidebarProps) {
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
@@ -116,15 +128,15 @@ export function GlobalSidebar({
             currentPath === item.href ||
             (item.href !== '/' && currentPath.startsWith(`${item.href}/`))
           ) : false;
-          
+
           const hasSubItems = item.subItems && item.subItems.length > 0;
-          
-          const hasActiveSubItem = item.subItems?.some(subItem => 
+
+          const hasActiveSubItem = item.subItems?.some(subItem =>
             currentPath === subItem.href || currentPath.startsWith(`${subItem.href}/`)
           );
-          
-          const isExpanded = expandedItems[item.id] !== undefined 
-            ? expandedItems[item.id] 
+
+          const isExpanded = expandedItems[item.id] !== undefined
+            ? expandedItems[item.id]
             : hasActiveSubItem;
 
           return (
@@ -226,25 +238,49 @@ export function GlobalSidebar({
         })}
       </nav>
 
-      {/* ── Settings Footer ─────────────────────────────────────────── */}
-      <div className="p-3 border-t-[3px] border-black">
-        <Link
-          href={settingsHref}
-          className={`
-            w-full flex items-center gap-3 px-4 py-3
-            font-body font-bold text-sm
-            border-[2px] border-black
-            nb-interactive
-            ${themeClasses.settingsContainer}
-          `}
-        >
-          <div className="shrink-0 flex items-center justify-center">
-            {settingsIcon}
-          </div>
-          <span className={`truncate ${themeClasses.settingsText}`}>
-            {settingsLabel}
-          </span>
-        </Link>
+      {/* ──  Footer ─────────────────────────────────────────── */}
+      <div className="p-3 border-t-[3px] border-black flex flex-col gap-2">
+        {/* Settings Button */}
+        {settingsHref && settingsLabel && settingsIcon && (
+          <Link
+            href={settingsHref}
+            className={`
+              w-full flex items-center gap-3 px-4 py-3
+              font-body font-bold text-sm
+              border-[2px] border-black
+              nb-interactive cursor-pointer
+              ${themeClasses.settingsContainer || ''}
+            `}
+          >
+            <div className="shrink-0 flex items-center justify-center">
+              {settingsIcon}
+            </div>
+            <span className={`truncate ${themeClasses.settingsText || ''}`}>
+              {settingsLabel}
+            </span>
+          </Link>
+        )}
+
+        {/* Logout Button */}
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            className={`
+              w-full flex items-center gap-3 px-4 py-3
+              font-body font-bold text-sm
+              border-[2px] border-black
+              nb-interactive cursor-pointer
+              ${themeClasses.logoutContainer || 'bg-nb-red hover:bg-red-600 text-white'}
+            `}
+          >
+            <div className="shrink-0 flex items-center justify-center">
+              {logoutIcon || <LogOut size={18} strokeWidth={2.5} />}
+            </div>
+            <span className={`truncate ${themeClasses.logoutText || 'text-inherit font-black'}`}>
+              {logoutLabel}
+            </span>
+          </button>
+        )}
       </div>
     </aside>
   );

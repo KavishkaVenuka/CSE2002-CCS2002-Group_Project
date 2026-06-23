@@ -167,7 +167,7 @@ export default function FinanceManagement() {
       const mappedItems = itemsArray.map(mapFromBackend);
 
       const validTypes: FundType[] = ['fund', 'loan', 'cash_in', 'cash_out', 'bank_deposit', 'bank_withdraw', 'income', 'expense'];
-      const filtered = mappedItems.filter((item) =>
+      const filtered = mappedItems.filter((item: FundTransaction) =>
         validTypes.includes(item.type)
       );
 

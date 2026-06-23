@@ -62,9 +62,37 @@ export default function DeliveryTrackingPage() {
     try {
       setLoading(true);
       const fetchedOrders = await getCustomerOrders(fetchId) as unknown as Order[];
-      setOrders(fetchedOrders);
-      if (fetchedOrders.length > 0 && !selectedOrderId) {
-        setSelectedOrderId(fetchedOrders[0]._id);
+      
+      const trackingStr = localStorage.getItem('client_side_delivery_tracking_v1');
+      const tracking = trackingStr ? JSON.parse(trackingStr) : {};
+      
+      const updatedOrders = fetchedOrders.map((o: any) => {
+        let orderWithTracking = { ...o };
+        
+        // Merge tracking info
+        const orderId = o.orderID || o.id || o._id;
+        const savedOrder = tracking[orderId] || tracking[o._id] || tracking[o.orderID];
+        if (savedOrder && savedOrder.items) {
+          orderWithTracking.items = (o.items || []).map((item: any) => {
+            const savedItem = savedOrder.items[item.productID];
+            if (savedItem) {
+              return {
+                ...item,
+                issuedQuantity: typeof savedItem.issuedQuantity === 'number' ? savedItem.issuedQuantity : item.issuedQuantity,
+                receivedQuantity: typeof savedItem.receivedQuantity === 'number' ? savedItem.receivedQuantity : item.receivedQuantity,
+                rejectedQuantity: typeof savedItem.rejectedQuantity === 'number' ? savedItem.rejectedQuantity : item.rejectedQuantity,
+                restocked: typeof savedItem.restocked === 'boolean' ? savedItem.restocked : item.restocked,
+              };
+            }
+            return item;
+          });
+        }
+        return orderWithTracking;
+      });
+
+      setOrders(updatedOrders);
+      if (updatedOrders.length > 0 && !selectedOrderId) {
+        setSelectedOrderId(updatedOrders[0]._id);
       }
     } catch (err) {
       console.error("Error fetching orders:", err);
@@ -83,7 +111,7 @@ export default function DeliveryTrackingPage() {
     if (!selectedOrder || !selectedOrder.items) return;
     const initialData: { [key: string]: number } = {};
     selectedOrder.items.forEach(item => {
-      initialData[item.productID] = item.issuedQuantity || 0;
+      initialData[item.productID] = item.issuedQuantity || item.quantity;
     });
     setReceivedData(initialData);
     setConfirmModalOpen(true);
@@ -106,6 +134,35 @@ export default function DeliveryTrackingPage() {
       }));
 
       await confirmDelivery(selectedOrder._id, { receivedItems });
+
+      // Save confirmation items to localStorage
+      const trackingStr = localStorage.getItem('client_side_delivery_tracking_v1');
+      const tracking = trackingStr ? JSON.parse(trackingStr) : {};
+      const orderId = selectedOrder.orderID || selectedOrder._id;
+      if (!tracking[orderId]) {
+        tracking[orderId] = { items: {} };
+      }
+      if (!tracking[selectedOrder._id]) {
+        tracking[selectedOrder._id] = { items: {} };
+      }
+
+      (selectedOrder.items || []).forEach((item) => {
+        const rQty = receivedData[item.productID] ?? (item.issuedQuantity || item.quantity);
+        const issuedQty = item.issuedQuantity || item.quantity;
+        const rejQty = Math.max(0, issuedQty - rQty);
+        
+        const itemTracking = {
+          issuedQuantity: issuedQty,
+          receivedQuantity: rQty,
+          rejectedQuantity: rejQty,
+          restocked: item.restocked || false,
+        };
+
+        tracking[orderId].items[item.productID] = itemTracking;
+        tracking[selectedOrder._id].items[item.productID] = itemTracking;
+      });
+
+      localStorage.setItem('client_side_delivery_tracking_v1', JSON.stringify(tracking));
 
       alert("Delivery confirmed successfully");
       setConfirmModalOpen(false);
@@ -296,7 +353,7 @@ export default function DeliveryTrackingPage() {
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className={`grid grid-cols-[2fr_1fr_1fr_1fr] items-center px-6 py-4 hover:bg-nb-yellow/20 transition-colors ${idx < selectedOrder.items!.length - 1 ? "border-b-[2px] border-black" : ""}`}>
                         <div className="font-mono text-sm font-bold text-black">{item.name}</div>
-                        <div className="font-mono text-sm text-black">{item.issuedQuantity || 0}</div>
+                        <div className="font-mono text-sm text-black">{item.issuedQuantity || item.quantity}</div>
                         <div className="font-mono text-sm font-bold text-nb-green">{item.receivedQuantity || 0}</div>
                         <div className="font-mono text-sm font-bold text-red-500">{item.rejectedQuantity || 0}</div>
                       </div>
@@ -342,25 +399,29 @@ export default function DeliveryTrackingPage() {
                   ))}
                 </div>
                 <div className="min-w-[500px]">
-                  {selectedOrder.items?.map((item, idx) => (
-                    <div key={item.productID} className={`grid grid-cols-[2fr_1fr_1fr_1fr] items-center px-4 py-3 ${idx < selectedOrder.items!.length - 1 ? "border-b-[2px] border-black" : ""}`}>
-                      <div className="font-mono text-xs font-bold text-black">{item.name}</div>
-                      <div className="font-mono text-sm text-black pl-2">{item.issuedQuantity || 0}</div>
-                      <div className="pr-4">
-                        <input 
-                          type="number"
-                          min="0"
-                          max={item.issuedQuantity || 0}
-                          value={receivedData[item.productID] || 0}
-                          onChange={(e) => handleReceivedChange(item.productID, parseInt(e.target.value) || 0, item.issuedQuantity || 0)}
-                          className="w-full px-2 py-1 bg-white border-[2px] border-black font-mono text-sm shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-none transition-all"
-                        />
+                  {selectedOrder.items?.map((item, idx) => {
+                    const maxQty = item.issuedQuantity || item.quantity;
+                    const currentValue = receivedData[item.productID] ?? maxQty;
+                    return (
+                      <div key={item.productID} className={`grid grid-cols-[2fr_1fr_1fr_1fr] items-center px-4 py-3 ${idx < selectedOrder.items!.length - 1 ? "border-b-[2px] border-black" : ""}`}>
+                        <div className="font-mono text-xs font-bold text-black">{item.name}</div>
+                        <div className="font-mono text-sm text-black pl-2">{maxQty}</div>
+                        <div className="pr-4">
+                          <input 
+                            type="number"
+                            min="0"
+                            max={maxQty}
+                            value={currentValue}
+                            onChange={(e) => handleReceivedChange(item.productID, parseInt(e.target.value) ?? 0, maxQty)}
+                            className="w-full px-2 py-1 bg-white border-[2px] border-black font-mono text-sm shadow-[2px_2px_0px_0px_#000] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-none transition-all"
+                          />
+                        </div>
+                        <div className="font-mono text-sm font-bold text-red-500 pl-2">
+                          {maxQty - currentValue}
+                        </div>
                       </div>
-                      <div className="font-mono text-sm font-bold text-red-500 pl-2">
-                        {(item.issuedQuantity || 0) - (receivedData[item.productID] || 0)}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

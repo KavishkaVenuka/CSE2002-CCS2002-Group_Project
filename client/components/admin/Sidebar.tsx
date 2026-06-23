@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { GlobalSidebar, NavItem } from "@/components/common/GlobalSidebar";
 import {
     LayoutDashboard,
@@ -17,6 +17,13 @@ import {
 
 export function AdminSidebar() {
     const currentPath = usePathname() || "";
+    const router = useRouter();
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        router.push("/login");
+    };
 
     const navItems: NavItem[] = [
         {
@@ -91,6 +98,10 @@ export function AdminSidebar() {
         // Settings Footer
         settingsContainer: "bg-[#FACC15] hover:bg-black hover:text-[#FACC15] transition-colors", // Yellow to black
         settingsText: "text-inherit font-black",
+
+        // Logout
+        logoutContainer: "bg-nb-red hover:bg-black hover:text-nb-red transition-colors",
+        logoutText: "text-inherit font-black",
     };
 
     return (
@@ -100,9 +111,11 @@ export function AdminSidebar() {
             navItems={navItems}
             settingsLabel="Settings"
             settingsIcon={<Settings size={20} />}
-            settingsHref="/settings" // Assuming a generic settings route or adjust if needed
+            settingsHref="/settings"
             currentPath={currentPath}
             themeClasses={themeClasses}
+            onLogout={handleLogout}
+            logoutLabel="Logout"
         />
     );
 }

@@ -203,7 +203,7 @@ export default function CustomerRequests() {
                         
                         {req.status !== 'rejected' && (
                           <button
-                            onClick={() => router.push('/create-quotation?reqId=' + req.id)}
+                            onClick={() => router.push('/customers/create-quotation?reqId=' + (req._id || req.id))}
                             disabled={req.status !== 'pending'}
                             className={`px-4 py-2 border-2 border-nb-black font-bold uppercase text-xs flex items-center gap-2 shadow-nb-sm transition-all ${
                               req.status === 'pending' 
