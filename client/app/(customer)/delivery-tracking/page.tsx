@@ -155,7 +155,6 @@ export default function DeliveryTrackingPage() {
           issuedQuantity: issuedQty,
           receivedQuantity: rQty,
           rejectedQuantity: rejQty,
-          restocked: item.restocked || false,
         };
 
         tracking[orderId].items[item.productID] = itemTracking;

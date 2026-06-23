@@ -112,24 +112,14 @@ export default function InvoicesPage() {
         const finalInvoices = combinedInvoices.map((inv: any) => {
           let finalInv = { ...inv }
           
-          // Recalculate invoice details if total is 0 or missing
-          if (!finalInv.total || finalInv.total === 0) {
+          let reconstructedItems = finalInv.items && finalInv.items.length > 0 ? finalInv.items : [];
+          
+          if (reconstructedItems.length === 0) {
             const matchingOrder = orders.find((o: any) => o.orderID === finalInv.orderID || o._id === finalInv.orderID);
             if (matchingOrder) {
-              const reconstructedItems = (finalInv.items && finalInv.items.length > 0) ? finalInv.items.map((item: any) => {
-                const orderItem = matchingOrder.items?.find((oi: any) => oi.name === item.itemName || oi.productID === item.productID || oi.name === item.name);
-                const qty = orderItem ? (orderItem.quantity || orderItem.issuedQuantity || 0) : (item.quantity || 0);
-                const price = orderItem ? (orderItem.price || 0) : (item.unitPrice || 0);
-                const itemQty = qty || 1;
-                return {
-                  ...item,
-                  quantity: itemQty,
-                  unitPrice: price,
-                  totalPrice: itemQty * price
-                };
-              }) : (matchingOrder.items || []).map((item: any) => {
+              reconstructedItems = (matchingOrder.items || []).map((item: any) => {
                 const qty = item.quantity || item.issuedQuantity || 1;
-                const price = item.price || 0;
+                const price = Math.round((item.price || 0) / 1.1);
                 return {
                   itemName: item.name,
                   quantity: qty,
@@ -137,17 +127,30 @@ export default function InvoicesPage() {
                   totalPrice: qty * price
                 };
               });
-
-              const subtotal = reconstructedItems.reduce((sum: number, item: any) => sum + (item.totalPrice || 0), 0);
-              const tax_amount = subtotal * 0.1;
-              const total = subtotal + tax_amount;
-
-              finalInv.items = reconstructedItems;
-              finalInv.subtotal = subtotal;
-              finalInv.tax_amount = tax_amount;
-              finalInv.total = total;
             }
+          } else {
+            const matchingOrder = orders.find((o: any) => o.orderID === finalInv.orderID || o._id === finalInv.orderID);
+            reconstructedItems = reconstructedItems.map((item: any) => {
+              const orderItem = matchingOrder?.items?.find((oi: any) => oi.name === item.itemName || oi.productID === item.productID || oi.name === item.name);
+              const qty = item.quantity || 0;
+              const price = orderItem && orderItem.price ? Math.round(orderItem.price / 1.1) : (item.unitPrice || 0);
+              return {
+                ...item,
+                quantity: qty,
+                unitPrice: price,
+                totalPrice: qty * price
+              };
+            });
           }
+
+          const subtotal = reconstructedItems.reduce((sum: number, item: any) => sum + (item.totalPrice || 0), 0);
+          const tax_amount = subtotal * 0.1;
+          const total = subtotal + tax_amount;
+
+          finalInv.items = reconstructedItems;
+          finalInv.subtotal = subtotal;
+          finalInv.tax_amount = tax_amount;
+          finalInv.total = total;
 
           if (overrides[finalInv._id]) {
             return {
@@ -186,7 +189,7 @@ export default function InvoicesPage() {
       let calculatedTotal = 0;
       const invoiceItems = (order.items || []).map((item: any) => {
         const qty = item.receivedQuantity || item.quantity || 0;
-        const price = item.price || 0;
+        const price = Math.round((item.price || 0) / 1.1);
         const itemTotal = qty * price;
         calculatedTotal += itemTotal;
         return {
@@ -504,7 +507,7 @@ export default function InvoicesPage() {
                   <div className="w-80 space-y-4 p-5 bg-nb-bg border-[3px] border-black shadow-[6px_6px_0px_0px_#000]">
                     <div className="flex justify-between font-mono text-sm border-b-[2px] border-black border-dashed pb-2">
                       <span className="font-bold uppercase">Subtotal</span>
-                      <span>LKR {selectedInvoice.subtotal?.toLocaleString() || selectedInvoice.total?.toLocaleString() || '0'}</span>
+                      <span>LKR {selectedInvoice.subtotal?.toLocaleString() || '0'}</span>
                     </div>
                     <div className="flex justify-between font-mono text-sm border-b-[2px] border-black border-dashed pb-2">
                       <span className="font-bold uppercase">Tax (10%)</span>
