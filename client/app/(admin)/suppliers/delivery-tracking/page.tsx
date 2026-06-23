@@ -30,14 +30,14 @@ interface OrderItem {
 interface PurchaseOrder {
   _id: string;
   po_id: string;
-  supplierEmail: string;
+  supplier: string;
+  email?: string;
   name?: string;
   status: string;
-  total: number;
-  date: string;
-  expectedDeliveryDate?: string;
+  totalAmount: number;
+  orderDate: string;
+  expectedDelivery?: string;
   items: OrderItem[];
-  orderType: string;
 }
 
 export default function SupplierDeliveryTracking() {
@@ -95,7 +95,7 @@ export default function SupplierDeliveryTracking() {
     const q = searchTerm.toLowerCase();
     return (
       (o.po_id || '').toLowerCase().includes(q) ||
-      (o.supplierEmail || '').toLowerCase().includes(q) ||
+      (o.supplier || '').toLowerCase().includes(q) ||
       (o.status || '').toLowerCase().includes(q)
     );
   });
@@ -208,8 +208,8 @@ export default function SupplierDeliveryTracking() {
                     return (
                       <tr key={order._id} className="hover:bg-nb-cyan/20 transition-colors border-b-4 border-black last:border-b-0 bg-white">
                         <td className="p-5 font-mono text-sm font-bold border-r-4 border-black">{order.po_id}</td>
-                        <td className="p-5 border-r-4 border-black font-black uppercase tracking-wide text-sm">{order.supplierEmail}</td>
-                        <td className="p-5 border-r-4 border-black font-black text-lg">LKR {order.total?.toLocaleString() || '—'}</td>
+                        <td className="p-5 border-r-4 border-black font-black uppercase tracking-wide text-sm">{order.supplier}</td>
+                        <td className="p-5 border-r-4 border-black font-black text-lg">LKR {order.totalAmount?.toLocaleString() || '—'}</td>
                         <td className="p-5 text-center border-r-4 border-black">
                           <div className="flex items-center justify-center gap-3">
                             <div className="flex-1 max-w-[80px] bg-white border-2 border-black h-4 relative overflow-hidden">
@@ -229,18 +229,26 @@ export default function SupplierDeliveryTracking() {
                           </span>
                         </td>
                         <td className="p-5 text-sm font-bold border-r-4 border-black">
-                          {new Date(order.date).toLocaleDateString()}
+                          {new Date(order.orderDate).toLocaleDateString()}
                         </td>
                         <td className="p-5 text-sm font-bold border-r-4 border-black">
-                          {order.expectedDeliveryDate
-                            ? new Date(order.expectedDeliveryDate).toLocaleDateString()
+                          {order.expectedDelivery
+                            ? new Date(order.expectedDelivery).toLocaleDateString()
                             : '—'
                           }
                         </td>
                         <td className="p-5 text-right">
                           <button
                             className="bg-white border-2 border-black h-10 px-4 inline-flex items-center justify-center font-black uppercase tracking-wider text-[10px] shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-nb-yellow hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
-                            onClick={() => { setSelected(order); setShowModal(true); }}
+                            onClick={() => { 
+                              setSelected(order); 
+                              const initial: { [key: string]: number } = {};
+                              order.items.forEach(item => {
+                                initial[item.productID] = item.receivedQuantity || item.issuedQuantity || item.quantity;
+                              });
+                              setReceivedQtys(initial);
+                              setShowModal(true); 
+                            }}
                           >
                             <Eye className="w-4 h-4 mr-2" /> Details
                           </button>
@@ -280,17 +288,17 @@ export default function SupplierDeliveryTracking() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-nb-bg">
                 <div className="p-4 border-b-4 md:border-b-0 border-r-4 border-black space-y-2">
                   <p className="text-[10px] font-black uppercase tracking-widest">Supplier</p>
-                  <p className="font-bold text-sm text-black uppercase tracking-wide">{selected.supplierEmail}</p>
+                  <p className="font-bold text-sm text-black uppercase tracking-wide">{selected.supplier}</p>
                 </div>
                 <div className="p-4 border-b-4 md:border-b-0 md:border-r-4 border-black space-y-2">
                   <p className="text-[10px] font-black uppercase tracking-widest">Order Date</p>
-                  <p className="font-mono text-sm font-bold text-black">{new Date(selected.date).toLocaleDateString()}</p>
+                  <p className="font-mono text-sm font-bold text-black">{new Date(selected.orderDate).toLocaleDateString()}</p>
                 </div>
                 <div className="p-4 border-b-4 md:border-b-0 border-r-4 border-black space-y-2">
                   <p className="text-[10px] font-black uppercase tracking-widest">Expected Delivery</p>
                   <p className="font-mono text-sm font-bold text-black">
-                    {selected.expectedDeliveryDate
-                      ? new Date(selected.expectedDeliveryDate).toLocaleDateString()
+                    {selected.expectedDelivery && selected.expectedDelivery !== 'Pending'
+                      ? new Date(selected.expectedDelivery).toLocaleDateString()
                       : 'Not specified'}
                   </p>
                 </div>
@@ -306,7 +314,7 @@ export default function SupplierDeliveryTracking() {
                   <div className="bg-nb-bg border-4 border-black p-4 inline-block shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     <div className="flex flex-col">
                       <span className="text-[10px] font-black uppercase tracking-widest">Total Value</span>
-                      <span className="text-3xl font-black text-black">LKR {selected.total?.toLocaleString() || '—'}</span>
+                      <span className="text-3xl font-black text-black">LKR {selected.totalAmount?.toLocaleString() || '—'}</span>
                     </div>
                   </div>
               </div>
@@ -329,7 +337,10 @@ export default function SupplierDeliveryTracking() {
                     </thead>
                     <tbody>
                       {selected.items?.map((item, idx) => {
-                        const pct = item.quantity > 0 ? Math.min(100, ((item.receivedQuantity || 0) / item.quantity) * 100) : 0;
+                        const currentReceived = selected.status !== 'delivered' 
+                          ? (receivedQtys[item.productID] ?? (item.receivedQuantity || item.issuedQuantity || item.quantity))
+                          : (item.receivedQuantity || 0);
+                        const pct = item.quantity > 0 ? Math.min(100, (currentReceived / item.quantity) * 100) : 0;
                         return (
                           <tr key={idx} className="border-b-4 border-black last:border-b-0 hover:bg-nb-yellow/20 transition-colors bg-white">
                             <td className="p-4 border-r-4 border-black font-bold text-sm uppercase">{item.name}</td>
@@ -337,7 +348,21 @@ export default function SupplierDeliveryTracking() {
                               {item.quantity}
                             </td>
                             <td className="p-4 border-r-4 border-black text-center font-black text-lg">
-                              {item.receivedQuantity || 0}
+                              {selected.status !== 'delivered' ? (
+                                <input 
+                                  type="number"
+                                  min="0"
+                                  max={item.issuedQuantity || item.quantity}
+                                  value={currentReceived}
+                                  onChange={(e) => {
+                                    const val = parseInt(e.target.value) || 0;
+                                    setReceivedQtys(prev => ({ ...prev, [item.productID]: Math.min(val, item.issuedQuantity || item.quantity) }));
+                                  }}
+                                  className="w-24 h-10 border-2 border-black font-bold text-center focus:outline-none focus:bg-nb-cyan/10"
+                                />
+                              ) : (
+                                item.receivedQuantity || 0
+                              )}
                             </td>
                             <td className="p-4 text-center">
                               <div className="flex items-center justify-center gap-3">
@@ -358,34 +383,51 @@ export default function SupplierDeliveryTracking() {
                 </div>
               </div>
 
-              {selected.status === 'dispatched' && (
+              {selected.status !== 'delivered' && (
                 <div className="space-y-4">
-                  <div className="p-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-3">
-                    <Truck className="w-6 h-6 shrink-0 text-blue-500" />
-                    <p className="text-sm font-bold uppercase">Shipment is in transit. Awaiting delivery confirmation.</p>
-                  </div>
+                  {selected.status === 'dispatched' ? (
+                    <div className="p-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-3">
+                      <Truck className="w-6 h-6 shrink-0 text-blue-500" />
+                      <p className="text-sm font-bold uppercase">Shipment is in transit. Awaiting delivery confirmation.</p>
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-3">
+                      <AlertCircle className="w-6 h-6 shrink-0 text-nb-yellow" />
+                      <p className="text-sm font-bold uppercase">Order is not dispatched yet, but you can manually confirm early reception.</p>
+                    </div>
+                  )}
                   <button 
-                    className="w-full h-14 bg-nb-green border-4 border-black text-black font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-2"
-                    onClick={() => {
-                      const initial: { [key: string]: number } = {};
-                      selected.items.forEach(item => {
-                        initial[item.productID] = item.issuedQuantity || item.quantity;
-                      });
-                      setReceivedQtys(initial);
-                      setShowReceiveModal(true);
+                    className="w-full h-14 bg-nb-green border-4 border-black text-black font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={isSubmitting}
+                    onClick={async () => {
+                      try {
+                        setIsSubmitting(true);
+                        const itemsToUpdate = selected.items.map(item => {
+                          const received = receivedQtys[item.productID] ?? (item.issuedQuantity || item.quantity);
+                          return {
+                            productID: item.productID,
+                            receivedQuantity: received,
+                            rejectedQuantity: (item.issuedQuantity || item.quantity) - received
+                          };
+                        });
+                        await axios.put(`http://localhost:5900/api/supplier-orders/${selected._id}/confirm-delivery`, {
+                          items: itemsToUpdate
+                        });
+                        toast.success("Delivery confirmed successfully");
+                        setShowModal(false);
+                        fetchOrders();
+                      } catch (err) {
+                        toast.error("Failed to confirm delivery");
+                      } finally {
+                        setIsSubmitting(false);
+                      }
                     }}
                   >
-                    <CheckCircle className="w-5 h-5" />
-                    Confirm Items Received
+                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <><CheckCircle className="w-5 h-5" /> Confirm Items Received</>}
                   </button>
                 </div>
               )}
-              {selected.status === 'pending' && (
-                <div className="p-4 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-3">
-                  <AlertCircle className="w-6 h-6 shrink-0 text-nb-yellow" />
-                  <p className="text-sm font-bold uppercase">Order is awaiting supplier acknowledgment and dispatch.</p>
-                </div>
-              )}
+
 
             </div>
 
@@ -401,110 +443,7 @@ export default function SupplierDeliveryTracking() {
         </div>
       )}
 
-      {/* Receive Modal */}
-      {showReceiveModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] w-full max-w-2xl my-8 relative flex flex-col">
-            <div className="bg-nb-green border-b-4 border-black p-6 flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-white border-4 border-black flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                  <CheckCircle className="w-5 h-5 text-black" />
-                </div>
-                <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight">Confirm Delivery</h2>
-              </div>
-              <button 
-                onClick={() => setShowReceiveModal(false)}
-                className="w-10 h-10 bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center hover:bg-nb-red hover:text-white transition-colors nb-interactive shrink-0"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            <div className="p-6 space-y-6">
-              <p className="font-bold text-sm uppercase bg-nb-yellow p-4 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                Verify the items received from the supplier. Specify the accepted quantity; the difference will be marked as rejected.
-              </p>
-              
-              <div className="border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] bg-white overflow-hidden overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[500px]">
-                  <thead>
-                    <tr className="bg-nb-bg border-b-4 border-black">
-                      <th className="p-4 font-black text-xs uppercase tracking-widest border-r-4 border-black">Item Name</th>
-                      <th className="p-4 font-black text-xs uppercase tracking-widest border-r-4 border-black text-center">Dispatched Qty</th>
-                      <th className="p-4 font-black text-xs uppercase tracking-widest border-r-4 border-black w-32">Received Qty</th>
-                      <th className="p-4 font-black text-xs uppercase tracking-widest text-center text-nb-red">Rejected</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selected?.items?.map((item) => (
-                      <tr key={item.productID} className="border-b-4 border-black last:border-b-0 bg-white">
-                        <td className="p-4 font-bold uppercase text-sm border-r-4 border-black">{item.name}</td>
-                        <td className="p-4 text-center font-black text-lg border-r-4 border-black bg-gray-50">{item.issuedQuantity || 0}</td>
-                        <td className="p-4 border-r-4 border-black">
-                          <input 
-                            type="number"
-                            min="0"
-                            max={item.issuedQuantity || 0}
-                            value={receivedQtys[item.productID] ?? (item.issuedQuantity || 0)}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value) || 0;
-                              setReceivedQtys(prev => ({ ...prev, [item.productID]: Math.min(val, item.issuedQuantity || 0) }));
-                            }}
-                            className="w-full h-10 border-2 border-black font-bold text-center focus:outline-none focus:bg-nb-cyan/10"
-                          />
-                        </td>
-                        <td className="p-4 text-center font-black text-xl text-nb-red bg-nb-red/10">
-                          {(item.issuedQuantity || 0) - (receivedQtys[item.productID] ?? (item.issuedQuantity || 0))}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div className="p-6 border-t-4 border-black bg-nb-bg flex flex-col sm:flex-row gap-4">
-              <button 
-                className="flex-1 bg-white border-4 border-black h-14 font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-gray-100 transition-colors nb-interactive"
-                onClick={() => setShowReceiveModal(false)}
-              >
-                Cancel
-              </button>
-              <button 
-                className="flex-1 bg-black text-white border-4 border-black h-14 font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                disabled={isSubmitting}
-                onClick={async () => {
-                  if (!selected) return;
-                  try {
-                    setIsSubmitting(true);
-                    const itemsToUpdate = selected.items.map(item => {
-                      const received = receivedQtys[item.productID] ?? (item.issuedQuantity || 0);
-                      return {
-                        productID: item.productID,
-                        receivedQuantity: received,
-                        rejectedQuantity: (item.issuedQuantity || 0) - received
-                      };
-                    });
-                    await axios.put(`http://localhost:5900/api/supplier-orders/${selected._id}/confirm-delivery`, {
-                      items: itemsToUpdate
-                    });
-                    toast.success("Delivery confirmed successfully");
-                    setShowReceiveModal(false);
-                    setShowModal(false);
-                    fetchOrders();
-                  } catch (err) {
-                    toast.error("Failed to confirm delivery");
-                  } finally {
-                    setIsSubmitting(false);
-                  }
-                }}
-              >
-                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Finalize Reception"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

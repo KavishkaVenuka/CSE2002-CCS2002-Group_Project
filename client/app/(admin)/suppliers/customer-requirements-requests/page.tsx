@@ -99,8 +99,12 @@ export default function SupplierRequests() {
                          Array.isArray(stockData.items) ? stockData.items :
                          Array.isArray(stockData.data) ? stockData.data : [];
       setStockItems(stockArray);
-    } catch (err) {
-      console.error('Failed to load requirements:', err);
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        toast.error('Session expired. Please log in again.');
+        window.location.href = '/login';
+        return;
+      }
       toast.error('Failed to load procurement data');
     } finally {
       setIsLoading(false);
@@ -174,7 +178,11 @@ export default function SupplierRequests() {
         throw new Error(response.data.message || "Failed to send request");
       }
     } catch (err: any) {
-      console.error("Broadcast Error Detail:", err.response?.data || err);
+      if (err.response?.status === 401) {
+        toast.error('Session expired. Please log in again.');
+        window.location.href = '/login';
+        return;
+      }
       const errorMsg = err.response?.data?.message || err.message || "Failed to send request";
       toast.error(`Error: ${errorMsg}`);
     } finally {
@@ -280,7 +288,9 @@ export default function SupplierRequests() {
     const q = searchTerm.toLowerCase();
     return (
       (r.requirementId || '').toLowerCase().includes(q) ||
-      (r.itemSummary || '').toLowerCase().includes(q)
+      (r.itemSummary || '').toLowerCase().includes(q) ||
+      (r.customerName || '').toLowerCase().includes(q) ||
+      (r.companyName || '').toLowerCase().includes(q)
     );
   });
 
@@ -316,11 +326,17 @@ export default function SupplierRequests() {
           <div className="relative w-full md:w-[400px]">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-black" />
             <input
+              list="suppliers-list"
               placeholder="SEARCH PROCUREMENT LOGS..."
               className="pl-12 w-full border-2 border-black bg-nb-bg h-14 font-mono font-bold text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:bg-white focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] focus:translate-x-[2px] focus:translate-y-[2px] transition-all"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
+            <datalist id="suppliers-list">
+              {suppliers.map(s => (
+                <option key={s._id || s.id} value={s.fullName} />
+              ))}
+            </datalist>
           </div>
           <button 
             className="w-full md:w-auto border-4 border-black h-14 px-8 bg-white hover:bg-nb-yellow font-black uppercase tracking-widest shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center"
