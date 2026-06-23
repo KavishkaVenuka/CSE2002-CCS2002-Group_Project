@@ -43,15 +43,18 @@ export default function CustomerPaymentsAdmin() {
   const fetchPayments = async () => {
     try {
       setIsLoading(true);
+      const token = typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('user') || '{}')?.token || localStorage.getItem('token') || '') : '';
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
       // 1. Fetch all customers
-      const customersRes = await axios.get('http://localhost:5900/api/users/all-customers');
+      const customersRes = await axios.get('http://localhost:5900/api/users/all-customers', config);
       const customers = customersRes.data.customers || [];
       
       // 2. Fetch invoices for each customer email
       const invoicePromises = customers.map(async (cust: any) => {
         if (!cust.email) return [];
         try {
-          const res = await axios.get(`http://localhost:5900/api/invoices/customer/${encodeURIComponent(cust.email)}`);
+          const res = await axios.get(`http://localhost:5900/api/invoices/customer/${encodeURIComponent(cust.email)}`, config);
           return res.data.invoices || res.data || [];
         } catch (e) {
           console.error(`Failed to fetch invoices for ${cust.email}`, e);
@@ -73,7 +76,7 @@ export default function CustomerPaymentsAdmin() {
       // Fetch all orders to map pricing/quantities for zero-total invoices
       let orders: any[] = [];
       try {
-        const ordersRes = await axios.get('http://localhost:5900/api/orders');
+        const ordersRes = await axios.get('http://localhost:5900/api/orders', config);
         orders = ordersRes.data || [];
       } catch (e) {
         console.error("Failed to fetch orders for invoice verification", e);
@@ -149,7 +152,8 @@ export default function CustomerPaymentsAdmin() {
 
   const fetchBankAccounts = async () => {
     try {
-      const response = await axios.get('http://localhost:5900/api/bankAccounts/getBankAccounts');
+      const token = typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('user') || '{}')?.token || localStorage.getItem('token') || '') : '';
+      const response = await axios.get('http://localhost:5900/api/bankAccounts/getBankAccounts', { headers: { Authorization: `Bearer ${token}` } });
       const accounts = response.data.bankAccounts || [];
       setBankAccounts(accounts);
       if (accounts.length > 0) {
