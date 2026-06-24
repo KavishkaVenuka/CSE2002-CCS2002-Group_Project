@@ -1,17 +1,35 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:5900";
 const SERVER_BASE = API_BASE || process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || process.env.NEXTAUTH_URL?.replace(/\/$/, "") || "http://localhost:5900";
 
+import { isTokenExpired, clearAuthCookie } from "@/lib/auth";
+
 function getToken(): string {
   if (typeof window === "undefined") return "";
   try {
     const user = JSON.parse(window.localStorage.getItem("user") || "{}");
-    if (user.token) return user.token;
+    if (user.token) {
+      if (isTokenExpired(user.token)) {
+        window.localStorage.removeItem("token");
+        window.localStorage.removeItem("user");
+        window.localStorage.removeItem("supplierToken");
+        clearAuthCookie();
+        return "";
+      }
+      return user.token;
+    }
   } catch (e) {}
-  return (
+  const token =
     window.localStorage.getItem("token") ||
     window.localStorage.getItem("supplierToken") ||
-    ""
-  );
+    "";
+  if (token && isTokenExpired(token)) {
+    window.localStorage.removeItem("token");
+    window.localStorage.removeItem("user");
+    window.localStorage.removeItem("supplierToken");
+    clearAuthCookie();
+    return "";
+  }
+  return token;
 }
 
 function buildHeaders(body?: BodyInit, auth = true): HeadersInit {
