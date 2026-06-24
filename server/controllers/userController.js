@@ -91,7 +91,7 @@ export async function loginUser(req, res) {
             email: user.email
         };
 
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "150h" });
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
 
         res.status(200).json({
             token,

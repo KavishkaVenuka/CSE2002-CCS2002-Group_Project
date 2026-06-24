@@ -5,7 +5,6 @@ import mongoose from "mongoose";
 // 1. GET ALL REQUIREMENTS
 //    GET /api/requirements?customerId=&status=&search=
 //    Admin → all records | Customer → own records only
-// =========================================
 
 // ==========================================
 // 2. GET STATS
