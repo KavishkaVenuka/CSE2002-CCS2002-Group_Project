@@ -11,6 +11,7 @@ import { Header } from "@/components/supplier/Header"
 import { Panel } from "@/components/common/Panel"
 import { getMyRequirements, getRequirementsStats, getRequirementDetails, updateRequirementStatus } from "@/lib/api"
 import { toast } from "sonner"
+import Loading from "./loading"
 
 const BADGE_MAP: Record<string, string> = {
   "pending": "bg-nb-cyan",
@@ -104,6 +105,10 @@ export default function CustomerRequirementsPage() {
       return matchesSearch && matchesStatus
     })
   }, [searchQuery, statusFilter, requirements])
+
+  if (isLoading && requirements.length === 0) {
+    return <Loading />
+  }
 
   return (
     <>
