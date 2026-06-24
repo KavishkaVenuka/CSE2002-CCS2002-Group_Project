@@ -1,13 +1,11 @@
 'use client';
 
 import { Wallet, Building2, Banknote } from 'lucide-react';
-import { AdminSidebar } from "@/components/admin/Sidebar";
 
 export default function FinanceManagementLoading() {
   return (
-    <div className="flex min-h-screen bg-nb-bg w-full">
-      <AdminSidebar />
-      <div className="flex-1 p-8 overflow-x-hidden">
+    <>
+      <div className="flex-1 p-8 overflow-y-auto">
 
         {/* Header Skeleton */}
         <div className="bg-nb-yellow border-4 border-nb-black p-8 shadow-nb mb-8">
@@ -160,6 +158,6 @@ export default function FinanceManagementLoading() {
           background-position: -600px 0;
         }
       `}</style>
-    </div>
+    </>
   );
 }

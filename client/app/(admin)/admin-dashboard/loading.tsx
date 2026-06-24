@@ -1,13 +1,11 @@
 'use client';
 
 import React from 'react';
-import { AdminSidebar } from "@/components/admin/Sidebar";
 
 export default function AdminDashboardLoading() {
   return (
-    <div className="flex min-h-screen bg-nb-bg w-full">
-      <AdminSidebar />
-      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-x-hidden">
+    <>
+      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto">
         {/* Page Header Skeleton */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 bg-nb-white border-2 border-nb-black p-2 shadow-nb">
           <div>
@@ -203,6 +201,6 @@ export default function AdminDashboardLoading() {
           background-position: -600px 0;
         }
       `}</style>
-    </div>
+    </>
   );
 }

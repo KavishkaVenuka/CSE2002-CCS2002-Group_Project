@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { AdminSidebar } from '@/components/admin/Sidebar';
 import {
   Send,
   Search,
@@ -111,9 +110,8 @@ export default function SupplierQuotationsAdmin() {
   });
 
   return (
-    <div className="flex min-h-screen bg-nb-bg w-full">
-      <AdminSidebar />
-      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-x-hidden">
+    <>
+      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto">
         
         {/* Header */}
         <div className="relative border-4 border-black bg-nb-cyan p-8 md:p-10 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
@@ -404,6 +402,6 @@ export default function SupplierQuotationsAdmin() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

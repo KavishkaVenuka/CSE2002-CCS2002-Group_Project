@@ -14,7 +14,6 @@ import {
   FileText, ShoppingBag, RefreshCw, Loader2
 } from 'lucide-react';
 import axios from 'axios';
-import { AdminSidebar } from "@/components/admin/Sidebar";
 
 interface DashboardStats {
   totalRevenue: number;
@@ -116,9 +115,8 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-nb-bg w-full">
-      <AdminSidebar />
-      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-x-hidden">
+    <>
+      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto">
         {isLoading ? (
           // Skeleton Loading UI
           <>
@@ -547,6 +545,6 @@ export default function AdminDashboard() {
         </>
         )}
       </div>
-    </div>
+    </>
   );
 }

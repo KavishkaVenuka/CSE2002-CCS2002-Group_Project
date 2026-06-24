@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AdminSidebar } from "@/components/admin/Sidebar";
 import {
   Wallet,
   Landmark,
@@ -532,10 +531,9 @@ export default function FinanceManagement() {
   const labelStyle = "block font-black text-nb-black uppercase tracking-widest text-xs";
 
   return (
-    <div className="flex min-h-screen bg-nb-bg w-full">
-      <AdminSidebar />
+    <>
       {loading ? (
-        <div className="flex-1 p-8 overflow-x-hidden">
+        <div className="flex-1 p-8 overflow-y-auto">
 
           {/* Header Skeleton */}
           <div className="bg-nb-yellow border-4 border-nb-black p-8 shadow-nb mb-8">
@@ -725,7 +723,7 @@ export default function FinanceManagement() {
           `}</style>
         </div>
       ) : (
-        <div className="flex-1 p-8 overflow-x-hidden">
+        <div className="flex-1 p-8 overflow-y-auto">
 
           {/* Page Header */}
           <div className="bg-nb-yellow border-4 border-nb-black p-8 shadow-nb mb-8">
@@ -1221,6 +1219,6 @@ export default function FinanceManagement() {
 
         </div>
       )}
-    </div>
+    </>
   );
 }

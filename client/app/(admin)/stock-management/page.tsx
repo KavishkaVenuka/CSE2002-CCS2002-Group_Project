@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AdminSidebar } from "@/components/admin/Sidebar";
 import {
   Plus,
   Search,
@@ -291,10 +290,9 @@ export default function StockManagement() {
   const inputStyle = "w-full mt-2 border-2 border-nb-black rounded-none shadow-[2px_2px_0px_0px_#000] focus:outline-none bg-white text-nb-black font-bold h-10 px-3";
 
   return (
-    <div className="flex min-h-screen bg-nb-bg w-full">
-      <AdminSidebar />
+    <>
       {loading ? (
-        <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-x-hidden">
+        <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto">
 
           {/* Page Header Skeleton */}
           <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 bg-nb-white border-2 border-nb-black p-6 shadow-nb">
@@ -447,7 +445,7 @@ export default function StockManagement() {
           `}</style>
         </div>
       ) : (
-        <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-x-hidden">
+        <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto">
 
           {/* Page Header */}
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 bg-nb-white border-2 border-nb-black p-6 shadow-nb">
@@ -871,6 +869,6 @@ export default function StockManagement() {
         </div>
       </div>
     )}
-    </div>
+    </>
   );
 }

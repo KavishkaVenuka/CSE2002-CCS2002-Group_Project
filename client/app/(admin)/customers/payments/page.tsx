@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { AdminSidebar } from "@/components/admin/Sidebar";
 import { CreditCard, Loader2, Calendar, Banknote, Search, Eye, CheckCircle, X, FileText, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -236,9 +235,8 @@ export default function CustomerPaymentsAdmin() {
   const inputStyle = "border-2 border-nb-black focus:outline-none font-bold text-nb-black shadow-[2px_2px_0px_0px_#000] px-4 py-2 bg-white";
 
   return (
-    <div className="flex min-h-screen bg-nb-bg w-full">
-      <AdminSidebar />
-      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-x-hidden">
+    <>
+      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto">
         
         {/* Header */}
         <div className="relative border-4 border-nb-black bg-nb-cyan p-10 shadow-nb-lg">
@@ -491,6 +489,6 @@ export default function CustomerPaymentsAdmin() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

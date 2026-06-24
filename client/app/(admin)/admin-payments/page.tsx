@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AdminSidebar } from '@/components/admin/Sidebar';
+import PaymentsLoading from './loading';
 import {
   CreditCard,
   Search,
@@ -147,7 +147,7 @@ export default function PaymentsTransactions() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
 
   const [formData, setFormData] = useState(initialForm);
@@ -565,9 +565,12 @@ export default function PaymentsTransactions() {
     }
   };
 
+  if (loading) {
+    return <PaymentsLoading />;
+  }
+
   return (
-    <div className="flex h-screen overflow-hidden bg-nb-bg font-mono">
-      <AdminSidebar />
+    <>
 
       <main className="flex-1 overflow-y-auto p-8 border-l-4 border-black">
         <div className="max-w-7xl mx-auto space-y-8">
@@ -1300,6 +1303,6 @@ export default function PaymentsTransactions() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

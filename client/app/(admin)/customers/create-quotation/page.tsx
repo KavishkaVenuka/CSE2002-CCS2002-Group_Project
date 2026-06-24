@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AdminSidebar } from "@/components/admin/Sidebar";
 import {
   Send,
   Save,
@@ -158,7 +157,7 @@ function CreateQuotationContent() {
   const inputStyle = "w-full border-2 border-nb-black bg-white focus:outline-none p-3 font-bold text-nb-black shadow-[2px_2px_0px_0px_#000]";
 
   return (
-    <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-x-hidden">
+    <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto">
       
       {/* Header */}
       <div className="relative border-4 border-nb-black bg-nb-cyan p-4 shadow-nb-lg">
@@ -454,11 +453,10 @@ function CreateQuotationContent() {
 
 export default function AdminCreateQuotation() {
   return (
-    <div className="flex min-h-screen bg-nb-bg w-full">
-      <AdminSidebar />
+    <>
       <Suspense fallback={<div className="flex-1 p-8 font-black uppercase tracking-widest text-xl">Loading...</div>}>
         <CreateQuotationContent />
       </Suspense>
-    </div>
+    </>
   );
 }

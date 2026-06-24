@@ -1,14 +1,12 @@
 'use client';
 
 import React from 'react';
-import { AdminSidebar } from "@/components/admin/Sidebar";
 import { Package } from 'lucide-react';
 
 export default function StockManagementLoading() {
   return (
-    <div className="flex min-h-screen bg-nb-bg w-full">
-      <AdminSidebar />
-      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-x-hidden">
+    <>
+      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto">
 
         {/* Page Header Skeleton */}
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 bg-nb-white border-2 border-nb-black p-6 shadow-nb">
@@ -160,6 +158,6 @@ export default function StockManagementLoading() {
           background-position: -600px 0;
         }
       `}</style>
-    </div>
+    </>
   );
 }
