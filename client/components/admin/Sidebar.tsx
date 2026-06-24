@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { GlobalSidebar, NavItem } from "@/components/common/GlobalSidebar";
+import { clearAuthCookie } from "@/lib/auth";
 import {
     LayoutDashboard,
     Package,
@@ -22,6 +23,8 @@ export function AdminSidebar() {
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("supplierToken");
+        clearAuthCookie();
         router.push("/login");
     };
 

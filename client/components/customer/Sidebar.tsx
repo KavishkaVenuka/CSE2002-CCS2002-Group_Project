@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation"
 import { GlobalSidebar } from "@/components/common/GlobalSidebar"
+import { clearAuthCookie } from "@/lib/auth"
 import {
   LayoutDashboard, Send, FileText, ShoppingBag,
   Truck, Receipt, CreditCard, Boxes,
@@ -24,6 +25,8 @@ export function Sidebar() {
   const handleLogout = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("user")
+    localStorage.removeItem("supplierToken")
+    clearAuthCookie()
     router.push("/login")
   }
 
