@@ -1,132 +1,12 @@
-import Supplier from "../models/Supplier.js";
+import Supplier from "../models/User.js"; // Suppliers are stored in the users collection with role: "Supplier"
 import Requirement from "../models/Requirement.js";
 import Quotation from "../models/Quotation.js";
 import Order from "../models/Order.js";
 import Invoice from "../models/Invoice.js";
 import PaymentTransaction from "../models/PaymentTransaction.js";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 
-// ================================
-//   REGISTER SUPPLIER
-// ================================
-export async function createSupplier(req, res) {
-    try {
-        const { 
-            fullName, 
-            companyName, 
-            vatNumber, 
-            email, 
-            contactNumber, 
-            password,
-            role 
-        } = req.body;
+// All registration/login is handled by userRouter — no auth functions here
 
-        // 1. Validation for required fields from the UI
-        if (!fullName || !email || !contactNumber || !password) {
-            return res.status(400).json({ message: "Please fill in all required fields." });
-        }
-
-        // 2. Check existing email (normalized to lowercase)
-        const existingSupplier = await Supplier.findOne({ email: email.toLowerCase() });
-        if (existingSupplier) {
-            return res.status(400).json({ message: "Email already exists" });
-        }
-
-        // 3. Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // 4. Create supplier instance
-        const supplier = new Supplier({
-                companyName: data.companyName,
-                businessRegistrationNumber: data.businessRegistrationNumber,
-                vatNumber: data.vatNumber,
-                contactNumber: data.contactNumber,
-                email: data.email,
-                address: data.address,
-                businessType: data.businessType,
-                natureOfBusiness: data.natureOfBusiness,
-                productCategories: data.productCategories || [],
-                password: hashedPassword,
-                role: data.role || "Supplier", // default role
-        });
-
-        await supplier.save();
-
-        res.status(201).json({
-            message: "Supplier registered successfully",
-            supplier: {
-                id: supplier._id,
-                fullName: supplier.fullName,
-                email: supplier.email,
-                role: supplier.role,
-            },
-        });
-
-    } catch (err) {
-        res.status(500).json({ message: "Server error", error: err.message });
-    }
-}
-
-// ================================
-//         LOGIN SUPPLIER
-// ================================
-export async function loginSupplier(req, res) {
-    try {
-        const { email, password } = req.body;
-
-       
-        if (!email || !password) {
-            return res.status(400).json({ message: "Email and password are required" });
-        }
-
-       
-        const supplier = await Supplier.findOne({ email });
-        if (!supplier) {
-            return res.status(404).json({ message: "Supplier not found" });
-        }
-
-       
-        const isPasswordCorrect = await bcrypt.compare(password, supplier.password);
-        if (!isPasswordCorrect) {
-            return res.status(401).json({ message: "Invalid password" });
-        }
-
-    
-        const payload = {
-            id: supplier._id,
-            email: supplier.email,
-            fullName: supplier.fullName,
-            companyName: supplier.companyName,
-            businessRegistrationNumber: supplier.businessRegistrationNumber,
-            businessType: supplier.businessType,
-            contactNumber: supplier.contactNumber,
-            role: supplier.role || "Supplier",
-        };
-
-      
-        const token = jwt.sign(payload, process.env.JWT_SECRET, {
-            expiresIn: "150h",
-        });
-
-        return res.status(200).json({
-            message: "Login successful",
-            token,
-            supplier: payload,
-        });
-
-    } catch (error) {
-        console.error("Login Error:", error);
-        return res.status(500).json({
-            message: "Server error",
-            error: error.message,
-        });
-    }
-}
-
-// ================================
-//   GET ALL SUPPLIERS (Admin)
-// ================================
 export async function getAllSuppliers(req, res) {
     try {
         const suppliers = await Supplier.find().select("-password");
@@ -195,7 +75,7 @@ export async function updateSupplierProfile(req, res) {
 export async function getDashboardStats(req, res) {
     try {
         const supplierEmail = req.user.email;
-        const supplierId    = req.user.id;
+        const supplierId = req.user.id;
 
         const quotedReqIds = await Quotation.distinct("requirementId", {
             supplierId,
@@ -223,13 +103,13 @@ export async function getDashboardStats(req, res) {
             {
                 $match: {
                     relatedEntity: supplierEmail,
-                    type:          "supplier",
-                    status:        "completed",
+                    type: "supplier",
+                    status: "completed",
                 },
             },
             {
                 $group: {
-                    _id:   null,
+                    _id: null,
                     total: { $sum: { $toDouble: "$amount" } },
                 },
             },
@@ -266,16 +146,16 @@ export async function getDashboardRecentRequirements(req, res) {
             .select("requirements attachedDocument createdAt");
 
         const formatted = recentRequirements.map((r) => ({
-            id:           r._id,
-            createdAt:    r.createdAt,
-            itemCount:    r.requirements?.length || 0,
+            id: r._id,
+            createdAt: r.createdAt,
+            itemCount: r.requirements?.length || 0,
             previewTitle: r.requirements?.[0]?.itemName || "Requirement",
             items: r.requirements?.map((item) => ({
-                itemName:             item.itemName,
-                quantity:             item.quantity,
-                unit:                 item.unit,
+                itemName: item.itemName,
+                quantity: item.quantity,
+                unit: item.unit,
                 expectedDeliveryDate: item.expectedDeliveryDate,
-                notes:                item.notes || "",
+                notes: item.notes || "",
             })),
             attachedDocument: r.attachedDocument || null,
         }));
@@ -310,14 +190,14 @@ export async function getDashboardRecentOrders(req, res) {
             .select("po_id status total date expectedDeliveryDate items payment_terms");
 
         const formatted = recentOrders.map((order) => ({
-            id:                   order._id,
-            po_id:                order.po_id,
-            status:               order.status,
-            total:                order.total,
-            date:                 order.date,
+            id: order._id,
+            po_id: order.po_id,
+            status: order.status,
+            total: order.total,
+            date: order.date,
             expectedDeliveryDate: order.expectedDeliveryDate || null,
-            itemCount:            order.items?.length || 0,
-            payment_terms:        order.payment_terms,
+            itemCount: order.items?.length || 0,
+            payment_terms: order.payment_terms,
         }));
 
         return res.status(200).json({
@@ -343,20 +223,20 @@ export async function getDashboardPendingPayments(req, res) {
 
         const pendingBills = await Invoice.find({
             supplierEmail,
-            invoiceType:    "supplier",
+            invoiceType: "supplier",
             payment_status: { $in: ["unpaid", "overdue", "partially_paid"] },
         })
             .sort({ date: -1 })
             .select("bill_id purchaseOrderRef total payment_status date due_date tax_amount");
 
         const formatted = pendingBills.map((bill) => ({
-            id:               bill._id,
-            bill_id:          bill.bill_id,
+            id: bill._id,
+            bill_id: bill.bill_id,
             purchaseOrderRef: bill.purchaseOrderRef,
-            total:            bill.total,
-            payment_status:   bill.payment_status,
-            bill_date:        bill.date,
-            due_date:         bill.due_date || null,
+            total: bill.total,
+            payment_status: bill.payment_status,
+            bill_date: bill.date,
+            due_date: bill.due_date || null,
             isOverdue:
                 bill.due_date &&
                 new Date(bill.due_date) < new Date() &&
@@ -369,9 +249,9 @@ export async function getDashboardPendingPayments(req, res) {
 
         return res.status(200).json({
             success: true,
-            pendingPayments:    formatted,
+            pendingPayments: formatted,
             totalPendingAmount,
-            count:              pendingBills.length,
+            count: pendingBills.length,
         });
     } catch (err) {
         console.error("getDashboardPendingPayments error:", err);

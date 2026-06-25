@@ -10,10 +10,10 @@ import stockRouter from "./routes/stockRouter.js"
 import financeRouter from "./routes/financeRouter.js"
 import bankAccountRoutes from "./routes/bankAccountRouter.js"
 import paymentTransactionRoutes from "./routes/paymentTransactionRoutes.js"
-import requirementRouter from "./routes/requirementRouter.js"   
+import requirementRouter from "./routes/requirementRouter.js"
 import quotationRouter from "./routes/quotationRouter.js"
 import orderRouter from "./routes/orderRouter.js"
-import invoiceRouter from "./routes/invoiceRouter.js"  
+import invoiceRouter from "./routes/invoiceRouter.js"
 import supplierRequirementRouter from "./routes/supplierrequirementRouter.js"
 import supplierQuotationRouter from "./routes/supplierQuotationRouter.js"
 import supplierOrderRouter from "./routes/supplierOrderRouter.js"
@@ -46,39 +46,27 @@ if (!fs.existsSync('uploads')) {
     fs.mkdirSync('uploads');
 }
 
-// const orderRoutes = require("./routes/orderRouter.js");
-// const requirementRoutes = require("./routes/requirementRouter.js");
-// const quotationRoutes = require("./routes/quotationRouter.js");
-// const invoiceRoutes = require("./routes/invoiceRouter.js");
 
-// Apply verifyToken globally — populates req.user if a valid Bearer token is present
-app.use(verifyToken)
-
-
-// app.use("/api/admin", adminRouter)  
-// app.use("/api/customers", customerRouter)
+// Public routes — NO auth middleware (login & register must be accessible without a token)
 app.use("/api/users", userRouter)
-app.use("/api/stocks", stockRouter)
-app.use("/api/finance", financeRouter)
-app.use("/api/bankAccounts", bankAccountRoutes)  
-app.use("/api/paymentTransactions", paymentTransactionRoutes);
-app.use("/api/requirements", requirementRouter);
-app.use("/api/orders", orderRouter)
-app.use("/api/quotations", quotationRouter)
-app.use("/api/invoices", invoiceRouter)
-app.use("/api/suppliers", supplierRequirementRouter)
-app.use("/api/suppliers/quotations", supplierQuotationRouter)
-app.use("/api/supplier-orders", supplierOrderRouter)
-app.use("/api/supplier-invoices", supplierInvoiceRouter)
-app.use("/api/supplier-payments", supplierPaymentTransactionRouter)
-app.use("/api/dashboard", dashboardRouter)
 
-// // Centralized error handler
-// app.use(errorHandler)
+// Protected routes — verifyToken applied only here
+app.use("/api/stocks", verifyToken, stockRouter)
+app.use("/api/finance", verifyToken, financeRouter)
+app.use("/api/bankAccounts", verifyToken, bankAccountRoutes)
+app.use("/api/paymentTransactions", verifyToken, paymentTransactionRoutes)
+app.use("/api/requirements", verifyToken, requirementRouter)
+app.use("/api/orders", verifyToken, orderRouter)
+app.use("/api/quotations", verifyToken, quotationRouter)
+app.use("/api/invoices", verifyToken, invoiceRouter)
+app.use("/api/suppliers", verifyToken, supplierRequirementRouter)
+app.use("/api/suppliers/quotations", verifyToken, supplierQuotationRouter)
+app.use("/api/supplier-orders", verifyToken, supplierOrderRouter)
+app.use("/api/supplier-invoices", verifyToken, supplierInvoiceRouter)
+app.use("/api/supplier-payments", verifyToken, supplierPaymentTransactionRouter)
+app.use("/api/dashboard", verifyToken, dashboardRouter)
 
 
-app.listen(5900,
-    () => {
-        console.log("server is running")
-    }
-)
+app.listen(5900, () => {
+    console.log("server is running")
+})
