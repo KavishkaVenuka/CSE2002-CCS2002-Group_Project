@@ -125,7 +125,7 @@ export function GlobalSidebar({
           <button
             onClick={onLogout}
             className={`flex items-center px-4 py-3 gap-4 border-[2px] border-black transition-all duration-100 nb-interactive cursor-pointer ${
-              themeClasses.logoutContainer || 'bg-nb-red hover:bg-red-600 text-white'
+              themeClasses.logoutContainer || 'bg-white hover:bg-red-50 text-nb-red'
             }`}
           >
             <div className="shrink-0 flex items-center justify-center">

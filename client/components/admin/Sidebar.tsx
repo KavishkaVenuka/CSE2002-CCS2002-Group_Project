@@ -103,7 +103,7 @@ export function AdminSidebar() {
         settingsText: "text-inherit font-black",
 
         // Logout
-        logoutContainer: "bg-nb-red hover:bg-black hover:text-nb-red transition-colors",
+        logoutContainer: "bg-white hover:bg-red-50 text-nb-red transition-colors",
         logoutText: "text-inherit font-black",
     };
 
