@@ -34,9 +34,9 @@ supplierRequirementRouter.get("/supplier-requirements/my", requireAuth, getMySup
 supplierRequirementRouter.post("/supplier-requirements", requireAdmin, createSupplierRequirement);
 
 // GET  /api/suppliers/requirements/stats
-supplierRequirementRouter.get("/requirements/stats", getSupplierRequirementStats);
+supplierRequirementRouter.get("/requirements/stats", requireAuth, getSupplierRequirementStats);
 
 // GET  /api/suppliers/requirements/:id
-supplierRequirementRouter.get("/requirements/:id", getSupplierRequirementById);
+supplierRequirementRouter.get("/requirements/:id", requireAuth, getSupplierRequirementById);
 
 export default supplierRequirementRouter;

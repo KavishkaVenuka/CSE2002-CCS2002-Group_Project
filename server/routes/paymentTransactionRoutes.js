@@ -4,11 +4,14 @@ import {
   addPayment,
   deletePayment,
 } from "../controllers/paymentTransactionController.js";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.get("/getPayments", getPayments);
-router.post("/addPayment", addPayment);
-router.delete("/deletePayment/:id", deletePayment);
+// Base path: /api/paymentTransactions
+// Payment transaction records are Admin-only — must never be exposed without auth.
+router.get("/getPayments",         requireAuth, requireAdmin, getPayments);
+router.post("/addPayment",         requireAuth, requireAdmin, addPayment);
+router.delete("/deletePayment/:id",requireAuth, requireAdmin, deletePayment);
 
 export default router;

@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearAuthCookie();
     setUser(null);
     setToken(null);
-    router.push("/login");
+    router.replace("/login");
   }, [router]);
 
   // ── Bootstrap: read localStorage once on mount ─────────────────────

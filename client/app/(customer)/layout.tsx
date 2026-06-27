@@ -1,13 +1,63 @@
 "use client"
 
 import { ReactNode, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/customer/Sidebar"
+import { isTokenExpired } from "@/lib/auth"
 
 interface CustomerLayoutProps {
   children: ReactNode
 }
 
 export default function CustomerLayout({ children }: CustomerLayoutProps) {
+  const router = useRouter()
+
+  // ── Client-side auth guard ────────────────────────────────────────────
+  // Even if browser shows a cached page via the back button, this effect
+  // runs immediately and redirects unauthenticated / expired users to login.
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user")
+      const storedToken = localStorage.getItem("token")
+
+      if (!storedUser || !storedToken) {
+        router.replace("/login")
+        return
+      }
+
+      // Check raw token expiry
+      if (isTokenExpired(storedToken)) {
+        localStorage.removeItem("token")
+        localStorage.removeItem("user")
+        localStorage.removeItem("supplierToken")
+        router.replace("/login")
+        return
+      }
+
+      // Also validate token embedded in user object
+      const parsed = JSON.parse(storedUser)
+      const userToken = parsed?.token || storedToken
+      if (isTokenExpired(userToken)) {
+        localStorage.removeItem("token")
+        localStorage.removeItem("user")
+        localStorage.removeItem("supplierToken")
+        router.replace("/login")
+        return
+      }
+
+      // Guard correct role
+      if (parsed?.role && parsed.role !== "Customer") {
+        router.replace("/login")
+      }
+    } catch {
+      // Corrupted storage — force logout
+      localStorage.removeItem("token")
+      localStorage.removeItem("user")
+      localStorage.removeItem("supplierToken")
+      router.replace("/login")
+    }
+  }, [router])
+
   // Load Neo Brutalism fonts
   useEffect(() => {
     const id = "nb-fonts"

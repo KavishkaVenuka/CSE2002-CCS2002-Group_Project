@@ -89,7 +89,7 @@ function readCookie(req: NextRequest): { token: string; role: string } | null {
   return null;
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const auth = readCookie(req);
   const hasValidToken = auth && !isExpired(auth.token);

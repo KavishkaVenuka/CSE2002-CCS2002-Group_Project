@@ -2,13 +2,57 @@
 "use client"
 
 import { ReactNode, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { AdminSidebar } from "@/components/admin/Sidebar"
+import { isTokenExpired } from "@/lib/auth"
 
 interface AdminLayoutProps {
   children: ReactNode
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
+  const router = useRouter()
+
+  // ── Client-side auth guard ────────────────────────────────────────────
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user")
+      const storedToken = localStorage.getItem("token")
+
+      if (!storedUser || !storedToken) {
+        router.replace("/login")
+        return
+      }
+
+      if (isTokenExpired(storedToken)) {
+        localStorage.removeItem("token")
+        localStorage.removeItem("user")
+        localStorage.removeItem("supplierToken")
+        router.replace("/login")
+        return
+      }
+
+      const parsed = JSON.parse(storedUser)
+      const userToken = parsed?.token || storedToken
+      if (isTokenExpired(userToken)) {
+        localStorage.removeItem("token")
+        localStorage.removeItem("user")
+        localStorage.removeItem("supplierToken")
+        router.replace("/login")
+        return
+      }
+
+      if (parsed?.role && parsed.role !== "Admin") {
+        router.replace("/login")
+      }
+    } catch {
+      localStorage.removeItem("token")
+      localStorage.removeItem("user")
+      localStorage.removeItem("supplierToken")
+      router.replace("/login")
+    }
+  }, [router])
+
   // Load Neo Brutalism fonts (same as supplier/customer layouts)
   useEffect(() => {
     const id = "nb-fonts"

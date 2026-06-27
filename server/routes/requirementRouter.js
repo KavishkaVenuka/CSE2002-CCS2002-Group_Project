@@ -1,35 +1,34 @@
 import express from "express";
 import {
-    getAllRequirements,
-    getRequirementStats,
-    getRequirementById,
-    createRequirement,
-    updateRequirementStatus,
+  getAllRequirements,
+  getRequirementStats,
+  getRequirementById,
+  createRequirement,
+  updateRequirementStatus,
 } from "../controllers/requirementController.js";
 import { uploadRequirementProof } from "../middleware/uploadMiddleware.js";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 const requirementRouter = express.Router();
 
-// ──────────────────────────────────────────────
-// GET  /api/requirements             → list (filtered by customerId, status, search)
-// GET  /api/requirements/stats       → stats for the frontend boxes
-// GET  /api/requirements/:id         → single record detail
-// POST /api/requirements             → create (multipart/form-data + optional file)
-// PATCH /api/requirements/:id/status → admin updates lifecycle status
-// ──────────────────────────────────────────────
+// Base path: /api/requirements
+// NOTE: /stats must be defined BEFORE /:id so Express doesn't treat "stats" as an id param.
 
-// NOTE: /stats must be defined BEFORE /:id so Express doesn't treat "stats" as an id param
-requirementRouter.get("/stats", getRequirementStats);
+// ── Shared (any authenticated user) ───────────────────────────────────────
+// Customers filter by ?customerId=, suppliers/admins may see broader results.
+requirementRouter.get("/stats", requireAuth, getRequirementStats);
+requirementRouter.get("/",      requireAuth, getAllRequirements);
+requirementRouter.get("/:id",   requireAuth, getRequirementById);
 
-requirementRouter.get("/", getAllRequirements);
-requirementRouter.get("/:id", getRequirementById);
-
+// ── Create — authenticated customers submit requirements ───────────────────
 requirementRouter.post(
-    "/",
-    uploadRequirementProof.single("attachedDocument"),
-    createRequirement
+  "/",
+  requireAuth,
+  uploadRequirementProof.single("attachedDocument"),
+  createRequirement
 );
 
-requirementRouter.patch("/:id/status", updateRequirementStatus);
+// ── Status update — Admin only ─────────────────────────────────────────────
+requirementRouter.patch("/:id/status", requireAuth, requireAdmin, updateRequirementStatus);
 
 export default requirementRouter;
