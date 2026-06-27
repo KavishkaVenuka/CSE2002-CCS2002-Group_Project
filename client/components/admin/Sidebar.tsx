@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { GlobalSidebar, NavItem } from "@/components/common/GlobalSidebar";
+import { clearAuthCookie } from "@/lib/auth";
 import {
     LayoutDashboard,
     Package,
@@ -22,6 +23,8 @@ export function AdminSidebar() {
     const handleLogout = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("supplierToken");
+        clearAuthCookie();
         router.push("/login");
     };
 
@@ -100,7 +103,7 @@ export function AdminSidebar() {
         settingsText: "text-inherit font-black",
 
         // Logout
-        logoutContainer: "bg-nb-red hover:bg-black hover:text-nb-red transition-colors",
+        logoutContainer: "bg-white hover:bg-red-50 text-nb-red transition-colors",
         logoutText: "text-inherit font-black",
     };
 

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Package, MapPin, Truck, CheckCircle2, Clock, Calendar, ChevronDown, CheckCircle, Loader2, X, Send, AlertCircle } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
 import { getCustomerOrders, confirmDelivery } from "@/lib/api"
+import DeliveryTrackingLoading from "./loading"
 
 interface OrderItem {
   productID: string;
@@ -155,7 +156,6 @@ export default function DeliveryTrackingPage() {
           issuedQuantity: issuedQty,
           receivedQuantity: rQty,
           rejectedQuantity: rejQty,
-          restocked: item.restocked || false,
         };
 
         tracking[orderId].items[item.productID] = itemTracking;
@@ -193,18 +193,8 @@ export default function DeliveryTrackingPage() {
 
   const timeline = selectedOrder ? getTimeline(selectedOrder.status, selectedOrder.statusDates) : [];
 
-  if (loading && orders.length === 0) {
-    return (
-      <>
-        <DashboardHeader title="Delivery Tracking" />
-        <main className="flex-1 overflow-auto p-6 space-y-6 bg-nb-bg flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-             <Loader2 className="w-10 h-10 animate-spin text-black" />
-             <p className="font-body font-bold text-sm uppercase tracking-wider text-black">Syncing Deliveries...</p>
-          </div>
-        </main>
-      </>
-    )
+  if (loading) {
+    return <DeliveryTrackingLoading />;
   }
 
   return (

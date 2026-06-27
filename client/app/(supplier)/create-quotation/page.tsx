@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import {
   Send, Plus, Trash2, ChevronLeft, Calendar,
@@ -13,7 +13,7 @@ import Link from "next/link"
 import { getMyRequirements, getRequirementDetails, createSupplierQuotation } from "@/lib/api"
 import { toast } from "sonner"
 
-export default function CreateQuotationPage() {
+function CreateQuotationContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const reqIdParam = searchParams.get("reqId")
@@ -547,5 +547,19 @@ export default function CreateQuotationPage() {
         </div>
       </main>
     </>
+  )
+}
+
+export default function CreateQuotationPage() {
+  return (
+    <Suspense fallback={
+      <main className="flex-1 overflow-auto p-8 space-y-10 bg-[#fdfcfb]">
+        <div className="max-w-4xl mx-auto text-center font-display font-black text-lg py-12">
+          LOADING...
+        </div>
+      </main>
+    }>
+      <CreateQuotationContent />
+    </Suspense>
   )
 }

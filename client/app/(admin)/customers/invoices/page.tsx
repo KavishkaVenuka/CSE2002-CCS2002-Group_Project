@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { AdminSidebar } from "@/components/admin/Sidebar";
 import { Receipt, Download, Eye, Loader2, Printer, Search, FileText, CheckCircle, X, CreditCard, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -93,22 +92,12 @@ export default function CustomerInvoicesAdmin() {
       const finalInvoices = aggregatedInvoices.map((inv: any) => {
         let finalInv = { ...inv };
 
-        // Recalculate invoice details if total is 0 or missing
-        if (!finalInv.total || finalInv.total === 0) {
+        let reconstructedItems = finalInv.items && finalInv.items.length > 0 ? finalInv.items : [];
+
+        if (reconstructedItems.length === 0) {
           const matchingOrder = orders.find((o: any) => o.orderID === finalInv.orderID || o._id === finalInv.orderID);
           if (matchingOrder) {
-            const reconstructedItems = (finalInv.items && finalInv.items.length > 0) ? finalInv.items.map((item: any) => {
-              const orderItem = matchingOrder.items?.find((oi: any) => oi.name === item.itemName || oi.productID === item.productID || oi.name === item.name);
-              const qty = orderItem ? (orderItem.quantity || orderItem.issuedQuantity || 0) : (item.quantity || 0);
-              const price = orderItem ? (orderItem.price || 0) : (item.unitPrice || 0);
-              const itemQty = qty || 1;
-              return {
-                ...item,
-                quantity: itemQty,
-                unitPrice: price,
-                totalPrice: itemQty * price
-              };
-            }) : (matchingOrder.items || []).map((item: any) => {
+            reconstructedItems = (matchingOrder.items || []).map((item: any) => {
               const qty = item.quantity || item.issuedQuantity || 1;
               const price = item.price || 0;
               return {
@@ -118,17 +107,28 @@ export default function CustomerInvoicesAdmin() {
                 totalPrice: qty * price
               };
             });
-
-            const subtotal = reconstructedItems.reduce((sum: number, item: any) => sum + (item.totalPrice || 0), 0);
-            const tax_amount = subtotal * 0.1;
-            const total = subtotal + tax_amount;
-
-            finalInv.items = reconstructedItems;
-            finalInv.subtotal = subtotal;
-            finalInv.tax_amount = tax_amount;
-            finalInv.total = total;
           }
+        } else {
+          reconstructedItems = reconstructedItems.map((item: any) => {
+            const qty = item.quantity || 0;
+            const price = item.unitPrice || 0;
+            return {
+              ...item,
+              quantity: qty,
+              unitPrice: price,
+              totalPrice: qty * price
+            };
+          });
         }
+
+        const subtotal = reconstructedItems.reduce((sum: number, item: any) => sum + (item.totalPrice || 0), 0);
+        const tax_amount = subtotal * 0.1;
+        const total = subtotal + tax_amount;
+
+        finalInv.items = reconstructedItems;
+        finalInv.subtotal = subtotal;
+        finalInv.tax_amount = tax_amount;
+        finalInv.total = total;
 
         if (overrides[finalInv._id]) {
           return {
@@ -243,9 +243,8 @@ export default function CustomerInvoicesAdmin() {
   const inputStyle = "border-2 border-nb-black focus:outline-none font-bold text-nb-black shadow-[2px_2px_0px_0px_#000] px-4 py-2 bg-white";
 
   return (
-    <div className="flex min-h-screen bg-nb-bg w-full">
-      <AdminSidebar />
-      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-x-hidden">
+    <>
+      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto">
         
         {/* Header Section */}
         <div className="relative border-4 border-nb-black bg-nb-cyan p-10 shadow-nb-lg">
@@ -494,7 +493,7 @@ export default function CustomerInvoicesAdmin() {
                       <div className="w-80 space-y-4 font-bold uppercase text-lg">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Subtotal</span>
-                          <span>LKR {selectedInvoice.subtotal?.toLocaleString() || selectedInvoice.total.toLocaleString()}</span>
+                          <span>LKR {selectedInvoice.subtotal?.toLocaleString() || '0'}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Tax (10%)</span>
@@ -567,6 +566,6 @@ export default function CustomerInvoicesAdmin() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

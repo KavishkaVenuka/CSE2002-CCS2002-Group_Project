@@ -15,6 +15,7 @@ import {
   getRecentOrders,
   getPendingPayments
 } from "@/lib/api"
+import SupplierDashboardLoading from "./loading"
 
 export default function SupplierDashboardPage() {
   const [stats, setStats] = useState<{ newRequirements: number; pendingQuotations: number; activeOrders: number; totalRevenue: string } | null>(null);
@@ -52,17 +53,7 @@ export default function SupplierDashboardPage() {
   }, []);
 
   if (loading) {
-    return (
-      <>
-        <Header title="Supplier Dashboard" />
-        <main className="flex-1 overflow-auto p-8 space-y-10 bg-[#fdfcfb] flex items-center justify-center">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="w-12 h-12 text-black animate-spin" />
-            <p className="font-mono font-bold text-sm tracking-widest uppercase">Loading Dashboard...</p>
-          </div>
-        </main>
-      </>
-    );
+    return <SupplierDashboardLoading />;
   }
 
   if (error) {

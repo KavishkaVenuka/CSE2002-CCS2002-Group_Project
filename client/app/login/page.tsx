@@ -1,12 +1,14 @@
 "use client"
 
-import { useState, FormEvent } from "react"
+import { useState, FormEvent, Suspense } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { ArrowRight, LogIn } from "lucide-react"
+import { setAuthCookie } from "@/lib/auth"
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -44,8 +46,14 @@ export default function LoginPage() {
       localStorage.setItem("token", data.token)
       localStorage.setItem("user", JSON.stringify(data.user))
 
-      // Redirect based on role
-      if (data.user?.role === "Supplier") {
+      // Set auth cookie so middleware can enforce route protection
+      setAuthCookie(data.token, data.user.role)
+
+      // Redirect to original page if ?redirect param exists, else role-based default
+      const redirectTo = searchParams.get("redirect")
+      if (redirectTo && redirectTo.startsWith("/")) {
+        router.push(redirectTo)
+      } else if (data.user?.role === "Supplier") {
         router.push("/supplier-dashboard")
       } else if (data.user?.role === "Admin") {
         router.push("/admin-dashboard")
@@ -176,5 +184,13 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginPageContent />
+    </Suspense>
   )
 }

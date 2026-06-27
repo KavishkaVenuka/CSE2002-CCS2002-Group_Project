@@ -10,6 +10,7 @@ import { Header } from "@/components/supplier/Header"
 import { Panel } from "@/components/common/Panel"
 import { toast } from "sonner"
 import { getMyPayments, getPaymentStats } from "@/lib/api"
+import Loading from "./loading"
 
 export default function PaymentStatusPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -89,6 +90,10 @@ export default function PaymentStatusPage() {
         return 'bg-gray-200 text-black border-black';
     }
   };
+
+  if (isLoading && payments.length === 0) {
+    return <Loading />
+  }
 
   return (
     <>

@@ -11,6 +11,7 @@ import { Panel } from "@/components/common/Panel"
 import { getSupplierOrders, getSupplierOrderStats, acknowledgeOrder, getOrderDetails } from "@/lib/api"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import Loading from "./loading"
 
 const BADGE_MAP: Record<string, string> = {
   "pending": "bg-gray-200",
@@ -127,6 +128,10 @@ export default function OrdersPage() {
     { title: "Dispatched", value: stats?.dispatched?.toString() || "0", icon: Truck, color: "bg-nb-green" },
     { title: "Delivered", value: stats?.delivered?.toString() || "0", icon: Package, color: "bg-nb-cyan" },
   ]
+
+  if (isLoading && orders.length === 0) {
+    return <Loading />
+  }
 
   return (
     <>

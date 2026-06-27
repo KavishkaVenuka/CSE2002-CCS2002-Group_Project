@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation"
 import { GlobalSidebar } from "@/components/ui/GlobalSidebar"
+import { clearAuthCookie } from "@/lib/auth"
 import {
   LayoutDashboard, FileText, ShoppingBag,
   Truck, Receipt, ClipboardList, PlusCircle,
@@ -27,6 +28,7 @@ export function Sidebar() {
     localStorage.removeItem("token")
     localStorage.removeItem("supplierToken")
     localStorage.removeItem("user")
+    clearAuthCookie()
     router.push("/login")
   }
 
@@ -59,7 +61,7 @@ export function Sidebar() {
         navItemContainerActive:   "bg-black text-white border-[2px] border-black shadow-[3px_3px_0px_0px_#000] translate-x-[2px] translate-y-[2px]",
         navItemTextDefault:       "text-black font-bold",
         navItemTextActive:        "text-white font-black",
-        logoutContainer:          "bg-nb-red hover:bg-black hover:text-nb-red transition-colors",
+        logoutContainer:          "bg-white hover:bg-red-50 text-nb-red transition-colors",
         logoutText:               "text-inherit font-black",
       }}
     />

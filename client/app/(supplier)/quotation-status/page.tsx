@@ -10,6 +10,7 @@ import { Header } from "@/components/supplier/Header"
 import { Panel } from "@/components/common/Panel"
 import { getSupplierQuotationsTable, getSupplierQuotationsStats, getQuotationDetails } from "@/lib/api"
 import { toast } from "sonner"
+import Loading from "./loading"
 
 const BADGE_MAP: Record<string, string> = {
   "pending": "bg-nb-yellow",
@@ -93,6 +94,10 @@ export default function QuotationStatusPage() {
     { title: "Approved", value: stats?.approved?.toString() || "0", icon: CheckCircle, color: "bg-nb-green" },
     { title: "Rejected", value: stats?.rejected?.toString() || "0", icon: XCircle, color: "bg-red-400" },
   ]
+
+  if (isLoading && quotations.length === 0) {
+    return <Loading />
+  }
 
   return (
     <>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import { AdminSidebar } from '@/components/admin/Sidebar';
 import {
   Settings,
   Users,
@@ -55,9 +54,8 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-nb-bg w-full">
-      <AdminSidebar />
-      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-x-hidden">
+    <>
+      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto">
         
         {/* Header - Neo Brutalist style */}
         <div className="relative border-4 border-black bg-blue-400 p-5 md:p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
@@ -101,7 +99,7 @@ export default function AdminSettingsPage() {
         </div>
 
       </div>
-    </div>
+    </>
   );
 }
 

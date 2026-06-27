@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { AdminSidebar } from "@/components/admin/Sidebar";
 import { CreditCard, Loader2, Calendar, Banknote, Search, Eye, CheckCircle, X, FileText, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -43,15 +42,18 @@ export default function CustomerPaymentsAdmin() {
   const fetchPayments = async () => {
     try {
       setIsLoading(true);
+      const token = typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('user') || '{}')?.token || localStorage.getItem('token') || '') : '';
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
       // 1. Fetch all customers
-      const customersRes = await axios.get('http://localhost:5900/api/users/all-customers');
+      const customersRes = await axios.get('http://localhost:5900/api/users/all-customers', config);
       const customers = customersRes.data.customers || [];
       
       // 2. Fetch invoices for each customer email
       const invoicePromises = customers.map(async (cust: any) => {
         if (!cust.email) return [];
         try {
-          const res = await axios.get(`http://localhost:5900/api/invoices/customer/${encodeURIComponent(cust.email)}`);
+          const res = await axios.get(`http://localhost:5900/api/invoices/customer/${encodeURIComponent(cust.email)}`, config);
           return res.data.invoices || res.data || [];
         } catch (e) {
           console.error(`Failed to fetch invoices for ${cust.email}`, e);
@@ -73,7 +75,7 @@ export default function CustomerPaymentsAdmin() {
       // Fetch all orders to map pricing/quantities for zero-total invoices
       let orders: any[] = [];
       try {
-        const ordersRes = await axios.get('http://localhost:5900/api/orders');
+        const ordersRes = await axios.get('http://localhost:5900/api/orders', config);
         orders = ordersRes.data || [];
       } catch (e) {
         console.error("Failed to fetch orders for invoice verification", e);
@@ -86,24 +88,15 @@ export default function CustomerPaymentsAdmin() {
       const finalInvoices = aggregatedInvoices.map((inv: any) => {
         let finalInv = { ...inv };
 
-        // Recalculate invoice details if total is 0 or missing
-        if (!finalInv.total || finalInv.total === 0) {
-          const matchingOrder = orders.find((o: any) => o.orderID === finalInv.orderID || o._id === finalInv.orderID);
+        // Always recalculate invoice details to apply pre-tax logic
+        let reconstructedItems = finalInv.items && finalInv.items.length > 0 ? finalInv.items : [];
+        const matchingOrder = orders.find((o: any) => o.orderID === finalInv.orderID || o._id === finalInv.orderID);
+        
+        if (reconstructedItems.length === 0) {
           if (matchingOrder) {
-            const reconstructedItems = (finalInv.items && finalInv.items.length > 0) ? finalInv.items.map((item: any) => {
-              const orderItem = matchingOrder.items?.find((oi: any) => oi.name === item.itemName || oi.productID === item.productID || oi.name === item.name);
-              const qty = orderItem ? (orderItem.quantity || orderItem.issuedQuantity || 0) : (item.quantity || 0);
-              const price = orderItem ? (orderItem.price || 0) : (item.unitPrice || 0);
-              const itemQty = qty || 1;
-              return {
-                ...item,
-                quantity: itemQty,
-                unitPrice: price,
-                totalPrice: itemQty * price
-              };
-            }) : (matchingOrder.items || []).map((item: any) => {
+            reconstructedItems = (matchingOrder.items || []).map((item: any) => {
               const qty = item.quantity || item.issuedQuantity || 1;
-              const price = item.price || 0;
+              const price = Math.round((item.price || 0) / 1.1);
               return {
                 itemName: item.name,
                 quantity: qty,
@@ -111,17 +104,29 @@ export default function CustomerPaymentsAdmin() {
                 totalPrice: qty * price
               };
             });
-
-            const subtotal = reconstructedItems.reduce((sum: number, item: any) => sum + (item.totalPrice || 0), 0);
-            const tax_amount = subtotal * 0.1;
-            const total = subtotal + tax_amount;
-
-            finalInv.items = reconstructedItems;
-            finalInv.subtotal = subtotal;
-            finalInv.tax_amount = tax_amount;
-            finalInv.total = total;
           }
+        } else {
+          reconstructedItems = reconstructedItems.map((item: any) => {
+            const orderItem = matchingOrder?.items?.find((oi: any) => oi.name === item.itemName || oi.productID === item.productID || oi.name === item.name);
+            const qty = item.quantity || 0;
+            const price = orderItem && orderItem.price ? Math.round(orderItem.price / 1.1) : (item.unitPrice || 0);
+            return {
+              ...item,
+              quantity: qty,
+              unitPrice: price,
+              totalPrice: qty * price
+            };
+          });
         }
+
+        const subtotal = reconstructedItems.reduce((sum: number, item: any) => sum + (item.totalPrice || 0), 0);
+        const tax_amount = subtotal * 0.1;
+        const total = subtotal + tax_amount;
+
+        finalInv.items = reconstructedItems;
+        finalInv.subtotal = subtotal;
+        finalInv.tax_amount = tax_amount;
+        finalInv.total = total;
 
         if (overrides[finalInv._id]) {
           return {
@@ -146,7 +151,8 @@ export default function CustomerPaymentsAdmin() {
 
   const fetchBankAccounts = async () => {
     try {
-      const response = await axios.get('http://localhost:5900/api/bankAccounts/getBankAccounts');
+      const token = typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('user') || '{}')?.token || localStorage.getItem('token') || '') : '';
+      const response = await axios.get('http://localhost:5900/api/bankAccounts/getBankAccounts', { headers: { Authorization: `Bearer ${token}` } });
       const accounts = response.data.bankAccounts || [];
       setBankAccounts(accounts);
       if (accounts.length > 0) {
@@ -229,9 +235,8 @@ export default function CustomerPaymentsAdmin() {
   const inputStyle = "border-2 border-nb-black focus:outline-none font-bold text-nb-black shadow-[2px_2px_0px_0px_#000] px-4 py-2 bg-white";
 
   return (
-    <div className="flex min-h-screen bg-nb-bg w-full">
-      <AdminSidebar />
-      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-x-hidden">
+    <>
+      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto">
         
         {/* Header */}
         <div className="relative border-4 border-nb-black bg-nb-cyan p-10 shadow-nb-lg">
@@ -484,6 +489,6 @@ export default function CustomerPaymentsAdmin() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

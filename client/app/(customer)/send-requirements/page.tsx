@@ -1,14 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { 
-  Package, FileText, Plus, Trash2, UploadCloud, 
+import {
+  Package, FileText, Plus, Trash2, UploadCloud,
   Edit3, ChevronDown, Send, Clock, AlertCircle,
   CheckCircle2, XCircle, ArrowRight, Eye, Upload, DownloadCloud, File
 } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
 import { Panel } from "@/components/common/Panel"
 import { getCustomerRequirements, getCustomerRequirementsStats, getAvailableStocks, createRequirement, type SupplierRequirement } from "@/lib/api"
+import SendRequirementsLoading from "./loading"
 
 interface RequirementItem {
   id: number
@@ -142,9 +143,14 @@ export default function SendRequirements() {
     } catch (error) { 
       console.error(error)
       alert("Failed to submit requirement.") 
-    } finally { 
-      setLoading(false) 
+    } finally {
+      setLoading(false)
     }
+  }
+
+
+  if (historyLoading && stocksLoading) {
+    return <SendRequirementsLoading />
   }
 
   return (
@@ -197,9 +203,13 @@ export default function SendRequirements() {
               <div className="w-12 h-12 bg-white border-[2px] border-black flex items-center justify-center shadow-[3px_3px_0px_0px_#000]">
                 {stat.icon}
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="font-display font-black text-[10px] text-black uppercase tracking-widest">{stat.label}</p>
-                <h3 className="font-display font-black text-3xl text-black">{stat.value}</h3>
+                {historyLoading ? (
+                  <div className="h-8 w-16 bg-white/40 border-2 border-black mt-1 shimmer"></div>
+                ) : (
+                  <h3 className="font-display font-black text-3xl text-black">{stat.value}</h3>
+                )}
               </div>
             </div>
           ))}
@@ -371,9 +381,16 @@ export default function SendRequirements() {
             </div>
             
             {historyLoading ? (
-              <div className="p-12 flex flex-col items-center justify-center gap-4 bg-white">
-                <div className="w-10 h-10 border-[4px] border-nb-cyan border-t-black animate-spin" />
-                <p className="font-mono text-[10px] font-black text-gray-400 uppercase tracking-widest">Loading history...</p>
+              <div className="divide-y-[2px] divide-black bg-white min-w-[700px]">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="grid grid-cols-[150px_1fr_150px_100px_80px] gap-4 px-6 py-4 items-center">
+                    <div className="h-4 w-28 bg-[#d4ede9] border-2 border-black shimmer"></div>
+                    <div className="h-4 w-48 bg-[#d4ede9] border-2 border-black shimmer"></div>
+                    <div className="h-6 w-24 bg-[#d4ede9] border-2 border-black shimmer"></div>
+                    <div className="h-4 w-12 bg-[#d4ede9] border-2 border-black shimmer ml-auto"></div>
+                    <div className="h-8 w-8 bg-[#d4ede9] border-2 border-black shimmer ml-auto"></div>
+                  </div>
+                ))}
               </div>
             ) : sentRequirements.length === 0 ? (
               <div className="p-12 text-center bg-white">

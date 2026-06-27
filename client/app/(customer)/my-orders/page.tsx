@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Clock, Package, Send, Truck, CheckCircle2, ShoppingBag, Search, ChevronDown, Eye, Loader2, X } from "lucide-react"
+import { Clock, Package, Send, Truck, CheckCircle2, ShoppingBag, Search, ChevronDown, Eye, X } from "lucide-react"
 import { DashboardHeader } from "@/components/customer/DashboardHeader"
+import MyOrdersLoading from "./loading"
 
 
 interface Order {
@@ -98,6 +99,10 @@ export default function MyOrdersPage() {
     return matchesSearch && matchesStatus;
   });
 
+  if (loading) {
+    return <MyOrdersLoading />;
+  }
+
   return (
     <>
       <DashboardHeader title="My Orders" />
@@ -155,58 +160,49 @@ export default function MyOrdersPage() {
           </div>
 
           <div className="overflow-x-auto min-h-[300px]">
-            {loading ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 z-10 gap-3">
-                <Loader2 className="w-10 h-10 animate-spin text-black" />
-                <p className="font-body font-bold text-sm uppercase tracking-wider text-black">Syncing Orders...</p>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-[1.4fr_1.2fr_1fr_70px_110px_110px_60px] px-6 py-3 border-b-[2px] border-black bg-nb-bg min-w-[900px]">
-                  {["Order ID", "Quotation Ref", "Order Date", "Items", "Amount", "Status", "Action"].map(h => (
-                    <div key={h} className="font-display font-black text-[10px] uppercase tracking-widest text-black">{h}</div>
-                  ))}
-                </div>
-                <div className="min-w-[900px]">
-                  {filteredOrders.length > 0 ? (
-                    filteredOrders.map((ord, i) => {
-                      const cfg = STAT_CONFIG[ord.status] || { color: "bg-gray-200", icon: Clock };
-                      const StatusIcon = cfg.icon;
-                      return (
-                        <div key={ord._id} className={`grid grid-cols-[1.4fr_1.2fr_1fr_70px_110px_110px_60px] items-center px-6 py-4 hover:bg-nb-yellow/20 transition-colors ${i < filteredOrders.length - 1 ? "border-b-[2px] border-black" : ""}`}>
-                          <div className="font-mono text-sm font-bold text-black">{ord.orderID}</div>
-                          <div className="font-mono text-xs text-black">{ord.quotationRef || "N/A"}</div>
-                          <div className="font-mono text-xs text-black">{new Date(ord.orderDate).toLocaleDateString()}</div>
-                          <div className="font-body text-sm text-black">{ord.totalItems}</div>
-                          <div className="font-display font-black text-sm text-black">LKR {ord.totalAmount?.toLocaleString()}</div>
-                          <div>
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 border-[2px] border-black font-mono font-bold text-[10px] uppercase ${cfg.color}`}>
-                              <StatusIcon size={10} strokeWidth={2.5} /> {ord.status}
-                            </span>
-                          </div>
-                          <div>
-                            <button
-                              onClick={() => {
-                                setSelectedOrderData(ord);
-                                setShowDetailsModal(true);
-                              }}
-                              className="w-8 h-8 flex items-center justify-center bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-y-[2px] hover:shadow-none transition-all"
-                            >
-                              <Eye size={14} strokeWidth={2.5} className="text-black" />
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    })
-                  ) : (
-                    <div className="p-10 text-center flex flex-col items-center gap-3">
-                      <ShoppingBag size={40} className="text-black/20" strokeWidth={1} />
-                      <p className="font-body font-bold text-sm text-black/50">No orders found.</p>
+            <div className="grid grid-cols-[1.4fr_1.2fr_1fr_70px_110px_110px_60px] px-6 py-3 border-b-[2px] border-black bg-nb-bg min-w-[900px]">
+              {["Order ID", "Quotation Ref", "Order Date", "Items", "Amount", "Status", "Action"].map(h => (
+                <div key={h} className="font-display font-black text-[10px] uppercase tracking-widest text-black">{h}</div>
+              ))}
+            </div>
+            <div className="min-w-[900px]">
+              {filteredOrders.length > 0 ? (
+                filteredOrders.map((ord, i) => {
+                  const cfg = STAT_CONFIG[ord.status] || { color: "bg-gray-200", icon: Clock };
+                  const StatusIcon = cfg.icon;
+                  return (
+                    <div key={ord._id} className={`grid grid-cols-[1.4fr_1.2fr_1fr_70px_110px_110px_60px] items-center px-6 py-4 hover:bg-nb-yellow/20 transition-colors ${i < filteredOrders.length - 1 ? "border-b-[2px] border-black" : ""}`}>
+                      <div className="font-mono text-sm font-bold text-black">{ord.orderID}</div>
+                      <div className="font-mono text-xs text-black">{ord.quotationRef || "N/A"}</div>
+                      <div className="font-mono text-xs text-black">{new Date(ord.orderDate).toLocaleDateString()}</div>
+                      <div className="font-body text-sm text-black">{ord.totalItems}</div>
+                      <div className="font-display font-black text-sm text-black">LKR {ord.totalAmount?.toLocaleString()}</div>
+                      <div>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 border-[2px] border-black font-mono font-bold text-[10px] uppercase ${cfg.color}`}>
+                          <StatusIcon size={10} strokeWidth={2.5} /> {ord.status}
+                        </span>
+                      </div>
+                      <div>
+                        <button
+                          onClick={() => {
+                            setSelectedOrderData(ord);
+                            setShowDetailsModal(true);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center bg-white border-[2px] border-black shadow-[2px_2px_0px_0px_#000] hover:translate-y-[2px] hover:shadow-none transition-all"
+                        >
+                          <Eye size={14} strokeWidth={2.5} className="text-black" />
+                        </button>
+                      </div>
                     </div>
-                  )}
+                  )
+                })
+              ) : (
+                <div className="p-10 text-center flex flex-col items-center gap-3">
+                  <ShoppingBag size={40} className="text-black/20" strokeWidth={1} />
+                  <p className="font-body font-bold text-sm text-black/50">No orders found.</p>
                 </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
         </section>
 
