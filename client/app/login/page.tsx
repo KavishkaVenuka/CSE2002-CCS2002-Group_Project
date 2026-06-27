@@ -42,9 +42,11 @@ function LoginPageContent() {
 
       const data = await response.json()
 
-      // Handle successful login: store token and user details
+      // Store token both at top level and inside the user object
+      // getToken() in api.ts reads user.token first, so we embed it here
+      const userWithToken = { ...data.user, token: data.token }
       localStorage.setItem("token", data.token)
-      localStorage.setItem("user", JSON.stringify(data.user))
+      localStorage.setItem("user", JSON.stringify(userWithToken))
 
       // Set auth cookie so middleware can enforce route protection
       setAuthCookie(data.token, data.user.role)

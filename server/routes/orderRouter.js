@@ -1,44 +1,45 @@
 import express from "express";
-import { 
-    getOrdersByCustomerId,
-    getPendingOrderCountByCustomer,
-    getProcessingOrderCountByCustomer,
-    getDispatchedOrderCountByCustomer,
-    getInTransitOrderCountByCustomer,
-    getDeliveredOrderCountByCustomer,
-    getAllOrders,
-    updateOrderStatus,
-    issueOrderItems,
-    confirmOrderDelivery,
-    restockRejectedItems,
-    getAllPurchaseOrders,
-    updatePurchaseOrderStatus,
-    createOrder
+import {
+  getOrdersByCustomerId,
+  getPendingOrderCountByCustomer,
+  getProcessingOrderCountByCustomer,
+  getDispatchedOrderCountByCustomer,
+  getInTransitOrderCountByCustomer,
+  getDeliveredOrderCountByCustomer,
+  getAllOrders,
+  updateOrderStatus,
+  issueOrderItems,
+  confirmOrderDelivery,
+  restockRejectedItems,
+  getAllPurchaseOrders,
+  updatePurchaseOrderStatus,
+  createOrder,
 } from "../controllers/orderController.js";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 const orderRouter = express.Router();
 
-// 1. Table eka load karanna adala orders tika ganna route eka
-// Frontend eke axios.get(`.../api/orders/customer/${customID}`) widiyata call karanna
-orderRouter.get("/customer/:customerId", getOrdersByCustomerId);
-orderRouter.get("/", getAllOrders); 
-orderRouter.post("/", createOrder);
+// Base path: /api/orders
 
-// New routes for updating order
-orderRouter.put("/:id/status", updateOrderStatus);
-orderRouter.put("/:id/issue-items", issueOrderItems);
-orderRouter.put("/confirm-delivery/:id", confirmOrderDelivery);
-orderRouter.put("/restock-rejected/:id", restockRejectedItems);
+// ── Customer routes ────────────────────────────────────────────────────────
+// Customers can only view their own orders; the controller further scopes by ID.
+orderRouter.get("/customer/:customerId", requireAuth, getOrdersByCustomerId);
+orderRouter.post("/", requireAuth, createOrder);
+orderRouter.put("/confirm-delivery/:id", requireAuth, confirmOrderDelivery);
 
-// Purchase Order Routes for Admin
-orderRouter.get("/purchase-orders", getAllPurchaseOrders);
-orderRouter.put("/purchase-orders/:id/status", updatePurchaseOrderStatus);
+// ── Per-customer stat counts ───────────────────────────────────────────────
+orderRouter.get("/pending-count/:customerId",    requireAuth, getPendingOrderCountByCustomer);
+orderRouter.get("/processing-count/:customerId", requireAuth, getProcessingOrderCountByCustomer);
+orderRouter.get("/dispatched-count/:customerId", requireAuth, getDispatchedOrderCountByCustomer);
+orderRouter.get("/in-transit-count/:customerId", requireAuth, getInTransitOrderCountByCustomer);
+orderRouter.get("/delivered-count/:customerId",  requireAuth, getDeliveredOrderCountByCustomer);
 
-// 2. Stats cards tika sandaha routes
-orderRouter.get("/pending-count/:customerId", getPendingOrderCountByCustomer);
-orderRouter.get("/processing-count/:customerId", getProcessingOrderCountByCustomer);
-orderRouter.get("/dispatched-count/:customerId", getDispatchedOrderCountByCustomer);
-orderRouter.get("/in-transit-count/:customerId", getInTransitOrderCountByCustomer);
-orderRouter.get("/delivered-count/:customerId", getDeliveredOrderCountByCustomer);
+// ── Admin-only routes ──────────────────────────────────────────────────────
+orderRouter.get("/",                        requireAuth, requireAdmin, getAllOrders);
+orderRouter.put("/:id/status",              requireAuth, requireAdmin, updateOrderStatus);
+orderRouter.put("/:id/issue-items",         requireAuth, requireAdmin, issueOrderItems);
+orderRouter.put("/restock-rejected/:id",    requireAuth, requireAdmin, restockRejectedItems);
+orderRouter.get("/purchase-orders",         requireAuth, requireAdmin, getAllPurchaseOrders);
+orderRouter.put("/purchase-orders/:id/status", requireAuth, requireAdmin, updatePurchaseOrderStatus);
 
 export default orderRouter;

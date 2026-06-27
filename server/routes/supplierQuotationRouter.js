@@ -1,29 +1,34 @@
 import express from "express";
-import { 
-    createSupplierQuotation, 
-    getSupplierQuotations, 
-    getSupplierQuotationById, 
-    updateSupplierQuotation, 
-    submitDraftQuotation,
-    getAllQuotations,
-    acceptQuotation,
-    rejectQuotation,
-    getSupplierQuotationStats
+import {
+  createSupplierQuotation,
+  getSupplierQuotations,
+  getSupplierQuotationById,
+  updateSupplierQuotation,
+  submitDraftQuotation,
+  getAllQuotations,
+  acceptQuotation,
+  rejectQuotation,
+  getSupplierQuotationStats,
 } from "../controllers/supplierQuotation.js";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 const supplierQuotationRouter = express.Router();
 
 // Base path: /api/suppliers/quotations
-supplierQuotationRouter.post("/", createSupplierQuotation);
-supplierQuotationRouter.get("/", getSupplierQuotations);
-supplierQuotationRouter.get("/table", getSupplierQuotations); // Frontend expects /table
-supplierQuotationRouter.get("/stats", getSupplierQuotationStats); // Frontend expects /stats
-supplierQuotationRouter.get("/all", getAllQuotations); // Admin view
-supplierQuotationRouter.get("/:id", getSupplierQuotationById);
-supplierQuotationRouter.get("/:id/detail", getSupplierQuotationById); // Frontend expects /detail
-supplierQuotationRouter.patch("/:id", updateSupplierQuotation);
-supplierQuotationRouter.post("/:id/submit", submitDraftQuotation);
-supplierQuotationRouter.put("/accept/:id", acceptQuotation); // Admin action
-supplierQuotationRouter.put("/reject/:id", rejectQuotation); // Admin action
+
+// ── Supplier-facing routes ─────────────────────────────────────────────────
+supplierQuotationRouter.post("/",           requireAuth, createSupplierQuotation);
+supplierQuotationRouter.get("/",            requireAuth, getSupplierQuotations);
+supplierQuotationRouter.get("/table",       requireAuth, getSupplierQuotations);
+supplierQuotationRouter.get("/stats",       requireAuth, getSupplierQuotationStats);
+supplierQuotationRouter.get("/:id",         requireAuth, getSupplierQuotationById);
+supplierQuotationRouter.get("/:id/detail",  requireAuth, getSupplierQuotationById);
+supplierQuotationRouter.patch("/:id",       requireAuth, updateSupplierQuotation);
+supplierQuotationRouter.post("/:id/submit", requireAuth, submitDraftQuotation);
+
+// ── Admin-only routes ──────────────────────────────────────────────────────
+supplierQuotationRouter.get("/all",          requireAuth, requireAdmin, getAllQuotations);
+supplierQuotationRouter.put("/accept/:id",   requireAuth, requireAdmin, acceptQuotation);
+supplierQuotationRouter.put("/reject/:id",   requireAuth, requireAdmin, rejectQuotation);
 
 export default supplierQuotationRouter;

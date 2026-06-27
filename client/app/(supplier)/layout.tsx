@@ -1,13 +1,57 @@
 "use client"
 
 import { ReactNode, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Sidebar } from "@/components/supplier/Sidebar"
+import { isTokenExpired } from "@/lib/auth"
 
 interface SupplierLayoutProps {
   children: ReactNode
 }
 
 export default function SupplierLayout({ children }: SupplierLayoutProps) {
+  const router = useRouter()
+
+  // ── Client-side auth guard ────────────────────────────────────────────
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user")
+      const storedToken = localStorage.getItem("token") || localStorage.getItem("supplierToken")
+
+      if (!storedUser || !storedToken) {
+        router.replace("/login")
+        return
+      }
+
+      if (isTokenExpired(storedToken)) {
+        localStorage.removeItem("token")
+        localStorage.removeItem("user")
+        localStorage.removeItem("supplierToken")
+        router.replace("/login")
+        return
+      }
+
+      const parsed = JSON.parse(storedUser)
+      const userToken = parsed?.token || storedToken
+      if (isTokenExpired(userToken)) {
+        localStorage.removeItem("token")
+        localStorage.removeItem("user")
+        localStorage.removeItem("supplierToken")
+        router.replace("/login")
+        return
+      }
+
+      if (parsed?.role && parsed.role !== "Supplier") {
+        router.replace("/login")
+      }
+    } catch {
+      localStorage.removeItem("token")
+      localStorage.removeItem("user")
+      localStorage.removeItem("supplierToken")
+      router.replace("/login")
+    }
+  }, [router])
+
   // Load distinctive fonts for Neo Brutalism
   useEffect(() => {
     const id = "nb-fonts"

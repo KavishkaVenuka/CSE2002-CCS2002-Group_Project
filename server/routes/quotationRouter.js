@@ -1,18 +1,36 @@
 import express from "express";
-import { getPendingQuotationCount, getPendingQuotations, getAcceptedQuotationsCount, getRejectedQuotationsCount, getExpiredQuotationsCount, getAllQuotations, getAllQuotationsByCustomer, getPendingQuotationsByCustomer, rejectQuotation, acceptQuotation, createSupplierQuotation } from "../controllers/quotationController.js";
+import {
+  getPendingQuotationCount,
+  getPendingQuotations,
+  getAcceptedQuotationsCount,
+  getRejectedQuotationsCount,
+  getExpiredQuotationsCount,
+  getAllQuotations,
+  getAllQuotationsByCustomer,
+  getPendingQuotationsByCustomer,
+  rejectQuotation,
+  acceptQuotation,
+  createSupplierQuotation,
+} from "../controllers/quotationController.js";
+import { requireAuth, requireAdmin } from "../middleware/auth.js";
 
 const quotationRouter = express.Router();
 
-quotationRouter.get("/all", getAllQuotations);
-quotationRouter.get("/pending-count/:email", getPendingQuotationCount);
-quotationRouter.get("/pending/:email", getPendingQuotations);
-quotationRouter.get("/pending-customer/:email", getPendingQuotationsByCustomer);
-quotationRouter.get("/accepted-count", getAcceptedQuotationsCount);
-quotationRouter.get("/rejected-count", getRejectedQuotationsCount);
-quotationRouter.get("/expired-count", getExpiredQuotationsCount);
-quotationRouter.get("/customer/:customerId", getAllQuotationsByCustomer);
-quotationRouter.put("/reject/:id", rejectQuotation);
-quotationRouter.put("/accept/:id", acceptQuotation);
-quotationRouter.post("/create-supplier-quotation", createSupplierQuotation );
+// Base path: /api/quotations
+
+// ── Customer-facing routes ─────────────────────────────────────────────────
+quotationRouter.get("/customer/:customerId",       requireAuth, getAllQuotationsByCustomer);
+quotationRouter.get("/pending/:email",             requireAuth, getPendingQuotations);
+quotationRouter.get("/pending-count/:email",       requireAuth, getPendingQuotationCount);
+quotationRouter.get("/pending-customer/:email",    requireAuth, getPendingQuotationsByCustomer);
+
+// ── Admin-only routes ──────────────────────────────────────────────────────
+quotationRouter.get("/all",                        requireAuth, requireAdmin, getAllQuotations);
+quotationRouter.get("/accepted-count",             requireAuth, requireAdmin, getAcceptedQuotationsCount);
+quotationRouter.get("/rejected-count",             requireAuth, requireAdmin, getRejectedQuotationsCount);
+quotationRouter.get("/expired-count",              requireAuth, requireAdmin, getExpiredQuotationsCount);
+quotationRouter.put("/reject/:id",                 requireAuth, requireAdmin, rejectQuotation);
+quotationRouter.put("/accept/:id",                 requireAuth, requireAdmin, acceptQuotation);
+quotationRouter.post("/create-supplier-quotation", requireAuth, requireAdmin, createSupplierQuotation);
 
 export default quotationRouter;
