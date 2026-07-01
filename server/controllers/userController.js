@@ -22,6 +22,13 @@ export async function createUser(req, res) {
             return res.status(400).json({ message: "Required fields are missing." });
         }
 
+        // Validate Admin Creation
+        if (role === "Admin") {
+            if (!req.user || req.user.role !== "Admin") {
+                return res.status(403).json({ message: "Forbidden: Only admins can create admin accounts." });
+            }
+        }
+
         // 2. පවතින Email එකක්දැයි බැලීම
         const existingUser = await User.findOne({ email: email.toLowerCase() });
         if (existingUser) {

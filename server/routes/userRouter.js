@@ -4,7 +4,7 @@ import { verifyToken, requireAuth } from "../middleware/auth.js";
 
 const userRouter = express.Router()
 
-userRouter.post("/register", createUser);
+userRouter.post("/register", verifyToken, createUser);
 userRouter.post("/login", loginUser);
 userRouter.get("/all-customers", verifyToken, requireAuth, getAllCustomers);
 
