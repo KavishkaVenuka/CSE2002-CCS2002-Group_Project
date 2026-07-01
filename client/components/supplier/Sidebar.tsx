@@ -29,7 +29,7 @@ export function Sidebar() {
     localStorage.removeItem("supplierToken")
     localStorage.removeItem("user")
     clearAuthCookie()
-    router.replace("/login")
+    window.location.href = "/login"
   }
 
   const platformIcon = (

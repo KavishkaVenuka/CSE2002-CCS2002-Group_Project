@@ -25,7 +25,7 @@ export function AdminSidebar() {
         localStorage.removeItem("user");
         localStorage.removeItem("adminToken");
         clearAuthCookie();
-        router.replace("/login");
+        window.location.href = "/login";
     };
 
     const navItems: NavItem[] = [
