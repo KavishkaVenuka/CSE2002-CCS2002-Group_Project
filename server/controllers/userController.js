@@ -13,7 +13,8 @@ export async function createUser(req, res) {
             password, 
             role, // "Admin", "Customer", හෝ "Supplier" ලෙස Frontend එකෙන් එවිය යුතුයි
             contactNumber,
-            address 
+            address ,
+            companyName
         } = req.body;
 
         // 1. Validation
@@ -58,7 +59,8 @@ export async function createUser(req, res) {
             password: hashedPassword,
             role, 
             contactNumber,
-            address
+            address,
+            companyName
         });
 
         await newUser.save();
@@ -104,7 +106,7 @@ export async function loginUser(req, res) {
 
 export async function getAllCustomers(req, res) {
     try {
-        const customers = await User.find({ role: "Customer" }).select("fullName customID email");
+        const customers = await User.find({ role: "Customer" }).select("fullName customID email companyName");
         res.status(200).json({ success: true, customers });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
