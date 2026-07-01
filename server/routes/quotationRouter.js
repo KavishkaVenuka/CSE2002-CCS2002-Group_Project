@@ -29,8 +29,8 @@ quotationRouter.get("/all",                        requireAuth, requireAdmin, ge
 quotationRouter.get("/accepted-count",             requireAuth, requireAdmin, getAcceptedQuotationsCount);
 quotationRouter.get("/rejected-count",             requireAuth, requireAdmin, getRejectedQuotationsCount);
 quotationRouter.get("/expired-count",              requireAuth, requireAdmin, getExpiredQuotationsCount);
-quotationRouter.put("/reject/:id",                 requireAuth, requireAdmin, rejectQuotation);
-quotationRouter.put("/accept/:id",                 requireAuth, requireAdmin, acceptQuotation);
+quotationRouter.put("/reject/:id",                 requireAuth, rejectQuotation);
+quotationRouter.put("/accept/:id",                 requireAuth, acceptQuotation);
 quotationRouter.post("/create-supplier-quotation", requireAuth, requireAdmin, createSupplierQuotation);
 
 export default quotationRouter;

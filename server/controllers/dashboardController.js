@@ -6,6 +6,7 @@ import PaymentTransaction from '../models/PaymentTransaction.js';
 import SupplierPaymentTransaction from '../models/supplierPaymentTransaction.js';
 import Invoice from '../models/Invoice.js';
 import Order from '../models/Order.js';
+import Quotation from '../models/Quotation.js';
 import mongoose from 'mongoose';
 
 export const getAdminDashboardStats = async (req, res) => {
@@ -222,8 +223,14 @@ export const getCustomerDashboardStats = async (req, res) => {
         ]);
 
         // 2. Quotations
-        const pendingQuotationsCount = await Requirement.countDocuments({ email, status: 'quoted' });
-        const pendingQuotations = await Requirement.find({ email, status: 'quoted' }).sort({ updatedAt: -1 }).limit(3);
+        const pendingQuotationsCount = await Quotation.countDocuments({ 
+            $or: [{ customerId: req.user.id }, { email }], 
+            status: { $regex: /^pending$/i } 
+        });
+        const pendingQuotations = await Quotation.find({ 
+            $or: [{ customerId: req.user.id }, { email }], 
+            status: { $regex: /^pending$/i } 
+        }).sort({ createdAt: -1 }).limit(3);
 
         // 3. Due Payments (Invoices)
         const duePaymentRes = await Invoice.aggregate([
@@ -277,10 +284,13 @@ export const getCustomerDashboardStats = async (req, res) => {
                     date: o.date.toISOString().split('T')[0]
                 })),
                 pendingQuotations: pendingQuotations.map(q => ({
-                    id: q.requirementID || `REQ-${q._id.toString().slice(-6)}`,
-                    reqRef: q.requirementID,
-                    amount: q.budget || 0,
-                    expiryDate: q.deadline ? q.deadline.toISOString().split('T')[0] : 'N/A'
+                    id: q.quotationID || q.sq_id || q._id.toString(),
+                    reqRef: q.requirementId ? "REQ" : 'N/A',
+                    items: q.items ? q.items.length : 0,
+                    amount: `LKR ${q.total || q.total_estimate || 0}`,
+                    status: q.status || "Pending",
+                    supplier: q.supplierEmail || "Supplier",
+                    date: q.date ? q.date.toISOString().split('T')[0] : (q.createdAt ? q.createdAt.toISOString().split('T')[0] : '')
                 })),
                 pendingInvoices: pendingInvoices.map(inv => ({
                     id: inv.invoiceID || inv.bill_id,
