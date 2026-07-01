@@ -102,7 +102,10 @@ export default function CustomerQuotations() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${BACKEND}/api/quotations/all`);
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${BACKEND}/api/quotations/all`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       if (!data.success) throw new Error(data.message || 'Failed to load quotations');
