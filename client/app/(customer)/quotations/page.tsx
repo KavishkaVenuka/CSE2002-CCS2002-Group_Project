@@ -412,7 +412,7 @@ export default function QuotationsPage() {
 
               <div className="mx-6 border-[3px] border-black shadow-[4px_4px_0px_0px_#000] overflow-hidden">
                 <div className="grid grid-cols-[1fr_80px_110px_110px] bg-black px-4 py-2.5">
-                  {["Item / Description", "Qty", "Unit Price", "Total"].map(h => (
+                  {["Item / Description", "Qty", "Unit Price", "Sub Total"].map(h => (
                     <div key={h} className="font-display font-black text-[10px] uppercase tracking-widest text-white">
                       {h}
                     </div>
@@ -420,7 +420,7 @@ export default function QuotationsPage() {
                 </div>
                 {selectedQuotation.items?.map((item, i, arr) => {
                   const price = item.unitPrice || item.price || 0;
-                  const total = item.totalPrice || (price * item.quantity);
+                  const Subtotal = item.totalPrice || (price * item.quantity);
                   return (
                     <div
                       key={i}
@@ -432,7 +432,7 @@ export default function QuotationsPage() {
                       </div>
                       <div className="font-mono text-xs text-black">{item.quantity} {item.unit || ''}</div>
                       <div className="font-mono text-xs text-black">LKR {price.toLocaleString()}</div>
-                      <div className="font-display font-black text-sm text-black">LKR {total.toLocaleString()}</div>
+                      <div className="font-display font-black text-sm text-black">LKR {Subtotal.toLocaleString()}</div>
                     </div>
                   )
                 })}
@@ -446,26 +446,41 @@ export default function QuotationsPage() {
                     </span>
                   </div>
                   <div className="bg-white divide-y-[2px] divide-black">
-                    <div className="flex justify-between items-center px-4 py-3">
-                      <span className="font-body text-xs text-gray-600 uppercase tracking-wide">Subtotal</span>
-                      <span className="font-mono text-sm font-bold text-black">
-                        LKR {(selectedQuotation.subtotal || selectedQuotation.total || selectedQuotation.total_estimate || 0).toLocaleString()}
-                      </span>
-                    </div>
-                    {selectedQuotation.tax_amount !== undefined && selectedQuotation.tax_amount > 0 && (
-                      <div className="flex justify-between items-center px-4 py-3">
-                        <span className="font-body text-xs text-gray-600 uppercase tracking-wide">Tax</span>
-                        <span className="font-mono text-sm font-bold text-black">
-                          LKR {selectedQuotation.tax_amount.toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center px-4 py-4 bg-nb-yellow border-t-[3px] border-black">
-                      <span className="font-display font-black text-xs uppercase tracking-widest text-black">Total</span>
-                      <span className="font-display font-black text-xl text-black">
-                        {formatAmount(selectedQuotation)}
-                      </span>
-                    </div>
+                    {(() => {
+                      const itemsSubtotal = selectedQuotation.items?.reduce((sum, item) => {
+                        const price = item.unitPrice || item.price || 0;
+                        return sum + (price * (item.quantity || 1));
+                      }, 0) || 0;
+
+                      const subtotal = selectedQuotation.subtotal || itemsSubtotal;
+                      const tax = selectedQuotation.tax_amount !== undefined && selectedQuotation.tax_amount > 0 
+                        ? selectedQuotation.tax_amount 
+                        : (subtotal * 0.1);
+                      const total = selectedQuotation.total || selectedQuotation.total_estimate || (subtotal + tax);
+
+                      return (
+                        <>
+                          <div className="flex justify-between items-center px-4 py-3">
+                            <span className="font-body text-xs text-gray-600 uppercase tracking-wide">Subtotal</span>
+                            <span className="font-mono text-sm font-bold text-black">
+                              LKR {subtotal.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center px-4 py-3">
+                            <span className="font-body text-xs text-gray-600 uppercase tracking-wide">Tax (10%)</span>
+                            <span className="font-mono text-sm font-bold text-black">
+                              LKR {tax.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center px-4 py-4 bg-nb-yellow border-t-[3px] border-black">
+                            <span className="font-display font-black text-xs uppercase tracking-widest text-black">Total</span>
+                            <span className="font-display font-black text-xl text-black">
+                              LKR {total.toLocaleString()}
+                            </span>
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

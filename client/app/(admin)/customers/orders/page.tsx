@@ -151,14 +151,48 @@ export default function CustomerOrders() {
     }
   };
 
-  const timeline: TimelineStep[] = [
-    { name: 'Quotation Accepted', status: 'completed', date: '2024-01-14 10:00 AM', notes: 'Customer accepted quotation' },
-    { name: 'Goods Prepared', status: 'completed', date: '2024-01-14 02:30 PM', notes: 'Order prepared for delivery' },
-    { name: 'Dispatched', status: 'completed', date: '2024-01-15 09:00 AM', notes: 'Package dispatched to customer' },
-    { name: 'In Transit', status: 'current', date: '2024-01-15 03:00 PM', notes: 'Package in transit - ETA 1 day' },
-    { name: 'Delivered', status: 'pending', notes: 'Awaiting delivery confirmation' },
-    { name: 'Stock Updated', status: 'pending', notes: 'Pending delivery completion' },
-  ];
+  const generateTimeline = () => {
+    if (!selectedOrderData) return [];
+    
+    const baseDate = new Date(selectedOrderData.orderDate);
+    
+    // Formatting function for dates
+    const formatDate = (d: Date) => d.toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true });
+
+    // Generate simulated dates based on order date
+    const d1 = new Date(baseDate);
+    const d2 = new Date(baseDate.getTime() + 4.5 * 60 * 60 * 1000);
+    const d3 = new Date(baseDate.getTime() + 24 * 60 * 60 * 1000);
+    const d4 = new Date(baseDate.getTime() + 30 * 60 * 60 * 1000);
+    
+    const status = selectedOrderData.status;
+
+    return [
+      { name: 'Quotation Accepted', status: 'completed' as const, date: formatDate(d1), notes: 'Customer accepted quotation' },
+      { name: 'Goods Prepared', 
+        status: status === 'pending' ? 'current' : 'completed' as const, 
+        date: status !== 'pending' ? formatDate(d2) : undefined, 
+        notes: 'Order prepared for delivery' },
+      { name: 'Dispatched', 
+        status: (status === 'dispatched' || status === 'in-transit' || status === 'completed') ? (status === 'dispatched' ? 'current' : 'completed') : 'pending' as const, 
+        date: (status === 'dispatched' || status === 'in-transit' || status === 'completed') ? formatDate(d3) : undefined, 
+        notes: 'Package dispatched to customer' },
+      { name: 'In Transit', 
+        status: (status === 'in-transit' || status === 'completed') ? (status === 'in-transit' ? 'current' : 'completed') : 'pending' as const, 
+        date: (status === 'in-transit' || status === 'completed') ? formatDate(d4) : undefined, 
+        notes: 'Package in transit - ETA 1 day' },
+      { name: 'Delivered', 
+        status: status === 'completed' ? 'completed' : 'pending' as const, 
+        date: status === 'completed' ? formatDate(new Date()) : undefined, 
+        notes: 'Awaiting delivery confirmation' },
+      { name: 'Stock Updated', 
+        status: status === 'completed' ? 'completed' : 'pending' as const, 
+        date: status === 'completed' ? formatDate(new Date()) : undefined, 
+        notes: 'Pending delivery completion' },
+    ];
+  };
+
+  const timeline: TimelineStep[] = generateTimeline();
 
   const updateItemField = (id: number, field: keyof OrderItem, value: any) => {
     setItems(items.map(item =>
@@ -320,7 +354,7 @@ export default function CustomerOrders() {
                         <td className="py-5 pl-8 pr-4 font-black text-lg border-r-2 border-nb-black">{order.id}</td>
                         <td className="p-5 font-bold text-lg border-r-2 border-nb-black">{order.customer}</td>
                         <td className="p-5 font-bold uppercase text-gray-600 border-r-2 border-nb-black">{order.quotationRef}</td>
-                        <td className="p-5 font-bold uppercase text-gray-600 border-r-2 border-nb-black">{new Date(order.orderDate).toLocaleDateString()}</td>
+                        <td className="p-5 font-bold uppercase text-gray-600 border-r-2 border-nb-black">{new Date(order.orderDate).toLocaleString()}</td>
                         <td className="p-5 font-black text-lg border-r-2 border-nb-black">{order.totalItems}</td>
                         <td className="p-5 font-black text-lg border-r-2 border-nb-black">LKR {order.totalAmount.toLocaleString()}</td>
                         <td className="p-5 border-r-2 border-nb-black">
@@ -394,7 +428,7 @@ export default function CustomerOrders() {
                       </div>
                       <div className="flex justify-between border-b-2 border-gray-300 pb-2">
                         <span className="text-gray-600">Order Date</span>
-                        <span className="text-nb-black">{selectedOrderData ? new Date(selectedOrderData.orderDate).toLocaleDateString() : '---'}</span>
+                        <span className="text-nb-black">{selectedOrderData ? new Date(selectedOrderData.orderDate).toLocaleString() : '---'}</span>
                       </div>
                       <div className="flex justify-between pb-2">
                         <span className="text-gray-600">Quotation Ref</span>
@@ -664,7 +698,7 @@ export default function CustomerOrders() {
                     <h2 className="text-5xl font-black font-display uppercase tracking-tighter mb-4">INVOICE</h2>
                     <div className="font-bold uppercase space-y-1">
                       <p>Invoice #: INV-{selectedOrderData?.id?.replace('ORD-', '') || '---'}</p>
-                      <p>Date: {selectedOrderData ? new Date(selectedOrderData.orderDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '---'}</p>
+                      <p>Date: {selectedOrderData ? new Date(selectedOrderData.orderDate).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true }) : '---'}</p>
                       <p>Order #: {selectedOrderData?.id || '---'}</p>
                     </div>
                   </div>
