@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { PriceInput } from '@/components/ui/PriceInput';
 import {
   Send,
   Save,
@@ -325,10 +326,7 @@ function CreateQuotationContent() {
                             <td className="p-4 bg-gray-50 border-r-2 border-nb-black">
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-nb-black font-black text-sm">LKR</span>
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
+                                <PriceInput
                                   value={item.unitPrice}
                                   onChange={(e) => updatePrice(item.id, e.target.value)}
                                   placeholder="0.00"

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import PaymentsLoading from './loading';
+import { PriceInput } from '@/components/ui/PriceInput';
 import {
   CreditCard,
   Search,
@@ -84,7 +85,7 @@ function getToken(): string {
     return user?.token || localStorage.getItem('token') || '';
   } catch { return ''; }
 }
-function authHeaders() {
+function authHeaders(): Record<string, string> {
   const t = getToken();
   return t ? { 'Authorization': `Bearer ${t}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
 }
@@ -1034,8 +1035,7 @@ export default function PaymentsTransactions() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block mb-2 uppercase">Amount *</label>
-                  <input
-                    type="number"
+                  <PriceInput
                     placeholder="0.00"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}

@@ -10,6 +10,7 @@ import {
 import { Header } from "@/components/supplier/Header"
 import { Panel } from "@/components/common/Panel"
 import Link from "next/link"
+import { PriceInput } from "@/components/ui/PriceInput"
 import { getMyRequirements, getRequirementDetails, createSupplierQuotation } from "@/lib/api"
 import { toast } from "sonner"
 
@@ -354,8 +355,7 @@ function CreateQuotationContent() {
 
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 font-display font-black text-[10px] text-gray-400">LKR</span>
-                            <input
-                              type="number"
+                            <PriceInput
                               value={item.unitPrice}
                               onChange={(e) => updateItem(item.id, 'unitPrice', e.target.value)}
                               placeholder="0.00"

@@ -151,7 +151,7 @@ export default function CustomerOrders() {
     }
   };
 
-  const generateTimeline = () => {
+  const generateTimeline = (): TimelineStep[] => {
     if (!selectedOrderData) return [];
     
     const baseDate = new Date(selectedOrderData.orderDate);

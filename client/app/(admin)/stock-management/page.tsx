@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { PriceInput } from '@/components/ui/PriceInput';
 import {
   Plus,
   Search,
@@ -42,7 +43,7 @@ function getToken(): string {
     return user?.token || localStorage.getItem('token') || '';
   } catch { return ''; }
 }
-function authHeaders() {
+function authHeaders(): Record<string, string> {
   const t = getToken();
   return t ? { 'Authorization': `Bearer ${t}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
 }
@@ -645,8 +646,7 @@ export default function StockManagement() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-black text-nb-black uppercase tracking-widest text-xs">Cost Price</label>
-                    <input
-                      type="number"
+                    <PriceInput
                       placeholder="0.00"
                       className={inputStyle}
                       value={newItem.cost}
@@ -658,8 +658,7 @@ export default function StockManagement() {
 
                   <div>
                     <label className="block font-black text-nb-black uppercase tracking-widest text-xs">Selling Price</label>
-                    <input
-                      type="number"
+                    <PriceInput
                       placeholder="0.00"
                       className={inputStyle}
                       value={newItem.sellingPrice}

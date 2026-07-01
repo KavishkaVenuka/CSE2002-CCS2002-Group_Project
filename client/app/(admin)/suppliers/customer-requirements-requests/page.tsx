@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
+import { PriceInput } from '@/components/ui/PriceInput';
 import {
   FileText,
   Search,
@@ -501,8 +502,7 @@ export default function SupplierRequests() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase tracking-widest">Quantity</label>
-                            <input 
-                              type="number" 
+                            <PriceInput 
                               placeholder="Qty" 
                               value={item.quantity}
                               onChange={(e) => handleUpdateItem(idx, 'quantity', e.target.value)}

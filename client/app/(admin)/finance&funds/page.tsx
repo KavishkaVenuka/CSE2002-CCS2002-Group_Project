@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { PriceInput } from '@/components/ui/PriceInput';
 import {
   Wallet,
   Landmark,
@@ -860,8 +861,7 @@ export default function FinanceManagement() {
 
                 <div>
                   <label className={labelStyle}>Opening Balance</label>
-                  <input
-                    type="number"
+                  <PriceInput
                     value={newBankAccount.opening_balance}
                     onChange={(e) =>
                       setNewBankAccount({
@@ -1020,8 +1020,7 @@ export default function FinanceManagement() {
 
               <div>
                 <label className={labelStyle}>Amount</label>
-                <input
-                  type="number"
+                <PriceInput
                   value={newTransaction.amount}
                   onChange={(e) =>
                     setNewTransaction({
