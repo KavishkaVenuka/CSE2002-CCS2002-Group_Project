@@ -211,7 +211,14 @@ export default function CustomerOrders() {
   };
 
   const handleDownloadInvoice = () => {
-    alert('Invoice downloaded successfully!');
+    if (!showInvoiceModal) {
+      setShowInvoiceModal(true);
+      setTimeout(() => {
+        window.print();
+      }, 100);
+    } else {
+      window.print();
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -251,7 +258,7 @@ export default function CustomerOrders() {
 
   return (
     <>
-      <div className="flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto">
+      <div className={`flex-1 space-y-8 p-4 md:p-8 font-body max-w-7xl mx-auto overflow-y-auto ${showInvoiceModal ? 'print:hidden' : ''}`}>
         
         {/* Header */}
         <div className="relative border-4 border-nb-black bg-nb-cyan p-10 shadow-nb-lg">
@@ -669,9 +676,9 @@ export default function CustomerOrders() {
 
       {/* Invoice Preview Modal */}
       {showInvoiceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)' }}>
-          <div className="bg-white border-4 border-nb-black shadow-nb-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div className="bg-nb-yellow border-b-4 border-nb-black p-6 flex justify-between items-center shrink-0">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm print:bg-white print:p-0">
+          <div className="bg-white border-4 border-nb-black shadow-nb-xl w-full max-w-4xl max-h-[90vh] flex flex-col print:border-0 print:shadow-none print:max-h-none print:h-auto">
+            <div className="bg-nb-yellow border-b-4 border-nb-black p-6 flex justify-between items-center shrink-0 print:hidden">
               <h2 className="text-3xl font-black uppercase font-display flex items-center gap-3">
                 <FileText className="w-8 h-8" /> Invoice Preview
               </h2>
@@ -685,8 +692,8 @@ export default function CustomerOrders() {
               </div>
             </div>
             
-            <div className="p-8 overflow-y-auto bg-nb-bg flex-1">
-              <div className="bg-white p-12 border-4 border-nb-black shadow-nb">
+            <div className="p-8 overflow-y-auto bg-nb-bg flex-1 print:bg-white print:p-0 print:overflow-visible">
+              <div className="bg-white p-12 border-4 border-nb-black shadow-nb print:border-0 print:shadow-none print:p-0">
                 <div className="flex justify-between items-start mb-12">
                   <div>
                     <h2 className="text-5xl font-black font-display uppercase tracking-tighter mb-4">INVOICE</h2>
