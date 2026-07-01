@@ -1,0 +1,3891 @@
+{
+  "info": {
+    "_postman_id": "c85d88ab-8c9e-4e4b-97fa-ea2945d8b87a",
+    "name": "CSE2002 Complete API Collection (116 Endpoints)",
+    "description": "Automatically generated test suite covering all 116 routes defined in the API Reference document.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Users & Auth",
+      "item": [
+        {
+          "name": "[#1] POST /users/register",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "register"
+              ]
+            },
+            "description": "Register a new user",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Pass@123\",\n  \"role\": \"Customer\",\n  \"contactNumber\": \"0771234567\",\n  \"address\": \"Colombo\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#2] POST /users/login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseData = pm.response.json();",
+                  "if (responseData.token) {",
+                  "    pm.environment.set(\"token\", responseData.token);",
+                  "    console.log(\"Automatically saved JWT Token to environment: token\");",
+                  "}",
+                  "pm.test(\"Login successful\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "login"
+              ]
+            },
+            "description": "Login — returns JWT token",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin@123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#3] GET /users/all-customers",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/all-customers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "all-customers"
+              ]
+            },
+            "description": "Get all customers list",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Admin Stock",
+      "item": [
+        {
+          "name": "[#4] GET /admin/get-stock",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/get-stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "get-stock"
+              ]
+            },
+            "description": "Get all admin stock items",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#5] POST /admin/add-stock",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/add-stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "add-stock"
+              ]
+            },
+            "description": "Add a new stock item",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Item A\",\n  \"quantity\": 100,\n  \"unit\": \"kg\",\n  \"unitPrice\": 250\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#6] PUT /admin/update-stock/:id",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/update-stock/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "update-stock",
+                ":id"
+              ]
+            },
+            "description": "Update a stock item by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 150,\n  \"unitPrice\": 300\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#7] DELETE /admin/delete-stock/:id",
+          "event": [],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/delete-stock/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "delete-stock",
+                ":id"
+              ]
+            },
+            "description": "Delete a stock item by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Stock Items",
+      "item": [
+        {
+          "name": "[#8] GET /stocks/getItems",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stocks/getItems",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stocks",
+                "getItems"
+              ]
+            },
+            "description": "Get all stock products",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#9] GET /stocks/getItems/:id",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stocks/getItems/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stocks",
+                "getItems",
+                ":id"
+              ]
+            },
+            "description": "Get one stock product by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#10] POST /stocks/addItem",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocks/addItem",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stocks",
+                "addItem"
+              ]
+            },
+            "description": "Add a new stock item",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Product A\",\n  \"quantity\": 50,\n  \"unit\": \"pcs\",\n  \"unitPrice\": 100\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#11] PUT /stocks/updateItem/:id",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocks/updateItem/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stocks",
+                "updateItem",
+                ":id"
+              ]
+            },
+            "description": "Update stock item by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 75\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#12] DELETE /stocks/deleteItem/:id",
+          "event": [],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stocks/deleteItem/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stocks",
+                "deleteItem",
+                ":id"
+              ]
+            },
+            "description": "Delete stock item by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Finance",
+      "item": [
+        {
+          "name": "[#13] GET /finance/getTransactions",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/finance/getTransactions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "finance",
+                "getTransactions"
+              ]
+            },
+            "description": "Get all finance transactions",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#14] GET /finance/getTransactions/:id",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/finance/getTransactions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "finance",
+                "getTransactions",
+                ":id"
+              ]
+            },
+            "description": "Get transaction by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#15] POST /finance/addTransaction",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/finance/addTransaction",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "finance",
+                "addTransaction"
+              ]
+            },
+            "description": "Add a finance transaction",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transaction_type\": \"cash_in\",\n  \"amount\": 5000,\n  \"description\": \"Customer payment received\",\n  \"date\": \"2026-06-25\",\n  \"notes\": \"Invoice #001\",\n  \"bankAccountId\": null,\n  \"bankAccountName\": null\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#16] PUT /finance/updateTransaction/:id",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/finance/updateTransaction/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "finance",
+                "updateTransaction",
+                ":id"
+              ]
+            },
+            "description": "Update transaction by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transaction_type\": \"cash_in\",\n  \"amount\": 5000,\n  \"description\": \"Customer payment received\",\n  \"date\": \"2026-06-25\",\n  \"notes\": \"Invoice #001\",\n  \"bankAccountId\": null,\n  \"bankAccountName\": null\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#17] DELETE /finance/deleteTransaction/:id",
+          "event": [],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/finance/deleteTransaction/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "finance",
+                "deleteTransaction",
+                ":id"
+              ]
+            },
+            "description": "Delete transaction by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Bank Accounts",
+      "item": [
+        {
+          "name": "[#18] GET /bankAccounts/getBankAccounts",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bankAccounts/getBankAccounts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bankAccounts",
+                "getBankAccounts"
+              ]
+            },
+            "description": "Get all bank accounts",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#19] POST /bankAccounts/addBankAccount",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/bankAccounts/addBankAccount",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bankAccounts",
+                "addBankAccount"
+              ]
+            },
+            "description": "Add a bank account",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bankName\": \"Bank of Ceylon\",\n  \"accountNumber\": \"1234567890\",\n  \"opening_balance\": 100000\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#20] DELETE /bankAccounts/deleteBankAccount/:id",
+          "event": [],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/bankAccounts/deleteBankAccount/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "bankAccounts",
+                "deleteBankAccount",
+                ":id"
+              ]
+            },
+            "description": "Delete bank account by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Payment Transactions",
+      "item": [
+        {
+          "name": "[#21] GET /paymentTransactions/getPayments",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/paymentTransactions/getPayments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "paymentTransactions",
+                "getPayments"
+              ]
+            },
+            "description": "Get all payments",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#22] POST /paymentTransactions/addPayment",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/paymentTransactions/addPayment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "paymentTransactions",
+                "addPayment"
+              ]
+            },
+            "description": "Add a payment transaction",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 2500,\n  \"type\": \"customer\",\n  \"paymentMethod\": \"cash\",\n  \"description\": \"Order payment\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#23] DELETE /paymentTransactions/deletePayment/:id",
+          "event": [],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/paymentTransactions/deletePayment/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "paymentTransactions",
+                "deletePayment",
+                ":id"
+              ]
+            },
+            "description": "Delete payment by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7. Requirements",
+      "item": [
+        {
+          "name": "[#24] GET /requirements",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requirements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requirements"
+              ]
+            },
+            "description": "Get all requirements (filter by ?customerId=&status=&search=)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#25] GET /requirements/stats",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requirements/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requirements",
+                "stats"
+              ]
+            },
+            "description": "Get requirement statistics",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#26] GET /requirements/:id",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requirements/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requirements",
+                ":id"
+              ]
+            },
+            "description": "Get single requirement by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#27] POST /requirements",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requirements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requirements"
+              ]
+            },
+            "description": "Create a new requirement (multipart/form-data)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "title",
+                  "value": "Need Steel Rods",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "50 units required urgently",
+                  "type": "text"
+                },
+                {
+                  "key": "customerId",
+                  "value": "CUST000001",
+                  "type": "text"
+                },
+                {
+                  "key": "quantity",
+                  "value": "50",
+                  "type": "text"
+                },
+                {
+                  "key": "unit",
+                  "value": "pcs",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#28] PATCH /requirements/:id/status",
+          "event": [],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/requirements/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "requirements",
+                ":id",
+                "status"
+              ]
+            },
+            "description": "Update requirement status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8. Quotations",
+      "item": [
+        {
+          "name": "[#29] GET /quotations/all",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quotations/all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotations",
+                "all"
+              ]
+            },
+            "description": "Get all quotations (Admin)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#30] GET /quotations/pending-count/:email",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quotations/pending-count/:email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotations",
+                "pending-count",
+                ":email"
+              ]
+            },
+            "description": "Pending quotation count for email",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#31] GET /quotations/pending/:email",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quotations/pending/:email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotations",
+                "pending",
+                ":email"
+              ]
+            },
+            "description": "Pending quotations by email",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#32] GET /quotations/pending-customer/:email",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quotations/pending-customer/:email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotations",
+                "pending-customer",
+                ":email"
+              ]
+            },
+            "description": "Pending quotations for customer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#33] GET /quotations/accepted-count",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quotations/accepted-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotations",
+                "accepted-count"
+              ]
+            },
+            "description": "Total accepted quotations count",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#34] GET /quotations/rejected-count",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quotations/rejected-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotations",
+                "rejected-count"
+              ]
+            },
+            "description": "Total rejected quotations count",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#35] GET /quotations/expired-count",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quotations/expired-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotations",
+                "expired-count"
+              ]
+            },
+            "description": "Total expired quotations count",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#36] GET /quotations/customer/:customerId",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quotations/customer/:customerId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotations",
+                "customer",
+                ":customerId"
+              ]
+            },
+            "description": "All quotations by customer ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#37] PUT /quotations/reject/:id",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotations/reject/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotations",
+                "reject",
+                ":id"
+              ]
+            },
+            "description": "Reject a quotation",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Price too high\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#38] PUT /quotations/accept/:id",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/quotations/accept/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotations",
+                "accept",
+                ":id"
+              ]
+            },
+            "description": "Accept a quotation",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes\": \"Approved\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#39] POST /quotations/create-supplier-quotation",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/quotations/create-supplier-quotation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "quotations",
+                "create-supplier-quotation"
+              ]
+            },
+            "description": "Create supplier quotation from requirement",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "9. Orders",
+      "item": [
+        {
+          "name": "[#40] GET /orders",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": "Get all orders (Admin)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#41] POST /orders",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": "Create a new order",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"CUST000001\",\n  \"items\": [],\n  \"totalAmount\": 5000\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#42] GET /orders/customer/:customerId",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/customer/:customerId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "customer",
+                ":customerId"
+              ]
+            },
+            "description": "Orders by customer ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#43] PUT /orders/:id/status",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                ":id",
+                "status"
+              ]
+            },
+            "description": "Update order status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Processing\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#44] PUT /orders/:id/issue-items",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/:id/issue-items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                ":id",
+                "issue-items"
+              ]
+            },
+            "description": "Issue items for an order",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#45] PUT /orders/confirm-delivery/:id",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/confirm-delivery/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "confirm-delivery",
+                ":id"
+              ]
+            },
+            "description": "Confirm order delivery",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#46] PUT /orders/restock-rejected/:id",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/restock-rejected/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "restock-rejected",
+                ":id"
+              ]
+            },
+            "description": "Restock rejected order items",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#47] GET /orders/purchase-orders",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/purchase-orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "purchase-orders"
+              ]
+            },
+            "description": "Get all purchase orders (Admin)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#48] PUT /orders/purchase-orders/:id/status",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/purchase-orders/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "purchase-orders",
+                ":id",
+                "status"
+              ]
+            },
+            "description": "Update purchase order status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#49] GET /orders/pending-count/:customerId",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/pending-count/:customerId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "pending-count",
+                ":customerId"
+              ]
+            },
+            "description": "Pending count for customer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#50] GET /orders/processing-count/:customerId",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/processing-count/:customerId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "processing-count",
+                ":customerId"
+              ]
+            },
+            "description": "Processing count for customer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#51] GET /orders/dispatched-count/:customerId",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/dispatched-count/:customerId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "dispatched-count",
+                ":customerId"
+              ]
+            },
+            "description": "Dispatched count for customer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#52] GET /orders/in-transit-count/:customerId",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/in-transit-count/:customerId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "in-transit-count",
+                ":customerId"
+              ]
+            },
+            "description": "In-transit count for customer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#53] GET /orders/delivered-count/:customerId",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/delivered-count/:customerId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "delivered-count",
+                ":customerId"
+              ]
+            },
+            "description": "Delivered count for customer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "10. Invoices (Customer)",
+      "item": [
+        {
+          "name": "[#54] GET /invoices/paid-count/:email",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/paid-count/:email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices",
+                "paid-count",
+                ":email"
+              ]
+            },
+            "description": "Paid invoice count for customer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#55] GET /invoices/unpaid-count/:email",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/unpaid-count/:email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices",
+                "unpaid-count",
+                ":email"
+              ]
+            },
+            "description": "Unpaid invoice count for customer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#56] GET /invoices/overdue-count/:email",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/overdue-count/:email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices",
+                "overdue-count",
+                ":email"
+              ]
+            },
+            "description": "Overdue invoice count for customer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#57] GET /invoices/customer/:email",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/customer/:email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices",
+                "customer",
+                ":email"
+              ]
+            },
+            "description": "All invoices for a customer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#58] POST /invoices/:invoiceID/payment",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/invoices/:invoiceID/payment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "invoices",
+                ":invoiceID",
+                "payment"
+              ]
+            },
+            "description": "Submit payment for an invoice (multipart/form-data)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "amount",
+                  "value": "2500",
+                  "type": "text"
+                },
+                {
+                  "key": "paymentMethod",
+                  "value": "bank",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "11. Suppliers — Requirements",
+      "item": [
+        {
+          "name": "[#59] GET /suppliers/all",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "all"
+              ]
+            },
+            "description": "Get all suppliers (Admin)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#60] GET /suppliers/supplier-requirements/my",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/supplier-requirements/my",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "supplier-requirements",
+                "my"
+              ]
+            },
+            "description": "Get my supplier requirements",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#61] POST /suppliers/supplier-requirements",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/supplier-requirements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "supplier-requirements"
+              ]
+            },
+            "description": "Create a supplier requirement",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Raw Lumber\",\n  \"description\": \"Looking for wood suppliers\",\n  \"quantity\": 50,\n  \"unit\": \"pcs\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#62] GET /suppliers/requirements/stats",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/requirements/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "requirements",
+                "stats"
+              ]
+            },
+            "description": "Get supplier requirement stats",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#63] GET /suppliers/requirements/:id",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/requirements/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "requirements",
+                ":id"
+              ]
+            },
+            "description": "Get supplier requirement by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#64] GET /suppliers/dashboard/stats",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/dashboard/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "dashboard",
+                "stats"
+              ]
+            },
+            "description": "Supplier dashboard stats",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#65] GET /suppliers/dashboard/recent-requirements",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/dashboard/recent-requirements",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "dashboard",
+                "recent-requirements"
+              ]
+            },
+            "description": "Recent supplier requirements",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#66] GET /suppliers/dashboard/recent-orders",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/dashboard/recent-orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "dashboard",
+                "recent-orders"
+              ]
+            },
+            "description": "Recent supplier orders",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#67] GET /suppliers/dashboard/pending-payments",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/dashboard/pending-payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "dashboard",
+                "pending-payments"
+              ]
+            },
+            "description": "Supplier pending payments",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "12. Supplier Quotations",
+      "item": [
+        {
+          "name": "[#68] GET /suppliers/quotations",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/quotations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "quotations"
+              ]
+            },
+            "description": "Get quotations (for supplier's own)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#69] GET /suppliers/quotations/table",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/quotations/table",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "quotations",
+                "table"
+              ]
+            },
+            "description": "Same as above (frontend alias)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#70] GET /suppliers/quotations/stats",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/quotations/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "quotations",
+                "stats"
+              ]
+            },
+            "description": "Quotation statistics",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#71] GET /suppliers/quotations/all",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/quotations/all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "quotations",
+                "all"
+              ]
+            },
+            "description": "All quotations (Admin view)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#72] GET /suppliers/quotations/:id",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/quotations/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "quotations",
+                ":id"
+              ]
+            },
+            "description": "Get quotation by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#73] GET /suppliers/quotations/:id/detail",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/quotations/:id/detail",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "quotations",
+                ":id",
+                "detail"
+              ]
+            },
+            "description": "Get quotation detail by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#74] POST /suppliers/quotations",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/quotations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "quotations"
+              ]
+            },
+            "description": "Create a supplier quotation",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requirementId\": \"REQ001\",\n  \"price\": 1500,\n  \"notes\": \"Best price guaranteed\",\n  \"validUntil\": \"2026-07-01\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#75] PATCH /suppliers/quotations/:id",
+          "event": [],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/quotations/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "quotations",
+                ":id"
+              ]
+            },
+            "description": "Update a quotation",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 1700,\n  \"notes\": \"Updated\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#76] POST /suppliers/quotations/:id/submit",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/quotations/:id/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "quotations",
+                ":id",
+                "submit"
+              ]
+            },
+            "description": "Submit a draft quotation",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#77] PUT /suppliers/quotations/accept/:id",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/quotations/accept/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "quotations",
+                "accept",
+                ":id"
+              ]
+            },
+            "description": "Admin: Accept a supplier quotation",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#78] PUT /suppliers/quotations/reject/:id",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/suppliers/quotations/reject/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "suppliers",
+                "quotations",
+                "reject",
+                ":id"
+              ]
+            },
+            "description": "Admin: Reject a supplier quotation",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "13. Supplier Orders",
+      "item": [
+        {
+          "name": "[#79] GET /supplier-orders",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders"
+              ]
+            },
+            "description": "Get all supplier orders (Admin)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#80] GET /supplier-orders/my-orders",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/my-orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                "my-orders"
+              ]
+            },
+            "description": "Supplier's own orders",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#81] GET /supplier-orders/my-invoices",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/my-invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                "my-invoices"
+              ]
+            },
+            "description": "Supplier's own invoices",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#82] GET /supplier-orders/my-pending-count",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/my-pending-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                "my-pending-count"
+              ]
+            },
+            "description": "Supplier pending orders count",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#83] GET /supplier-orders/my-active-count",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/my-active-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                "my-active-count"
+              ]
+            },
+            "description": "Supplier active orders count",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#84] GET /supplier-orders/my-delivered-count",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/my-delivered-count",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                "my-delivered-count"
+              ]
+            },
+            "description": "Supplier delivered orders count",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#85] GET /supplier-orders/my-stats",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/my-stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                "my-stats"
+              ]
+            },
+            "description": "Supplier order stats",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#86] GET /supplier-orders/dispatch-list",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/dispatch-list",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                "dispatch-list"
+              ]
+            },
+            "description": "Orders ready to dispatch",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#87] GET /supplier-orders/invoiceable-orders",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/invoiceable-orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                "invoiceable-orders"
+              ]
+            },
+            "description": "Orders eligible for invoice",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#88] GET /supplier-orders/invoices",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                "invoices"
+              ]
+            },
+            "description": "All supplier invoices (Admin)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#89] GET /supplier-orders/:id",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                ":id"
+              ]
+            },
+            "description": "Get supplier order by ID",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#90] GET /supplier-orders/:id/delivery-progress",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/:id/delivery-progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                ":id",
+                "delivery-progress"
+              ]
+            },
+            "description": "Delivery progress for an order",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#91] GET /supplier-orders/supplier/:supplierId",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/supplier/:supplierId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                "supplier",
+                ":supplierId"
+              ]
+            },
+            "description": "Orders by supplier ID (Admin)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#92] PUT /supplier-orders/:id/status",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                ":id",
+                "status"
+              ]
+            },
+            "description": "Update supplier order status",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Processing\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#93] PUT /supplier-orders/:id/dispatch",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/:id/dispatch",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                ":id",
+                "dispatch"
+              ]
+            },
+            "description": "Dispatch a supplier order",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#94] PUT /supplier-orders/:id/confirm-delivery",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/:id/confirm-delivery",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                ":id",
+                "confirm-delivery"
+              ]
+            },
+            "description": "Confirm supplier delivery",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#95] PUT /supplier-orders/invoices/:id/accept",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/invoices/:id/accept",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                "invoices",
+                ":id",
+                "accept"
+              ]
+            },
+            "description": "Accept supplier payment",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#96] PUT /supplier-orders/invoices/:id/reject",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/invoices/:id/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                "invoices",
+                ":id",
+                "reject"
+              ]
+            },
+            "description": "Reject supplier payment",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#97] POST /supplier-orders/:orderId/create-invoice",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/:orderId/create-invoice",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                ":orderId",
+                "create-invoice"
+              ]
+            },
+            "description": "Create invoice for supplier order",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000,\n  \"dueDate\": \"2026-07-10\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#98] PATCH /supplier-orders/:id/acknowledge",
+          "event": [],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-orders/:id/acknowledge",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-orders",
+                ":id",
+                "acknowledge"
+              ]
+            },
+            "description": "Supplier acknowledges order",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "14. Supplier Invoices",
+      "item": [
+        {
+          "name": "[#99] GET /supplier-invoices",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-invoices"
+              ]
+            },
+            "description": "All supplier invoices (Admin)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#100] GET /supplier-invoices/my",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-invoices/my",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-invoices",
+                "my"
+              ]
+            },
+            "description": "My supplier invoices",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#101] GET /supplier-invoices/all",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-invoices/all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-invoices",
+                "all"
+              ]
+            },
+            "description": "All my invoices (frontend alias)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#102] GET /supplier-invoices/stats",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-invoices/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-invoices",
+                "stats"
+              ]
+            },
+            "description": "Supplier invoice stats",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#103] GET /supplier-invoices/paid-count/:email",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-invoices/paid-count/:email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-invoices",
+                "paid-count",
+                ":email"
+              ]
+            },
+            "description": "Paid invoice count by email",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#104] GET /supplier-invoices/unpaid-count/:email",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-invoices/unpaid-count/:email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-invoices",
+                "unpaid-count",
+                ":email"
+              ]
+            },
+            "description": "Unpaid invoice count by email",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#105] GET /supplier-invoices/overdue-count/:email",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-invoices/overdue-count/:email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-invoices",
+                "overdue-count",
+                ":email"
+              ]
+            },
+            "description": "Overdue invoice count by email",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#106] POST /supplier-invoices",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-invoices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-invoices"
+              ]
+            },
+            "description": "Supplier creates an invoice",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"ORD123\",\n  \"amount\": 5000,\n  \"dueDate\": \"2026-07-10\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#107] POST /supplier-invoices/:invoiceID/payment",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-invoices/:invoiceID/payment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-invoices",
+                ":invoiceID",
+                "payment"
+              ]
+            },
+            "description": "Submit payment proof for invoice (multipart/form-data)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "amount",
+                  "value": "5000",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#108] PUT /supplier-invoices/accept-payment/:id",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-invoices/accept-payment/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-invoices",
+                "accept-payment",
+                ":id"
+              ]
+            },
+            "description": "Admin accepts payment",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#109] PUT /supplier-invoices/reject-payment/:id",
+          "event": [],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-invoices/reject-payment/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-invoices",
+                "reject-payment",
+                ":id"
+              ]
+            },
+            "description": "Admin rejects payment",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "15. Supplier Payments",
+      "item": [
+        {
+          "name": "[#110] GET /supplier-payments",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-payments"
+              ]
+            },
+            "description": "Get all supplier payments",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#111] GET /supplier-payments/all",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-payments/all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-payments",
+                "all"
+              ]
+            },
+            "description": "My supplier payments (frontend alias)",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#112] GET /supplier-payments/stats",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-payments/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-payments",
+                "stats"
+              ]
+            },
+            "description": "Supplier payment stats",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#113] POST /supplier-payments",
+          "event": [],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-payments"
+              ]
+            },
+            "description": "Add a supplier payment",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoiceId\": \"INV123\",\n  \"amount\": 3000,\n  \"paymentMethod\": \"bank\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#114] DELETE /supplier-payments/:id",
+          "event": [],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/supplier-payments/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "supplier-payments",
+                ":id"
+              ]
+            },
+            "description": "Delete a supplier payment",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "16. Dashboard",
+      "item": [
+        {
+          "name": "[#115] GET /dashboard/admin-stats",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/admin-stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "admin-stats"
+              ]
+            },
+            "description": "Admin dashboard statistics",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[#116] GET /dashboard/customer-stats",
+          "event": [],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/customer-stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "dashboard",
+                "customer-stats"
+              ]
+            },
+            "description": "Customer dashboard statistics",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

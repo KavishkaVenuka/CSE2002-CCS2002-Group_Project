@@ -35,6 +35,18 @@ type StockItem = {
 
 const API_BASE = 'http://localhost:5900/api/stocks';
 
+function getToken(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user?.token || localStorage.getItem('token') || '';
+  } catch { return ''; }
+}
+function authHeaders() {
+  const t = getToken();
+  return t ? { 'Authorization': `Bearer ${t}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+}
+
 const initialNewItem: StockItem = {
   name: '',
   category: '',
@@ -97,7 +109,9 @@ export default function StockManagement() {
   const fetchStockItems = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/getItems`);
+      const response = await fetch(`${API_BASE}/getItems`, {
+        headers: authHeaders(),
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch items: ${response.status}`);
@@ -142,9 +156,7 @@ export default function StockManagement() {
 
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: authHeaders(),
         body: JSON.stringify({
             item_name: newItem.name,
             description: newItem.description,
@@ -204,6 +216,7 @@ export default function StockManagement() {
     try {
       const response = await fetch(`${API_BASE}/deleteItem/${id}`, {
         method: 'DELETE',
+        headers: authHeaders(),
       });
 
       if (!response.ok) {

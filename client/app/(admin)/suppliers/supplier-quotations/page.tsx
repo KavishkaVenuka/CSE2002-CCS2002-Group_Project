@@ -51,10 +51,18 @@ export default function SupplierQuotationsAdmin() {
   const [showModal, setShowModal] = useState(false);
   const [selected, setSelected] = useState<Quotation | null>(null);
 
+  const getAuthHeader = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const token = user?.token || localStorage.getItem('token') || '';
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch { return {}; }
+  };
+
   const fetchQuotations = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('http://localhost:5900/api/suppliers/quotations/all');
+      const res = await axios.get('http://localhost:5900/api/suppliers/quotations/all', { headers: getAuthHeader() });
       setQuotations(res.data.quotations || res.data || []);
     } catch (err) {
       console.error('Failed to load quotations:', err);
@@ -65,6 +73,7 @@ export default function SupplierQuotationsAdmin() {
   };
 
   useEffect(() => { fetchQuotations(); }, []);
+
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -79,7 +88,7 @@ export default function SupplierQuotationsAdmin() {
 
   const handleApprove = async (id: string) => {
     try {
-      await axios.put(`http://localhost:5900/api/suppliers/quotations/accept/${id}`);
+      await axios.put(`http://localhost:5900/api/suppliers/quotations/accept/${id}`, {}, { headers: getAuthHeader() });
       toast.success('Quotation approved');
       fetchQuotations();
       setShowModal(false);
@@ -90,7 +99,7 @@ export default function SupplierQuotationsAdmin() {
 
   const handleReject = async (id: string) => {
     try {
-      await axios.put(`http://localhost:5900/api/suppliers/quotations/reject/${id}`);
+      await axios.put(`http://localhost:5900/api/suppliers/quotations/reject/${id}`, {}, { headers: getAuthHeader() });
       toast.error('Quotation rejected');
       fetchQuotations();
       setShowModal(false);
@@ -98,6 +107,7 @@ export default function SupplierQuotationsAdmin() {
       toast.error('Failed to reject quotation');
     }
   };
+
 
   const filtered = quotations.filter(q => {
     const queryLower = searchTerm.toLowerCase();

@@ -77,6 +77,19 @@ interface BankAccount {
 const API_BASE = 'http://localhost:5900/api/paymentTransactions';
 const API_BASE_BANK = 'http://localhost:5900/api/bankAccounts';
 
+function getToken(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    return user?.token || localStorage.getItem('token') || '';
+  } catch { return ''; }
+}
+function authHeaders() {
+  const t = getToken();
+  return t ? { 'Authorization': `Bearer ${t}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+}
+
+
 const parseNumber = (value: any): number => {
   if (value == null) return 0;
   if (typeof value === 'number') return value;
@@ -167,7 +180,7 @@ export default function PaymentsTransactions() {
 
   const fetchFinanceTransactions = async () => {
     try {
-      const response = await fetch(`http://localhost:5900/api/finance/getTransactions`);
+      const response = await fetch(`http://localhost:5900/api/finance/getTransactions`, { headers: authHeaders() });
       if (!response.ok) return;
       const data = await response.json();
       const itemsArray =
@@ -185,7 +198,7 @@ export default function PaymentsTransactions() {
   const fetchTransactions = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/getPayments`);
+      const response = await fetch(`${API_BASE}/getPayments`, { headers: authHeaders() });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch transactions: ${response.status}`);
@@ -212,7 +225,7 @@ export default function PaymentsTransactions() {
 
   const fetchBankAccounts = async () => {
     try {
-      const response = await fetch(`${API_BASE_BANK}/getBankAccounts`);
+      const response = await fetch(`${API_BASE_BANK}/getBankAccounts`, { headers: authHeaders() });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch bank accounts: ${response.status}`);
@@ -317,9 +330,7 @@ export default function PaymentsTransactions() {
           : `${API_BASE}/addPayment`,
         {
           method: isEditMode ? 'PUT' : 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: authHeaders(),
           body: JSON.stringify(payload),
         }
       );

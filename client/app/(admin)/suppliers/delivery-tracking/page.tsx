@@ -49,10 +49,18 @@ export default function SupplierDeliveryTracking() {
   const [receivedQtys, setReceivedQtys] = useState<{ [key: string]: number }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const getAuthHeader = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const token = user?.token || localStorage.getItem('token') || '';
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch { return {}; }
+  };
+
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get('http://localhost:5900/api/supplier-orders');
+      const res = await axios.get('http://localhost:5900/api/supplier-orders', { headers: getAuthHeader() });
       setOrders(res.data.orders || []);
     } catch (err) {
       console.error('Failed to load orders:', err);
@@ -63,6 +71,7 @@ export default function SupplierDeliveryTracking() {
   };
 
   useEffect(() => { fetchOrders(); }, []);
+
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -410,7 +419,7 @@ export default function SupplierDeliveryTracking() {
                         });
                         await axios.put(`http://localhost:5900/api/supplier-orders/${selected._id}/confirm-delivery`, {
                           items: itemsToUpdate
-                        });
+                        }, { headers: getAuthHeader() });
                         toast.success("Delivery confirmed successfully");
                         setShowModal(false);
                         fetchOrders();

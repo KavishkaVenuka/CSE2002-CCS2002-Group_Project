@@ -106,7 +106,15 @@ export default function CustomerOrders() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5900/api/orders');
+      const getAuthHeader = () => {
+        try {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          const token = user?.token || localStorage.getItem('token') || '';
+          return token ? { Authorization: `Bearer ${token}` } : {};
+        } catch { return {}; }
+      };
+      const response = await axios.get('http://localhost:5900/api/orders', { headers: getAuthHeader() });
+
       
       const trackingStr = localStorage.getItem('client_side_delivery_tracking_v1');
       const tracking = trackingStr ? JSON.parse(trackingStr) : {};

@@ -42,11 +42,20 @@ export default function CustomerDeliveryTracking() {
   const [issuingData, setIssuingData] = useState<{ [key: string]: number }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const getAuthHeader = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const token = user?.token || localStorage.getItem('token') || '';
+      return token ? { Authorization: `Bearer ${token}` } : {};
+    } catch { return {}; }
+  };
+
   // 2. Fetch Data Logic
   const fetchDeliveries = async () => {
     try {
       setIsLoading(true);
-      const response = await axios.get('http://localhost:5900/api/orders');
+      const response = await axios.get('http://localhost:5900/api/orders', { headers: getAuthHeader() });
+
       
       const invoicedOrdersStr = localStorage.getItem('client_side_invoiced_orders');
       const invoicedOrders = invoicedOrdersStr ? JSON.parse(invoicedOrdersStr) : {};
@@ -132,7 +141,7 @@ export default function CustomerDeliveryTracking() {
 
       await axios.put(`http://localhost:5900/api/orders/${selectedOrder._id}/issue-items`, {
         issuedItems
-      });
+      }, { headers: getAuthHeader() });
 
       // Save to localStorage
       const trackingStr = localStorage.getItem('client_side_delivery_tracking_v1');
@@ -181,7 +190,7 @@ export default function CustomerDeliveryTracking() {
       setRestockLoading(`${orderId}-${productID}`);
       const response = await axios.put(`http://localhost:5900/api/orders/restock-rejected/${orderId}`, {
         productID
-      });
+      }, { headers: getAuthHeader() });
       
       if (response.data) {
         // Update localStorage
