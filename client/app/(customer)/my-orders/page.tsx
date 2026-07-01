@@ -59,7 +59,13 @@ export default function MyOrdersPage() {
       try {
         setLoading(true);
         const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:5900";
-        const res = await fetch(`${API_BASE}/api/orders/customer/${fetchId}`);
+        const token = localStorage.getItem("token") || userData?.token || "";
+        const res = await fetch(`${API_BASE}/api/orders/customer/${fetchId}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
         if (!res.ok) {
           throw new Error(`Failed to fetch orders: ${res.status}`);
         }
