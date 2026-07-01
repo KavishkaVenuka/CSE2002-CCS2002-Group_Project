@@ -650,12 +650,6 @@ export default function CustomerOrders() {
                 <FileText className="w-5 h-5" /> Generate Invoice
               </button>
               <button
-                disabled={!canUpdateStatus}
-                className="px-6 py-3 border-4 border-nb-black font-black uppercase flex items-center gap-2 bg-purple-300 shadow-nb-sm disabled:opacity-50 nb-interactive"
-              >
-                <Truck className="w-5 h-5" /> Update Status
-              </button>
-              <button
                 disabled={!canConfirmDelivery}
                 onClick={() => setShowReceiveModal(true)}
                 className="px-6 py-3 border-4 border-nb-black font-black uppercase flex items-center gap-2 bg-nb-green shadow-nb-sm disabled:opacity-50 nb-interactive"
