@@ -91,8 +91,8 @@ export default function AdminDashboard() {
   ];
 
   const pendingRequests = [
-    { label: 'Pending Customer Requests', value: stats ? stats.pendingCustomerRequests.toString() : '0', icon: Users, bgColor: 'bg-nb-cyan', link: '/customer-requests' },
-    { label: 'Pending Supplier Requests', value: stats ? stats.pendingSupplierRequests.toString() : '0', icon: Truck, bgColor: 'bg-nb-green', link: '/purchase-orders' },
+    { label: 'Pending Customer Requests', value: stats ? stats.pendingCustomerRequests.toString() : '0', icon: Users, bgColor: 'bg-nb-cyan' },
+    { label: 'Pending Supplier Requests', value: stats ? stats.pendingSupplierRequests.toString() : '0', icon: Truck, bgColor: 'bg-nb-green'},
   ];
 
   const getStatusColor = (status: string) => {
