@@ -277,21 +277,6 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Quick Links Skeleton */}
-            <div className="nb-card bg-nb-white border-2 border-nb-black">
-              <div className="border-b-2 border-nb-black p-4 bg-nb-bg">
-                <div className="h-5 w-32 bg-[#d4ede9] border-2 border-nb-black shimmer"></div>
-              </div>
-              <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                {['bg-nb-cyan', 'bg-nb-green', 'bg-nb-orange', 'bg-nb-yellow'].map((color, idx) => (
-                  <div key={idx} className={`${color} border-2 border-nb-black p-6 flex flex-col items-start gap-4`}>
-                    <div className="w-10 h-10 bg-nb-white border-2 border-nb-black shimmer"></div>
-                    <div className="h-4 w-24 bg-nb-black/20 border-2 border-nb-black shimmer"></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             <style jsx>{`
               @keyframes shimmer {
                 0% {
@@ -507,39 +492,6 @@ export default function AdminDashboard() {
                   )}
                 </tbody>
               </table>
-            </div>
-          </div>
-
-          {/* Quick Links */}
-          <div className="nb-card bg-nb-white">
-            <div className="border-b-2 border-nb-black p-4 bg-nb-bg">
-              <h2 className="text-lg font-display font-black uppercase tracking-widest text-nb-black">Quick Links</h2>
-            </div>
-            <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Link href="/stock" className="nb-interactive bg-nb-cyan border-2 border-nb-black p-6 flex flex-col items-start gap-4 shadow-nb-sm">
-                <div className="bg-nb-white border-2 border-nb-black p-2 shadow-[2px_2px_0px_0px_#000]">
-                  <Package className="w-6 h-6 text-nb-black" strokeWidth={2.5} />
-                </div>
-                <span className="text-nb-black font-black uppercase tracking-wide">Stock Management</span>
-              </Link>
-              <Link href="/customer-requests" className="nb-interactive bg-nb-green border-2 border-nb-black p-6 flex flex-col items-start gap-4 shadow-nb-sm">
-                <div className="bg-nb-white border-2 border-nb-black p-2 shadow-[2px_2px_0px_0px_#000]">
-                  <FileText className="w-6 h-6 text-nb-black" strokeWidth={2.5} />
-                </div>
-                <span className="text-nb-black font-black uppercase tracking-wide">Customer Requests</span>
-              </Link>
-              <Link href="/purchase-orders" className="nb-interactive bg-nb-orange border-2 border-nb-black p-6 flex flex-col items-start gap-4 shadow-nb-sm">
-                <div className="bg-nb-white border-2 border-nb-black p-2 shadow-[2px_2px_0px_0px_#000]">
-                  <ShoppingBag className="w-6 h-6 text-nb-black" strokeWidth={2.5} />
-                </div>
-                <span className="text-nb-black font-black uppercase tracking-wide">Purchase Orders</span>
-              </Link>
-              <Link href="/payments" className="nb-interactive bg-nb-yellow border-2 border-nb-black p-6 flex flex-col items-start gap-4 shadow-nb-sm">
-                <div className="bg-nb-white border-2 border-nb-black p-2 shadow-[2px_2px_0px_0px_#000]">
-                  <Banknote className="w-6 h-6 text-nb-black" strokeWidth={2.5} />
-                </div>
-                <span className="text-nb-black font-black uppercase tracking-wide">Payments</span>
-              </Link>
             </div>
           </div>
         </>
